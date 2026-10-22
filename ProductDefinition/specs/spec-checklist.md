@@ -1,37 +1,90 @@
 ---
 name: spec-checklist
-description: Expand existing feature specifications into detailed, requirement-by-requirement checklists that examine completeness, clarity, edge cases, acceptance criteria, dependencies, and consistency before tests or implementation begin.
+description: Analyze a feature specification and produce a detailed, feature-specific requirements checklist. Identify ambiguity, contradictions, omissions, constraints, and acceptance criteria before TDD or implementation.
 ---
 
-# spec-checklist — Specification Deep-Dive Checklist
+# spec-checklist — Requirements Quality Gate
 
-## Purpose
+## Purpose and ownership
 
-Read the existing feature specification and expand its requirements into a detailed, feature-specific checklist. Each checklist item must examine a concrete aspect of the specification in depth, helping identify missing details, ambiguities, contradictions, edge cases, and unverified assumptions before development begins.
+Turn a specification into a detailed checklist of what the feature must do and the conditions under which it is correct. Examine each requirement in depth, with enough specificity that `tdd` can derive tests and `dev` can implement the behavior without guessing.
 
-This skill does not replace or rewrite the original specification by default. It uses the specification as its source and creates a checklist that makes every requirement easier to inspect, validate, and prepare for implementation.
+This checklist evaluates **requirements quality and completeness**, not implementation progress. It does not write tests, implement code, or certify that the feature is complete.
 
-## Core Responsibilities
+## Inputs and source of truth
 
-- Read the existing `spec.md` and relevant planning artifacts.
-- Break down each requirement and user scenario into specific review points.
-- Examine expected behavior, inputs, outputs, validation, error handling, edge cases, permissions, dependencies, and acceptance criteria where applicable.
-- Identify missing, ambiguous, contradictory, or insufficiently detailed requirements.
-- Link checklist items to the relevant specification sections.
-- Resolve gaps by updating source artifacts when authorized and unambiguous, or request clarification when a product or behavior decision is required.
-- Ensure the checklist is reviewed and passes its quality gate before test creation or production implementation.
+Use the supplied specification, user request, linked design notes, and explicitly identified repository contracts. Preserve the source's terminology, requirement IDs, constraints, and priorities.
 
-## Workflow Position
+Do not silently fill gaps with assumptions or replace the specification with general best practices. Clearly separate:
+- Requirements explicitly stated by the source.
+- Necessary implications directly supported by the source.
+- Questions or gaps that require a product decision.
+- Optional recommendations that are not requirements.
 
-`product-planning` → `specify-requirements` → `spec-checklist` → `dev:tdd` → `dev`
+If no specification or sufficient source material is available, ask for it or state the limitation. Do not invent feature requirements.
 
-The `spec-checklist` gate must pass before `dev:tdd` writes tests or `dev` modifies production code.
+## Workflow
 
-## Boundaries
+### 1. Establish scope
 
-- **`specify-requirements`** creates the specification.
-- **`spec-checklist`** expands and deeply reviews the specification through a detailed checklist.
-- **`dev:tdd`** creates and validates test code.
-- **`dev`** implements production code.
+Identify the feature, user or system actors, intended outcomes, affected workflows, explicit exclusions, dependencies, and source documents. Keep unrelated features out of scope.
 
-The checklist verifies the quality and completeness of the requirements. Checking an item as complete means the reviewer has confirmed that the requirement is sufficiently specified—not that the corresponding functionality has been implemented or tested.
+### 2. Decompose every requirement
+
+For each requirement, identify applicable details:
+
+- Trigger and preconditions.
+- Inputs, formats, allowed values, and validation.
+- Expected outcomes and observable behavior.
+- State changes and persistence.
+- Success, failure, boundary, and recovery behavior.
+- Authorization, roles, and permissions.
+- Data handling, privacy, and security constraints.
+- Integrations, external contracts, and dependency failures.
+- Compatibility, migration, and performance constraints when specified.
+- Acceptance criteria and testable examples.
+- Explicit exclusions or non-goals.
+
+Only include dimensions relevant to the feature. Do not inflate the checklist with generic cases that the source does not support.
+
+### 3. Detect gaps and conflicts
+
+Look for requirements that are:
+- Ambiguous or not objectively testable.
+- Contradictory with another requirement or existing stated contract.
+- Missing a necessary outcome or failure behavior.
+- Missing a decision that would materially change implementation.
+- Impossible to validate from the available information.
+- Unclear about scope, ownership, permissions, or compatibility.
+
+Ask concise, specific questions for material product decisions. Do not block on ordinary implementation choices that can follow established repository conventions.
+
+### 4. Produce the checklist
+
+Organize checklist items by feature flow or requirement ID, not as a generic boilerplate list. Use stable IDs when helpful (for example, `REQ-01`, `REQ-02`) and include traceability to the source when available.
+
+For each item, include:
+- A concrete, testable statement of expected behavior.
+- Acceptance condition or example, where supported.
+- Source reference or requirement ID, when available.
+- Status: **Ready**, **Needs clarification**, or **Out of scope**.
+
+Do not mark an item as implemented or passed; this skill assesses requirements, not implementation.
+
+### 5. Gate the handoff
+
+End with:
+- **Ready for implementation:** requirements sufficiently clear for the scoped work.
+- **Blocked:** exact questions or contradictions that must be resolved first.
+- **Assumptions:** only if explicitly authorized or unavoidable, clearly labeled and not presented as source facts.
+- **Out of scope:** exclusions stated in the source.
+
+If a material requirement remains unresolved, tell `dev` not to implement the affected behavior until clarified. Other independent, fully specified portions may proceed only if `dev` can isolate them safely.
+
+## Output principles
+
+- Be specific to the supplied feature and source.
+- Preserve original terminology and framing.
+- Avoid generic checklists detached from the actual specification.
+- Do not claim completeness beyond the available source.
+- Keep the output concise enough to use, but detailed enough to derive tests and implementation.
