@@ -53,6 +53,12 @@ Read when writing SQL, designing or changing a schema, handling database securit
 
 Read when choosing a data model or datastore, designing storage, encoding or schema evolution, replicating or partitioning data, picking transaction isolation, reasoning about faults, clocks, consistency or consensus, or building batch and stream pipelines. It routes to one skill per chapter of Martin Kleppmann's *Designing Data-Intensive Applications*.
 
+### DevOps and Cloud Infrastructure
+
+`templates/DevOps/README.md`
+
+Read when building or changing CI/CD pipelines, infrastructure as code, configuration management, deployments, monitoring and logging, or cloud resources. It routes to one folder per infrastructure (`Practices/` for platform-neutral practice, `AWS/`, `Azure/`); read `Practices/` plus only the folder for the platform the project uses.
+
 ### TDD Test Patterns
 
 `templates/TDD/README.md`

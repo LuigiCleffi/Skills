@@ -72,6 +72,13 @@ const skills: Skill[] = [
     directories: ["DataSystems"],
   },
   {
+    value: "devops",
+    name: "DevOps and cloud infrastructure",
+    description: "Delivery practices, IaC, CI/CD, monitoring, and AWS or Azure per platform",
+    files: ["DevOps/README.md"],
+    directories: ["DevOps"],
+  },
+  {
     value: "product",
     name: "Product definition",
     description: "Planning and specification templates",

@@ -2,7 +2,7 @@
 
 Reusable instructions for AI coding agents to help developers build software that is clear, correct, maintainable, and aligned with product requirements.
 
-**Skills Code Kit** provides focused instruction sets for Clean Code, development workflows, code reviews, test-driven development (TDD), databases, data-intensive system design, product definition, and UI/UX decisions. Install the instructions you need directly into an existing project without cloning this repository.
+**Skills Code Kit** provides focused instruction sets for Clean Code, development workflows, code reviews, test-driven development (TDD), databases, data-intensive system design, DevOps and cloud infrastructure, product definition, and UI/UX decisions. Install the instructions you need directly into an existing project without cloning this repository.
 
 ## Why Skills Code Kit?
 
@@ -171,6 +171,28 @@ This group includes planning and specification documents to help define:
 - `actions/uiux.md`
 - `UIUX/` — the `README.md` entry point plus one skill folder per section.
 
+### 9. DevOps and Cloud Infrastructure
+
+**Purpose:** Guide how software gets built, deployed, operated, and observed, on whichever infrastructure the project runs.
+
+`DevOps/README.md` routes to one folder per infrastructure, so the agent reads the platform-neutral practices plus only the platform the project uses:
+
+- `DevOps/Practices/` — one skill per chapter of *DevOps na Prática: Entrega de Software Confiável e Automatizada* (Danilo Sato).
+- `DevOps/AWS/` — one skill per chapter of *AWS Certified DevOps Engineer – Professional: Certification and Beyond* (Adam Book), grouped into `Fundamentals/`, `Delivery/`, `Monitoring/` and `Resilience/`.
+- `DevOps/Azure/` — one skill per chapter of *Azure: Coloque suas plataformas e serviços no cloud* (Casa do Código).
+
+They help AI agents:
+
+- Build continuous integration and deployment pipelines, and deploy safely with blue/green, canary, and rollback.
+- Write infrastructure as code and configuration management, and review plans before applying them.
+- Monitor, log, and alert on what matters, and trace requests across services.
+- Apply least privilege, keep secrets out of code, and protect data in transit and at rest.
+- Choose and operate managed services on AWS or Azure, with notes where the books' services have since changed or been retired.
+
+**Installed files:**
+
+`DevOps/` — the `README.md` entry point, plus `Practices/`, `AWS/` and `Azure/`, each with its own `README.md` and one skill folder per chapter.
+
 ## Workflow order
 
 When the workflow groups are installed together, a feature moves through them in this order, and the generated `AGENTS.md` lists the installed stages:
@@ -180,7 +202,7 @@ When the workflow groups are installed together, a feature moves through them in
 3. Implementation: `actions/dev.md`, in TDD mode with `actions/tdd.md` or in direct mode, as `uiux` recommends.
 4. Review: `actions/review.md`.
 
-Clean Code, database, and data-intensive system skills apply wherever the task needs them.
+Clean Code, database, data-intensive system, and DevOps skills apply wherever the task needs them.
 
 ## How installation works
 
@@ -257,6 +279,7 @@ The repository separates its working instruction documents from the templates di
 │   ├── CleanCode/
 │   ├── DBA/
 │   ├── DataSystems/
+│   ├── DevOps/
 │   ├── ProductDefinition/
 │   ├── TDD/
 │   ├── UIUX/
@@ -273,6 +296,7 @@ The repository separates its working instruction documents from the templates di
 | `templates/DBA/` | Database skills, one folder per engine. `Oracle/` and `PostgreSQL/` each hold one skill per chapter of their book. |
 | `templates/DataSystems/` | Data-intensive system design skills, one per chapter of *Designing Data-Intensive Applications*. |
 | `templates/UIUX/` | UI/UX skill library, one skill per section of the *UI/UX Design Guide*, consulted by `actions/uiux.md`. |
+| `templates/DevOps/` | DevOps skills, one folder per infrastructure: `Practices/`, `AWS/` and `Azure/`, each holding one skill per chapter of its book. |
 | `templates/TDD/` | TDD test pattern library, one skill per chapter of Kent Beck's book. |
 | `CleanCode_Uncle_Bob/` | Working copy of the core Clean Code standards. |
 | `ProductDefinition/` | Planning and specification documents. |
