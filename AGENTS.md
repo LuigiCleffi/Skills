@@ -36,6 +36,12 @@ Follow the applicable workflow for the task. Consult multiple workflows when nec
 
 Read when writing SQL, designing or changing a schema, handling database security, loading or moving data, tuning queries, or administering a database. It routes to one folder per engine (`Oracle/`, `PostgreSQL/`); read only the folder for the engine the project uses.
 
+### Data-Intensive Systems
+
+`templates/DataSystems/README.md`
+
+Read when choosing a data model or datastore, designing storage, encoding or schema evolution, replicating or partitioning data, picking transaction isolation, reasoning about faults, clocks, consistency or consensus, or building batch and stream pipelines. It routes to one skill per chapter of Martin Kleppmann's *Designing Data-Intensive Applications*.
+
 ### TDD Test Patterns
 
 `templates/TDD/README.md`

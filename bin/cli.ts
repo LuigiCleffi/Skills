@@ -65,6 +65,13 @@ const skills: Skill[] = [
     directories: ["DBA"],
   },
   {
+    value: "data-systems",
+    name: "Data-intensive systems",
+    description: "Data models, storage, replication, partitioning, transactions, batch and stream processing",
+    files: ["DataSystems/README.md"],
+    directories: ["DataSystems"],
+  },
+  {
     value: "product",
     name: "Product definition",
     description: "Planning and specification templates",

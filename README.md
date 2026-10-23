@@ -2,7 +2,7 @@
 
 Reusable instructions for AI coding agents to help developers build software that is clear, correct, maintainable, and aligned with product requirements.
 
-**Skills Code Kit** provides focused instruction sets for Clean Code, development workflows, code reviews, test-driven development (TDD), and product definition. Install the instructions you need directly into an existing project without cloning this repository.
+**Skills Code Kit** provides focused instruction sets for Clean Code, development workflows, code reviews, test-driven development (TDD), databases, data-intensive system design, and product definition. Install the instructions you need directly into an existing project without cloning this repository.
 
 ## Why Skills Code Kit?
 
@@ -122,7 +122,25 @@ They help AI agents:
 
 `DBA/` — the `README.md` entry point, plus `Oracle/` and `PostgreSQL/`, each with its own `README.md` and one skill folder per chapter.
 
-### 6. Product Definition
+### 6. Data-Intensive Systems
+
+**Purpose:** Guide the design and change of systems whose hard problems are the amount, complexity, and rate of change of their data rather than CPU.
+
+`DataSystems/README.md` routes to one skill per chapter of Martin Kleppmann's *Designing Data-Intensive Applications*, grouped into `Foundations/`, `DistributedData/` and `DerivedData/`. They help AI agents:
+
+- State reliability, scalability, and maintainability requirements with load parameters and percentiles.
+- Choose between relational, document, and graph models, and between storage engines (LSM-trees, B-trees, column stores).
+- Encode data and evolve schemas with backward and forward compatibility across rolling deploys.
+- Replicate and partition data, and handle replication lag, failover, rebalancing, and hot spots.
+- Pick transaction isolation levels and recognize lost updates, write skew, and phantoms.
+- Reason about network faults, unreliable clocks, process pauses, fencing tokens, linearizability, and consensus.
+- Build batch and stream pipelines with change data capture, event sourcing, idempotence, and exactly-once semantics.
+
+**Installed files:**
+
+`DataSystems/` — the `README.md` entry point plus one skill folder per chapter.
+
+### 7. Product Definition
 
 **Purpose:** Clarify what should be built and how success should be evaluated before implementation begins.
 
@@ -214,6 +232,7 @@ The repository separates its working instruction documents from the templates di
 ├── templates/
 │   ├── CleanCode/
 │   ├── DBA/
+│   ├── DataSystems/
 │   ├── ProductDefinition/
 │   ├── TDD/
 │   └── actions/
@@ -227,6 +246,7 @@ The repository separates its working instruction documents from the templates di
 | `dist/cli.js` | Compiled executable invoked by npm. |
 | `templates/` | Instruction files distributed to users. |
 | `templates/DBA/` | Database skills, one folder per engine. `Oracle/` and `PostgreSQL/` each hold one skill per chapter of their book. |
+| `templates/DataSystems/` | Data-intensive system design skills, one per chapter of *Designing Data-Intensive Applications*. |
 | `templates/TDD/` | TDD test pattern library, one skill per chapter of Kent Beck's book. |
 | `CleanCode_Uncle_Bob/` | Working copy of the core Clean Code standards. |
 | `ProductDefinition/` | Planning and specification documents. |
