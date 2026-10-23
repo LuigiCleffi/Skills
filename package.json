@@ -35,7 +35,5 @@
     "@types/node": "^26.6.5",
     "typescript": "^7.0.2"
   },
-  "bin": {
-    "skills-code-kit": "./dist/cli.js"
-  }
+  "bin": "./dist/cli.js"
 }
