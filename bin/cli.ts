@@ -81,6 +81,28 @@ const skills: Skill[] = [
       "ProductDefinition/specs/spec-checklist.md",
     ],
   },
+  {
+    value: "uiux",
+    name: "UI/UX decisions",
+    description: "Design handoff between specs and dev, plus the UI/UX skill library",
+    files: ["actions/uiux.md", "UIUX/README.md"],
+    directories: ["UIUX"],
+  },
+];
+
+// Delivery stages in the order an agent should follow them.
+const workflowStages: { skill: string; step: string }[] = [
+  {
+    skill: "product",
+    step: "`ProductDefinition/plan.md`, then `ProductDefinition/specs/spec-definition.md`, then `ProductDefinition/specs/spec-checklist.md`",
+  },
+  {
+    skill: "uiux",
+    step: "`actions/uiux.md` — UI/UX decisions, when the change has a user-facing surface",
+  },
+  { skill: "dev", step: "`actions/dev.md` — implementation, in TDD or direct mode" },
+  { skill: "tdd", step: "`actions/tdd.md` — tests first, before each production change" },
+  { skill: "review", step: "`actions/review.md` — incremental and final review" },
 ];
 
 async function exists(filePath: string): Promise<boolean> {
@@ -127,6 +149,23 @@ function generateAgentsMd(selectedSkills: Skill[]): string {
     return `### ${skill.name}\n\n${links}`;
   });
 
+  const selectedValues = selectedSkills.map((skill) => skill.value);
+  const stages = workflowStages
+    .filter((stage) => selectedValues.includes(stage.skill))
+    .map((stage, index) => `${index + 1}. ${stage.step}`);
+
+  const workflowSection =
+    stages.length > 1
+      ? `## Workflow Order
+
+Follow the installed stages in this order, then apply any other installed
+instructions where the task needs them:
+
+${stages.join("\n")}
+
+`
+      : "";
+
   return `# AGENTS.md
 
 ## Purpose
@@ -141,7 +180,7 @@ Use them to guide implementation, code reviews, testing, and planning.
 
 ${sections.join("\n\n")}
 
-## Working Rules
+${workflowSection}## Working Rules
 
 1. Understand the existing codebase and architecture before making changes.
 2. Read the relevant instruction files before starting a task.

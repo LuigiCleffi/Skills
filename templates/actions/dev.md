@@ -1,6 +1,6 @@
 ---
 name: dev
-description: Implement software changes from an approved task or specification. Coordinate spec-checklist, tdd, and review when appropriate. Own production code, verification, and final reporting.
+description: Implement software changes from an approved task or specification. Coordinate spec-checklist, uiux, tdd, and review when appropriate. Own production code, verification, and final reporting.
 ---
 
 # dev — Implementation Orchestrator
@@ -9,11 +9,12 @@ description: Implement software changes from an approved task or specification. 
 
 Implement the requested behavior in the existing repository with the smallest correct change.
 
-`dev` owns production-code changes and coordinates the workflow. Delegate requirement analysis to `spec-checklist` when applicable, test-first preparation to `tdd` when appropriate, and independent code-quality analysis to `review`.
+`dev` owns production-code changes and coordinates the workflow. Delegate requirement analysis to `spec-checklist` when applicable, UI/UX decisions to `uiux` when the change has a user-facing surface, test-first preparation to `tdd` when appropriate, and independent code-quality analysis to `review`.
 
 ## Skill boundaries
 
 - `spec-checklist`: expands a specification into a detailed, feature-specific requirements checklist and identifies ambiguities. It does not implement or test the code.
+- `uiux`: turns the approved requirements into a UI/UX decisions record (`UIUXDecisions.md`): flows, screens and states, components, accessibility, copy, the recommended implementation mode and slice order, and UI acceptance checks. It does not implement or test the code.
 - `tdd`: writes or updates tests before the corresponding production implementation and reports the observed test result. It must not modify production code.
 - `dev`: implements production code, runs validation, decides how to address review findings, and reports completion.
 - `review`: independently analyzes changed code for security, quality, and architecture. It reports findings but does not fix them unless explicitly asked to take on implementation.
@@ -34,6 +35,13 @@ If a specification is provided, named, or required for a substantial feature, in
 
 Use the checklist as a requirements-quality gate, not as a progress tracker for implementation.
 
+If the change adds or alters a user-facing surface and `uiux` is available, invoke it after `spec-checklist` and before implementation, or use an existing `UIUXDecisions.md` for the scope.
+
+- Treat its recorded decisions as requirements for the UI: components, states, interaction rules, copy, accessibility, layout, and internationalization.
+- Do not implement UI behavior whose decisions are still open in the record.
+- If a decision proves infeasible or conflicts with the codebase, stop on that item and return to `uiux` and the user instead of improvising a different design.
+- When the change has no user-facing surface, note "UI/UX: not applicable" and continue.
+
 ### 2. Inspect the repository
 
 Inspect only the context needed for the task:
@@ -48,9 +56,11 @@ Preserve unrelated work. Run baseline checks when practical if existing failures
 
 ### 3. Select the implementation mode
 
+When a `uiux` handoff exists, use its recommended mode and slice order unless the user overrides them.
+
 **TDD mode:** Use when the user requests TDD, explicitly asks to use `tdd`, or test-first development is appropriate for the risk and scope.
 
-1. Invoke `tdd` with the scoped requirements and relevant repository context.
+1. Invoke `tdd` with the scoped requirements, the UI acceptance checks from `UIUXDecisions.md` when present, and relevant repository context.
 2. Inspect the actual changed tests and the reported execution result.
 3. Implement production code only after test-first preparation is complete, or after `tdd` documents a justified exception (for example, meaningful RED is not possible because the behavior already exists).
 4. Do not claim strict TDD unless a meaningful failing test was observed before the corresponding production change.
@@ -101,6 +111,7 @@ Provide a concise report containing:
 
 - **Implemented:** behavior and important files changed.
 - **Requirements:** checklist status or unresolved items, when applicable.
+- **UI/UX:** UX decision IDs implemented and how each was verified, deviations agreed with the user, or "not applicable".
 - **Tests and validation:** commands actually run and observed results; distinguish passed, failed, skipped, and not run.
 - **Review:** material findings fixed, accepted, or still open.
 - **Remaining:** blockers, unverified requirements, known failures, and limitations.

@@ -27,7 +27,7 @@ The skills under `TDD/MoneyExample/` and `TDD/XUnitExample/` show the same moves
 
 ### 1. Understand the scoped behavior
 
-Use the user's request and approved requirements as the source of truth. Preserve requirement IDs where available. If a `spec-checklist` exists, use its resolved checklist as the coverage guide; do not treat unresolved product decisions as settled.
+Use the user's request and approved requirements as the source of truth. Preserve requirement IDs where available. If a `spec-checklist` exists, use its resolved checklist as the coverage guide; do not treat unresolved product decisions as settled. If a `UIUXDecisions.md` exists, add its UI acceptance checks (section 11) to the coverage guide at the test level it names, in its slice order; do not test UI decisions it still lists as open.
 
 Inspect applicable project instructions, relevant production interfaces, existing tests and fixtures, test framework, and the narrowest useful test command.
 

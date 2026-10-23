@@ -541,6 +541,7 @@ When this skill is invoked:
 5. Generate and validate the specification.
 6. Save the resulting `SpecifyRequirements.md` in the location requested by the user or appropriate to the current project context.
 7. Summarize the specification and identify any remaining decisions.
+8. Name the next stage: `spec-checklist`, then `uiux` when the feature has a user-facing surface, then `dev`.
 
 Do not implement the feature, modify production code, or generate an implementation plan unless the user explicitly requests those additional activities.
 

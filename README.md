@@ -2,7 +2,7 @@
 
 Reusable instructions for AI coding agents to help developers build software that is clear, correct, maintainable, and aligned with product requirements.
 
-**Skills Code Kit** provides focused instruction sets for Clean Code, development workflows, code reviews, test-driven development (TDD), databases, data-intensive system design, and product definition. Install the instructions you need directly into an existing project without cloning this repository.
+**Skills Code Kit** provides focused instruction sets for Clean Code, development workflows, code reviews, test-driven development (TDD), databases, data-intensive system design, product definition, and UI/UX decisions. Install the instructions you need directly into an existing project without cloning this repository.
 
 ## Why Skills Code Kit?
 
@@ -158,6 +158,30 @@ This group includes planning and specification documents to help define:
 - `ProductDefinition/specs/spec-definition.md`
 - `ProductDefinition/specs/spec-checklist.md`
 
+### 8. UI/UX Decisions
+
+**Purpose:** Make the UI/UX decisions for an approved specification and tell the developer which approach to follow, so the interface is not improvised during implementation.
+
+`actions/uiux.md` sits between the specification and implementation. It reads the approved spec and checklist, inspects the existing design system, and writes `UIUXDecisions.md`: flows, screens and states, components, interaction rules, copy, accessibility target, layout and internationalization, the recommended TDD or direct mode and slice order for `dev`, and the UI acceptance checks `tdd` turns into tests. Product questions go back to the specification instead of being decided by design.
+
+`UIUX/README.md` routes to one skill per section of the *UI/UX Design Guide* (Joel Parker Henderson, ed.), which `uiux` consults: foundations, design thinking, task analysis, ideation, product design, modeling diagrams, design systems, affordance and accessibility, implementation, internationalization, AI, testing, principles, and soft skills.
+
+**Installed files:**
+
+- `actions/uiux.md`
+- `UIUX/` — the `README.md` entry point plus one skill folder per section.
+
+## Workflow order
+
+When the workflow groups are installed together, a feature moves through them in this order, and the generated `AGENTS.md` lists the installed stages:
+
+1. Product definition: `plan.md`, then `spec-definition.md`, then `spec-checklist.md`.
+2. UI/UX decisions: `actions/uiux.md`, when the change has a user-facing surface.
+3. Implementation: `actions/dev.md`, in TDD mode with `actions/tdd.md` or in direct mode, as `uiux` recommends.
+4. Review: `actions/review.md`.
+
+Clean Code, database, and data-intensive system skills apply wherever the task needs them.
+
 ## How installation works
 
 1. Run `npx skills-code-kit` in your project.
@@ -235,6 +259,7 @@ The repository separates its working instruction documents from the templates di
 │   ├── DataSystems/
 │   ├── ProductDefinition/
 │   ├── TDD/
+│   ├── UIUX/
 │   └── actions/
 ├── package.json
 └── tsconfig.json
@@ -247,10 +272,11 @@ The repository separates its working instruction documents from the templates di
 | `templates/` | Instruction files distributed to users. |
 | `templates/DBA/` | Database skills, one folder per engine. `Oracle/` and `PostgreSQL/` each hold one skill per chapter of their book. |
 | `templates/DataSystems/` | Data-intensive system design skills, one per chapter of *Designing Data-Intensive Applications*. |
+| `templates/UIUX/` | UI/UX skill library, one skill per section of the *UI/UX Design Guide*, consulted by `actions/uiux.md`. |
 | `templates/TDD/` | TDD test pattern library, one skill per chapter of Kent Beck's book. |
 | `CleanCode_Uncle_Bob/` | Working copy of the core Clean Code standards. |
 | `ProductDefinition/` | Planning and specification documents. |
-| `actions/` | Development, review, and TDD workflows. |
+| `actions/` | Development, review, TDD, and UI/UX workflows. |
 | `AGENTS.md` | Repository-level entry point for AI coding instructions. |
 
 Keep the distributed templates synchronized with their corresponding working copies whenever you update an instruction.

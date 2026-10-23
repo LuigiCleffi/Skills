@@ -27,8 +27,19 @@ Consult the relevant files when planning features, defining requirements, changi
 - `actions/dev.md` — development and implementation workflow.
 - `actions/review.md` — code review workflow.
 - `actions/tdd.md` — test-driven development workflow.
+- `actions/uiux.md` — UI/UX decisions and design handoff from specs to dev and tdd.
 
 Follow the applicable workflow for the task. Consult multiple workflows when necessary.
+
+### Workflow Order
+
+For a feature, follow the stages in this order: `ProductDefinition/plan.md`, then `spec-definition.md`, then `spec-checklist.md`, then `actions/uiux.md` when the change has a user-facing surface, then `actions/dev.md` (in TDD mode with `actions/tdd.md`), then `actions/review.md`. Apply the other instruction sources where the task needs them.
+
+### UI/UX Design
+
+`templates/UIUX/README.md`
+
+Read when making UI/UX decisions for an approved specification: users and tasks, flows, screens and states, design system reuse, accessibility, copy, responsive layout, internationalization, AI-assisted features, and UI testing. It routes to one skill per section of the *UI/UX Design Guide*, consulted by `actions/uiux.md`.
 
 ### Databases (DBA): Oracle and PostgreSQL
 
