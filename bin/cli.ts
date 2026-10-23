@@ -5,6 +5,7 @@ import {
   access,
   copyFile,
   mkdir,
+  readdir,
   writeFile,
 } from "node:fs/promises";
 import path from "node:path";
@@ -14,7 +15,10 @@ type Skill = {
   value: string;
   name: string;
   description: string;
+  // Entry points listed in the generated AGENTS.md.
   files: string[];
+  // Template directories installed in full, alongside the entry points.
+  directories?: string[];
 };
 
 const currentFile = fileURLToPath(import.meta.url);
@@ -31,7 +35,8 @@ const skills: Skill[] = [
     value: "clean-code",
     name: "Clean Code standards",
     description: "Core principles, elegance, and code quality",
-    files: ["CleanCode_Uncle_Bob/README.md"],
+    files: ["CleanCode/README.md"],
+    directories: ["CleanCode"],
   },
   {
     value: "dev",
@@ -70,6 +75,32 @@ async function exists(filePath: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+async function listTemplateFiles(directory: string): Promise<string[]> {
+  const entries = await readdir(path.join(templateDirectory, directory), {
+    withFileTypes: true,
+  });
+
+  const nestedFiles = await Promise.all(
+    entries.map((entry) => {
+      const relativePath = path.posix.join(directory, entry.name);
+
+      return entry.isDirectory()
+        ? listTemplateFiles(relativePath)
+        : [relativePath];
+    }),
+  );
+
+  return nestedFiles.flat().sort();
+}
+
+async function listSkillFiles(skill: Skill): Promise<string[]> {
+  const directoryFiles = await Promise.all(
+    (skill.directories ?? []).map(listTemplateFiles),
+  );
+
+  return [...skill.files, ...directoryFiles.flat()];
 }
 
 function generateAgentsMd(selectedSkills: Skill[]): string {
@@ -266,12 +297,8 @@ async function main(): Promise<void> {
 
   // AGENTS.md is always generated to provide an entry point to the
   // instruction files selected by the developer.
-  const filesToInstall = [
-    ...new Set([
-      ...selectedSkills.flatMap((skill) => skill.files),
-      "AGENTS.md",
-    ]),
-  ];
+  const skillFiles = await Promise.all(selectedSkills.map(listSkillFiles));
+  const filesToInstall = [...new Set([...skillFiles.flat(), "AGENTS.md"])];
 
   console.log("\nThe following files will be installed:\n");
 

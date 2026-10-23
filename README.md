@@ -43,9 +43,9 @@ This instruction set guides AI agents to:
 - Consider correctness, security, performance, and resource management.
 - Avoid introducing messy code that makes future changes harder.
 
-**Installed file:**
+**Installed files:**
 
-`CleanCode_Uncle_Bob/README.md`
+`CleanCode/` — the `README.md` entry point plus every Clean Code skill folder it routes to.
 
 ### 2. Development Workflow
 
@@ -187,7 +187,7 @@ The repository separates its working instruction documents from the templates di
 ├── dist/
 │   └── cli.js
 ├── templates/
-│   ├── CleanCode_Uncle_Bob/
+│   ├── CleanCode/
 │   ├── ProductDefinition/
 │   └── actions/
 ├── package.json

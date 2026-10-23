@@ -1,15 +1,31 @@
 ## AI Skills
 
-Before writing, reviewing, refactoring, or extending code, read:
+Before writing, reviewing, refactoring, or extending code, find the skills
+that apply to the task in the table below and read them.
 
-`./MeaningfulNames/ROOT.md`
+Do not read every skill file by default. Read only the skills whose
+"Use when" matches the task, and follow their references to other skills
+only when needed.
 
-This file is the entry point for the Meaningful Names skill collection.
-Follow its instructions to determine when and how to apply the relevant
-guidelines.
-
-Do not read every skill file by default. Start with `ROOT.md` and consult
-additional skill files only when its instructions require them.
+| Skill | Use when |
+|---|---|
+| `./Mindset/cleanCodeMindset.md` | Weighing speed against quality, technical debt, a big rewrite, or the Boy Scout Rule. |
+| `./MeaningfulNames/ROOT.md` | Naming or renaming anything, or reviewing names. Entry point for the naming skills. |
+| `./Functions/functions.md` | Writing a function, or splitting, shortening, or simplifying one (nesting, flag arguments, long parameter lists, side effects). |
+| `./Comments/comments.md` | Adding, auditing, or removing comments and docstrings. |
+| `./Formatting/formatting.md` | Ordering code in a file, blank lines, line and file length, or a team style guide. |
+| `./ObjectsAndDataStructures/objectsAndDataStructures.md` | Getters and setters, classes vs. plain records/DTOs, type switches vs. polymorphism, the Law of Demeter. |
+| `./ErrorHandling/errorHandling.md` | Code that can fail: exceptions, error types, result types, null, error messages. |
+| `./Boundaries/boundaries.md` | Adopting or wrapping a third-party library, SDK, or API, learning tests, or coding against an API that doesn't exist yet. |
+| `./UnitTests/unitTests.md` | Writing or reviewing unit tests, test structure, F.I.R.S.T., flaky or slow tests. |
+| `./Classes/classes.md` | Designing a class or module, its size and cohesion, SRP, Open–Closed, Dependency Inversion. |
+| `./Systems/systems.md` | Wiring and bootstrapping, dependency injection, factories, keeping frameworks out of domain code, cross-cutting concerns. |
+| `./SimpleDesign/simpleDesign.md` | Judging whether a design is good enough, over-engineering, YAGNI, or breaking ties between other guidelines. |
+| `./Concurrency/concurrency.md` | Threads, async tasks, locks, shared mutable state, races, deadlocks, or shutdown of workers. |
+| `./SuccessiveRefinement/successiveRefinement.md` | Working code that has grown tangled as features were added, or deciding when to stop and clean. |
+| `./PolishingGoodCode/polishingGoodCode.md` | A final cleanup pass on code that is already good and tested. |
+| `./LegacyRefactoring/legacyRefactoring.md` | Refactoring inherited or legacy code with weak or unknown test coverage. |
+| `./SmellsAndHeuristics/smellsReview.md` | Reviewing a whole piece of code for smells, or citing a heuristic code such as G5 or N7. |
 
 # Context for AI: Clean Code as a Working Standard
 
