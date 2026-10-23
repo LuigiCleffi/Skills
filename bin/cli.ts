@@ -59,8 +59,8 @@ const skills: Skill[] = [
   },
   {
     value: "dba",
-    name: "Oracle database (DBA)",
-    description: "SQL, PL/SQL, schema design, security, tuning, and administration",
+    name: "Databases (DBA): Oracle and PostgreSQL",
+    description: "SQL, schema design, security, tuning, and administration per engine",
     files: ["DBA/README.md"],
     directories: ["DBA"],
   },

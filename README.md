@@ -100,22 +100,27 @@ It also installs a test pattern library: one skill per chapter of Kent Beck's *T
 - `actions/tdd.md`
 - `TDD/` — the `README.md` entry point plus one skill folder per chapter, grouped into `MoneyExample/`, `XUnitExample/` and `Patterns/`.
 
-### 5. Oracle Database (DBA)
+### 5. Databases (DBA): Oracle and PostgreSQL
 
 **Purpose:** Guide work on Oracle databases and the applications built on them, from SQL and schema design to security, data movement, tuning, and administration.
 
-`DBA/README.md` routes to one folder per database engine, so the agent only reads skills for the engine the project uses. The Oracle skills live in `DBA/Oracle/`, one per chapter of *Oracle Database 11g: The Complete Reference*. They help AI agents:
+`DBA/README.md` routes to one folder per database engine, so the agent only reads skills for the engine the project uses:
 
-- Write correct, efficient SQL and PL/SQL.
+- `DBA/Oracle/` — one skill per chapter of *Oracle Database 11g: The Complete Reference*.
+- `DBA/PostgreSQL/` — one skill per chapter of *PostgreSQL: Up and Running*, 3rd edition.
+
+They help AI agents:
+
+- Write correct, efficient SQL, PL/SQL, and PL/pgSQL.
 - Design tables, indexes, partitions, views, and materialized views.
 - Apply security: privileges, roles, virtual private databases, and encryption.
-- Move data with SQL*Loader, Data Pump, external tables, and database links.
+- Move data with SQL*Loader, Data Pump, external tables, and database links on Oracle, or pg_dump, `\copy`, replication, and foreign data wrappers on PostgreSQL.
 - Recover from mistakes with flashback, and treat destructive operations with care.
 - Diagnose and tune queries using the data dictionary, execution plans, and caches.
 
 **Installed files:**
 
-`DBA/` — the `README.md` entry point, plus `Oracle/` with its own `README.md` and one skill folder per chapter, grouped by the book's parts.
+`DBA/` — the `README.md` entry point, plus `Oracle/` and `PostgreSQL/`, each with its own `README.md` and one skill folder per chapter.
 
 ### 6. Product Definition
 
@@ -221,7 +226,7 @@ The repository separates its working instruction documents from the templates di
 | `bin/cli.ts` | TypeScript source code for the installer. |
 | `dist/cli.js` | Compiled executable invoked by npm. |
 | `templates/` | Instruction files distributed to users. |
-| `templates/DBA/` | Database skills, one folder per engine. `Oracle/` holds one skill per chapter of *Oracle Database 11g: The Complete Reference*. |
+| `templates/DBA/` | Database skills, one folder per engine. `Oracle/` and `PostgreSQL/` each hold one skill per chapter of their book. |
 | `templates/TDD/` | TDD test pattern library, one skill per chapter of Kent Beck's book. |
 | `CleanCode_Uncle_Bob/` | Working copy of the core Clean Code standards. |
 | `ProductDefinition/` | Planning and specification documents. |
