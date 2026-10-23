@@ -30,6 +30,12 @@ Consult the relevant files when planning features, defining requirements, changi
 
 Follow the applicable workflow for the task. Consult multiple workflows when necessary.
 
+### Oracle Database (DBA)
+
+`templates/DBA/README.md`
+
+Read when writing SQL, designing or changing a schema, handling database security, loading or moving data, tuning queries, or administering a database. It routes to one folder per engine (`Oracle/`); read only the folder for the engine the project uses.
+
 ### TDD Test Patterns
 
 `templates/TDD/README.md`

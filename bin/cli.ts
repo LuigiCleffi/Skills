@@ -58,6 +58,13 @@ const skills: Skill[] = [
     directories: ["TDD"],
   },
   {
+    value: "dba",
+    name: "Oracle database (DBA)",
+    description: "SQL, PL/SQL, schema design, security, tuning, and administration",
+    files: ["DBA/README.md"],
+    directories: ["DBA"],
+  },
+  {
     value: "product",
     name: "Product definition",
     description: "Planning and specification templates",
