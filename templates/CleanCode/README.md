@@ -17,7 +17,7 @@ only when needed.
 | `./ObjectsAndDataStructures/objectsAndDataStructures.md` | Getters and setters, classes vs. plain records/DTOs, type switches vs. polymorphism, the Law of Demeter. |
 | `./ErrorHandling/errorHandling.md` | Code that can fail: exceptions, error types, result types, null, error messages. |
 | `./Boundaries/boundaries.md` | Adopting or wrapping a third-party library, SDK, or API, learning tests, or coding against an API that doesn't exist yet. |
-| `./UnitTests/unitTests.md` | Writing or reviewing unit tests, test structure, F.I.R.S.T., flaky or slow tests. |
+| `./UnitTests/unitTests.md` | Writing or reviewing unit tests, test structure, F.I.R.S.T., flaky or slow tests. For the test-first cycle and test patterns, see `../TDD/README.md` when installed. |
 | `./Classes/classes.md` | Designing a class or module, its size and cohesion, SRP, Open–Closed, Dependency Inversion. |
 | `./Systems/systems.md` | Wiring and bootstrapping, dependency injection, factories, keeping frameworks out of domain code, cross-cutting concerns. |
 | `./SimpleDesign/simpleDesign.md` | Judging whether a design is good enough, over-engineering, YAGNI, or breaking ties between other guidelines. |

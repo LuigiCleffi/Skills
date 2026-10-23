@@ -53,8 +53,9 @@ const skills: Skill[] = [
   {
     value: "tdd",
     name: "Test-driven development",
-    description: "Testing workflow and TDD principles",
-    files: ["actions/tdd.md"],
+    description: "Testing workflow and the TDD test pattern library",
+    files: ["actions/tdd.md", "TDD/README.md"],
+    directories: ["TDD"],
   },
   {
     value: "product",

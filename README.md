@@ -93,9 +93,12 @@ The TDD instructions help AI agents:
 - Refactor while preserving correctness.
 - Verify that relevant tests pass.
 
-**Installed file:**
+It also installs a test pattern library: one skill per chapter of Kent Beck's *Test-Driven Development: By Example*, routed from `TDD/README.md`. The pattern skills cover choosing the next test (Test List, Starter Test, One Step Test), writing it (Assert First, Evident Data, Mock Object, Self Shunt, Log String), getting to green (Fake It, Triangulate, Obvious Implementation), xUnit mechanics, the design patterns and refactorings TDD relies on, and step size and test quality. The worked money and xUnit examples show those moves in a real session.
 
-`actions/tdd.md`
+**Installed files:**
+
+- `actions/tdd.md`
+- `TDD/` — the `README.md` entry point plus one skill folder per chapter, grouped into `MoneyExample/`, `XUnitExample/` and `Patterns/`.
 
 ### 5. Product Definition
 
@@ -189,6 +192,7 @@ The repository separates its working instruction documents from the templates di
 ├── templates/
 │   ├── CleanCode/
 │   ├── ProductDefinition/
+│   ├── TDD/
 │   └── actions/
 ├── package.json
 └── tsconfig.json
@@ -199,6 +203,7 @@ The repository separates its working instruction documents from the templates di
 | `bin/cli.ts` | TypeScript source code for the installer. |
 | `dist/cli.js` | Compiled executable invoked by npm. |
 | `templates/` | Instruction files distributed to users. |
+| `templates/TDD/` | TDD test pattern library, one skill per chapter of Kent Beck's book. |
 | `CleanCode_Uncle_Bob/` | Working copy of the core Clean Code standards. |
 | `ProductDefinition/` | Planning and specification documents. |
 | `actions/` | Development, review, and TDD workflows. |

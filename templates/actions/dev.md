@@ -54,6 +54,9 @@ Preserve unrelated work. Run baseline checks when practical if existing failures
 2. Inspect the actual changed tests and the reported execution result.
 3. Implement production code only after test-first preparation is complete, or after `tdd` documents a justified exception (for example, meaningful RED is not possible because the behavior already exists).
 4. Do not claim strict TDD unless a meaningful failing test was observed before the corresponding production change.
+5. Work red, green, refactor for each test: make the failing test pass with the smallest change, run the tests, then remove the duplication the change introduced (including duplication between test and code) while everything stays green. Only then ask `tdd` for the next test from the test list.
+
+When `TDD/README.md` is installed, use `TDD/Patterns/GreenBarPatterns/greenBarPatterns.md` to choose how to get to green (Fake It, Triangulate, Obvious Implementation, One to Many), `TDD/Patterns/Refactoring/refactoring.md` for the refactoring step, and `TDD/Patterns/DesignPatterns/designPatterns.md` when a design pattern emerges from removing duplication.
 
 **Direct mode:** Use when the user asks for direct implementation or TDD is unnecessary for a small/low-risk change. Inspect existing tests, implement directly, and add or update focused tests when appropriate. Do not describe this as strict TDD.
 
@@ -65,7 +68,7 @@ If `tdd` is unavailable, explain the limitation and ask whether to proceed direc
 - Reuse existing abstractions where appropriate.
 - Preserve compatibility and existing behavior unless the task requires a change.
 - Implement specified validation, error handling, permissions, and integration behavior.
-- Avoid unrelated refactors, speculative features, unnecessary dependencies, and hardcoded behavior designed only to satisfy a test.
+- Avoid unrelated refactors, speculative features, unnecessary dependencies, and hardcoded behavior designed only to satisfy a test. In TDD mode a faked constant is an acceptable intermediate step to reach green, but it must be generalized away during the refactor step before the behavior is reported as done.
 - Do not silently expand scope.
 
 ### 5. Verify incrementally

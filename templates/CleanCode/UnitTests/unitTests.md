@@ -13,7 +13,7 @@ Test code is as important as production code. Tests keep production code flexibl
 2. Don't write more of a test than is enough to fail. A test that doesn't compile counts as failing.
 3. Don't write more production code than is enough to pass the currently failing test.
 
-These keep you in a very short cycle, measured in seconds to minutes, so tests and code grow together and the tests cover nearly everything. When the user practices TDD, follow the cycle: red, green, refactor. When `actions/tdd.md` is installed, it defines the test-first workflow; this skill defines what a clean test looks like. Otherwise, still write the tests alongside the code, not as an afterthought.
+These keep you in a very short cycle, measured in seconds to minutes, so tests and code grow together and the tests cover nearly everything. When the user practices TDD, follow the cycle: red, green, refactor. When `actions/tdd.md` is installed, it defines the test-first workflow; this skill defines what a clean test looks like. When `TDD/README.md` is installed, it routes to the TDD pattern skills: which test to write next, how to get to green, and how to refactor afterwards. Otherwise, still write the tests alongside the code, not as an afterthought.
 
 ## Keep tests clean
 

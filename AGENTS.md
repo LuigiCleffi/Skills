@@ -30,6 +30,12 @@ Consult the relevant files when planning features, defining requirements, changi
 
 Follow the applicable workflow for the task. Consult multiple workflows when necessary.
 
+### TDD Test Patterns
+
+`templates/TDD/README.md`
+
+Read when writing tests first, choosing the next test, getting a failing test to pass, or refactoring under green. It routes to one skill per chapter of Kent Beck's *Test-Driven Development: By Example*.
+
 ## Working Rules
 
 1. **Understand before changing.** Inspect the relevant code, architecture, dependencies, existing conventions, and applicable instructions.
