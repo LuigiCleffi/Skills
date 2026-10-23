@@ -1,3 +1,16 @@
+## AI Skills
+
+Before writing, reviewing, refactoring, or extending code, read:
+
+`./MeaningfulNames/ROOT.md`
+
+This file is the entry point for the Meaningful Names skill collection.
+Follow its instructions to determine when and how to apply the relevant
+guidelines.
+
+Do not read every skill file by default. Start with `ROOT.md` and consult
+additional skill files only when its instructions require them.
+
 # Context for AI: Clean Code as a Working Standard
 
 ## 1. Purpose of This Document
