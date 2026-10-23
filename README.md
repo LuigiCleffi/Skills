@@ -210,21 +210,20 @@ Keep the distributed templates synchronized with their corresponding working cop
 
 When changing the instructions distributed through npm, update the corresponding files under `templates/` as well.
 
-Build and inspect the package before publishing:
+Publish with the release script. It checks your npm login, bumps the version when the current one is already on npm, installs dependencies, builds, checks the package contents, and publishes:
 
 ```bash
-npm run build
-npm pack --dry-run
+npm run release
 ```
 
-To publish an update, increment the package version before publishing:
+Pass `minor` or `major` instead of the default patch bump, or `--dry-run` to run every check without changing the version or publishing:
 
 ```bash
-npm version patch
-npm publish
+npm run release -- minor
+npm run release -- --dry-run
 ```
 
-Use a patch version for fixes, a minor version for backward-compatible features, and a major version for breaking changes.
+Use a patch version for fixes, a minor version for backward-compatible features, and a major version for breaking changes. The script does not commit; commit and tag the version change after publishing.
 
 ## Guiding principle
 
