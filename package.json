@@ -1,0 +1,38 @@
+{
+  "name": "Skills-Code-Kit",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/cli.js",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LuigiCleffi/Skills.git"
+  },
+  "files": [
+    "dist/",
+    "templates/",
+    "README.md"
+  ],
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bugs": {
+    "url": "https://github.com/LuigiCleffi/Skills/issues"
+  },
+  "homepage": "https://github.com/LuigiCleffi/Skills#readme",
+  "dependencies": {
+    "@inquirer/prompts": "^8.7.4"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.2"
+  }
+}
