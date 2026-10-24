@@ -2,7 +2,7 @@
 
 Reusable instructions for AI coding agents to help developers build software that is clear, correct, maintainable, and aligned with product requirements.
 
-**Skills Code Kit** provides focused instruction sets for Clean Code, development workflows, code reviews, test-driven development (TDD), databases, data-intensive system design, DevOps and cloud infrastructure, product definition, and UI/UX decisions. Install the instructions you need directly into an existing project without cloning this repository.
+**Skills Code Kit** provides focused instruction sets for Clean Code, development workflows, code reviews, test-driven development (TDD), behavior-driven development (BDD), databases, data-intensive system design, DevOps and cloud infrastructure, product definition, and UI/UX decisions. Install the instructions you need directly into an existing project without cloning this repository.
 
 ## Why Skills Code Kit?
 
@@ -193,14 +193,28 @@ They help AI agents:
 
 `DevOps/` — the `README.md` entry point, plus `Practices/`, `AWS/` and `Azure/`, each with its own `README.md` and one skill folder per chapter.
 
+### 10. Behavior-Driven Development (BDD)
+
+**Purpose:** Make the agreed behavior concrete with examples before code exists, and keep those examples running as acceptance tests.
+
+`actions/bdd.md` sits between the specification and implementation. It discovers the rules and key examples behind each user story, writes them as declarative Gherkin scenarios in the domain's language, confirms them with the user, and automates them as failing acceptance tests. `dev` then makes one scenario pass at a time, with `tdd` driving the units inside. It owns feature files and step definitions, never production code.
+
+`BDD/README.md` routes to one skill per chapter of John Ferguson Smart's *BDD in Action*, grouped into `FirstSteps/`, `DefiningRequirements/`, `CodingTheBddWay/` and `TakingBddFurther/`: feature injection, example discovery, Gherkin, step definitions, UI and API automation, the link to unit testing, living documentation, and BDD in CI.
+
+**Installed files:**
+
+- `actions/bdd.md`
+- `BDD/` — the `README.md` entry point plus one skill folder per chapter.
+
 ## Workflow order
 
 When the workflow groups are installed together, a feature moves through them in this order, and the generated `AGENTS.md` lists the installed stages:
 
 1. Product definition: `plan.md`, then `spec-definition.md`, then `spec-checklist.md`.
-2. UI/UX decisions: `actions/uiux.md`, when the change has a user-facing surface.
-3. Implementation: `actions/dev.md`, in TDD mode with `actions/tdd.md` or in direct mode, as `uiux` recommends.
-4. Review: `actions/review.md`.
+2. Examples and scenarios: `actions/bdd.md`, when the change has business behavior to illustrate.
+3. UI/UX decisions: `actions/uiux.md`, when the change has a user-facing surface.
+4. Implementation: `actions/dev.md`, with BDD scenarios as the outer loop and `actions/tdd.md` as the inner loop, or in direct mode, as `uiux` recommends.
+5. Review: `actions/review.md`.
 
 Clean Code, database, data-intensive system, and DevOps skills apply wherever the task needs them.
 
@@ -276,6 +290,7 @@ The repository separates its working instruction documents from the templates di
 ├── dist/
 │   └── cli.js
 ├── templates/
+│   ├── BDD/
 │   ├── CleanCode/
 │   ├── DBA/
 │   ├── DataSystems/
@@ -297,10 +312,11 @@ The repository separates its working instruction documents from the templates di
 | `templates/DataSystems/` | Data-intensive system design skills, one per chapter of *Designing Data-Intensive Applications*. |
 | `templates/UIUX/` | UI/UX skill library, one skill per section of the *UI/UX Design Guide*, consulted by `actions/uiux.md`. |
 | `templates/DevOps/` | DevOps skills, one folder per infrastructure: `Practices/`, `AWS/` and `Azure/`, each holding one skill per chapter of its book. |
+| `templates/BDD/` | BDD pattern library, one skill per chapter of *BDD in Action*, consulted by `actions/bdd.md`. |
 | `templates/TDD/` | TDD test pattern library, one skill per chapter of Kent Beck's book. |
 | `CleanCode_Uncle_Bob/` | Working copy of the core Clean Code standards. |
 | `ProductDefinition/` | Planning and specification documents. |
-| `actions/` | Development, review, TDD, and UI/UX workflows. |
+| `actions/` | Development, review, TDD, BDD, and UI/UX workflows. |
 | `AGENTS.md` | Repository-level entry point for AI coding instructions. |
 
 Keep the distributed templates synchronized with their corresponding working copies whenever you update an instruction.

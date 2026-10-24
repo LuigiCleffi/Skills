@@ -14,9 +14,9 @@ Decide how the specified behavior is presented to and operated by its users, and
 ## Position in the workflow
 
 ```text
-plan → spec-definition → spec-checklist → uiux → dev ─┬─ TDD mode: tdd ⇄ dev
-                                                      └─ direct mode
-                                                  → review → other skills
+plan → spec-definition → spec-checklist → bdd → uiux → dev ─┬─ TDD mode: tdd ⇄ dev
+                                                            └─ direct mode
+                                                        → review → other skills
 ```
 
 Run `uiux` when the scoped work adds or changes anything a person sees or operates: screens, pages, components, forms, navigation, notifications, emails, copy, error messages, or CLI output meant for people.
@@ -38,6 +38,7 @@ Do not copy another skill's full workflow into this skill. Invoke it and use its
 - The approved specification (`SpecifyRequirements.md`) and its requirement and user-story IDs.
 - The `spec-checklist` result. Only items marked **Ready** may be designed; items marked **Needs clarification** that affect the UI block the affected decisions.
 - The product plan, for goals, target users, platforms, and success criteria.
+- The `bdd` feature files and scenario IDs, when they exist. They already state the business rules and expected outcomes; reference them instead of restating them, and add only UI-specific decisions and checks.
 - The existing interface in the repository: design system or component library, design tokens, style guide, routes and layouts, i18n setup, accessibility tooling, and the end-to-end and component test frameworks and their selector conventions.
 - External guidelines the project already follows (brand guide, Apple HIG, Material Design, GOV.UK, an internal pattern library).
 
@@ -197,7 +198,7 @@ Use a compact handoff. Point to the record instead of copying it:
 - Implements the decisions as recorded. When a decision proves infeasible or conflicts with the codebase, `dev` stops on that item and returns to `uiux` and the user instead of improvising.
 - Reports which UX IDs were implemented and how each was verified.
 
-`tdd` then derives its test list from section 11, in slice order, alongside the functional requirements.
+`tdd` then derives its test list from section 11, in slice order, alongside the functional requirements. When `bdd` scenarios exist, section 11 holds only UI-specific checks (states, focus, accessibility, layout) and cites the scenario IDs whose outcome it presents.
 
 ## Guardrails
 

@@ -58,6 +58,7 @@ Do not report a generic vulnerability category without showing how the changed c
 ### 2. Correctness and code quality
 
 Assess:
+- BDD scenarios, when present: declarative, in domain language, traced to requirement IDs, thin step definitions, and automated at the lowest layer that proves the behavior.
 - Behavior against the requirements and existing contracts, and against `UIUXDecisions.md` when the change has a user-facing surface: specified states, interaction rules, copy, and accessibility requirements.
 - Error handling, boundary conditions, and state consistency.
 - Duplication, unnecessary complexity, unclear naming, and inappropriate abstractions.

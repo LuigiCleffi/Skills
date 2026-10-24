@@ -27,13 +27,14 @@ Consult the relevant files when planning features, defining requirements, changi
 - `actions/dev.md` — development and implementation workflow.
 - `actions/review.md` — code review workflow.
 - `actions/tdd.md` — test-driven development workflow.
+- `actions/bdd.md` — examples and executable scenarios from specs, the outer loop for dev and tdd.
 - `actions/uiux.md` — UI/UX decisions and design handoff from specs to dev and tdd.
 
 Follow the applicable workflow for the task. Consult multiple workflows when necessary.
 
 ### Workflow Order
 
-For a feature, follow the stages in this order: `ProductDefinition/plan.md`, then `spec-definition.md`, then `spec-checklist.md`, then `actions/uiux.md` when the change has a user-facing surface, then `actions/dev.md` (in TDD mode with `actions/tdd.md`), then `actions/review.md`. Apply the other instruction sources where the task needs them.
+For a feature, follow the stages in this order: `ProductDefinition/plan.md`, then `spec-definition.md`, then `spec-checklist.md`, then `actions/bdd.md` when the change has business behavior to illustrate, then `actions/uiux.md` when the change has a user-facing surface, then `actions/dev.md` (scenarios as the outer loop, `actions/tdd.md` as the inner loop), then `actions/review.md`. Apply the other instruction sources where the task needs them.
 
 ### UI/UX Design
 
@@ -58,6 +59,12 @@ Read when choosing a data model or datastore, designing storage, encoding or sch
 `templates/DevOps/README.md`
 
 Read when building or changing CI/CD pipelines, infrastructure as code, configuration management, deployments, monitoring and logging, or cloud resources. It routes to one folder per infrastructure (`Practices/` for platform-neutral practice, `AWS/`, `Azure/`); read `Practices/` plus only the folder for the platform the project uses.
+
+### BDD Patterns
+
+`templates/BDD/README.md`
+
+Read when discovering examples for a feature, writing Gherkin scenarios, automating acceptance criteria through the UI or APIs, connecting scenarios to unit tests, or publishing living documentation. It routes to one skill per chapter of John Ferguson Smart's *BDD in Action*, consulted by `actions/bdd.md`.
 
 ### TDD Test Patterns
 

@@ -58,6 +58,13 @@ const skills: Skill[] = [
     directories: ["TDD"],
   },
   {
+    value: "bdd",
+    name: "Behavior-driven development",
+    description: "Examples, executable Gherkin scenarios, and the BDD pattern library",
+    files: ["actions/bdd.md", "BDD/README.md"],
+    directories: ["BDD"],
+  },
+  {
     value: "dba",
     name: "Databases (DBA): Oracle and PostgreSQL",
     description: "SQL, schema design, security, tuning, and administration per engine",
@@ -102,6 +109,10 @@ const workflowStages: { skill: string; step: string }[] = [
   {
     skill: "product",
     step: "`ProductDefinition/plan.md`, then `ProductDefinition/specs/spec-definition.md`, then `ProductDefinition/specs/spec-checklist.md`",
+  },
+  {
+    skill: "bdd",
+    step: "`actions/bdd.md` — concrete examples and executable scenarios for the agreed behavior",
   },
   {
     skill: "uiux",

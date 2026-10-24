@@ -81,7 +81,7 @@ End with:
 
 If a material requirement remains unresolved, tell `dev` not to implement the affected behavior until clarified. Other independent, fully specified portions may proceed only if `dev` can isolate them safely.
 
-When the ready scope adds or changes a user-facing surface and `uiux` is available, hand the checklist to `uiux` before `dev`, so UI/UX decisions are made from the approved requirements rather than improvised during implementation. Otherwise hand it to `dev`.
+When the ready scope has business behavior worth illustrating and `bdd` is available, hand the checklist to `bdd` first, so the requirements become agreed examples and executable scenarios. When the scope adds or changes a user-facing surface and `uiux` is available, `uiux` follows, so UI/UX decisions are made from the approved requirements rather than improvised during implementation. Otherwise hand it to `dev`.
 
 ## Output principles
 
