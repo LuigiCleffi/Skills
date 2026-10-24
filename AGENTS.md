@@ -27,6 +27,7 @@ Consult the relevant files when planning features, defining requirements, changi
 - `actions/dev.md` — development and implementation workflow.
 - `actions/review.md` — code review workflow.
 - `actions/tdd.md` — test-driven development workflow.
+- `actions/strategy.md` — strategy review of a checked spec against the marketing knowledge base, before the domain model.
 - `actions/ddd.md` — domain model and ubiquitous language from specs, before scenarios, screens, and code.
 - `actions/bdd.md` — examples and executable scenarios from specs, the outer loop for dev and tdd.
 - `actions/uiux.md` — UI/UX decisions and design handoff from specs to dev and tdd.
@@ -35,7 +36,7 @@ Follow the applicable workflow for the task. Consult multiple workflows when nec
 
 ### Workflow Order
 
-For a feature, follow the stages in this order: `ProductDefinition/plan.md`, then `spec-definition.md`, then `spec-checklist.md`, then `actions/ddd.md` when the change touches domain concepts or rules, then `actions/bdd.md` when the change has business behavior to illustrate, then `actions/uiux.md` when the change has a user-facing surface, then `actions/dev.md` (scenarios as the outer loop, `actions/tdd.md` as the inner loop), then `actions/review.md`. Apply the other instruction sources where the task needs them.
+For a feature, follow the stages in this order: `ProductDefinition/plan.md`, then `spec-definition.md`, then `spec-checklist.md`, then `actions/strategy.md` when the change is customer-facing or the product is a marketing tool, then `actions/ddd.md` when the change touches domain concepts or rules, then `actions/bdd.md` when the change has business behavior to illustrate, then `actions/uiux.md` when the change has a user-facing surface, then `actions/dev.md` (scenarios as the outer loop, `actions/tdd.md` as the inner loop), then `actions/review.md`. Apply the other instruction sources where the task needs them.
 
 ### UI/UX Design
 
@@ -60,6 +61,12 @@ Read when choosing a data model or datastore, designing storage, encoding or sch
 `templates/DevOps/README.md`
 
 Read when building or changing CI/CD pipelines, infrastructure as code, configuration management, deployments, monitoring and logging, or cloud resources. It routes to one folder per infrastructure (`Practices/` for platform-neutral practice, `AWS/`, `Azure/`); read `Practices/` plus only the folder for the platform the project uses.
+
+### Marketing
+
+`templates/Marketing/README.md`
+
+Read when planning marketing or business strategy, positioning a product, writing a value proposition, segmenting and targeting, branding, pricing, planning campaigns and channels, or writing persuasive copy. It routes to one folder per book (Rumelt's *Good Strategy Bad Strategy*, Dunford's *Obviously Awesome*, Kotler, Keller and Chernev's *Marketing Management*, Cialdini's *Influence*), each with one skill per chapter, consulted by `actions/strategy.md`.
 
 ### Domain-Driven Design
 

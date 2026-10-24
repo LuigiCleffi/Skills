@@ -93,6 +93,13 @@ const skills: Skill[] = [
     directories: ["DevOps"],
   },
   {
+    value: "marketing",
+    name: "Marketing and product strategy",
+    description: "Strategy review of specs, plus the strategy, positioning, marketing, and persuasion library",
+    files: ["actions/strategy.md", "Marketing/README.md"],
+    directories: ["Marketing"],
+  },
+  {
     value: "product",
     name: "Product definition",
     description: "Planning and specification templates",
@@ -116,6 +123,10 @@ const workflowStages: { skill: string; step: string }[] = [
   {
     skill: "product",
     step: "`ProductDefinition/plan.md`, then `ProductDefinition/specs/spec-definition.md`, then `ProductDefinition/specs/spec-checklist.md`",
+  },
+  {
+    skill: "marketing",
+    step: "`actions/strategy.md` — strategy review against the marketing knowledge base, when the change is customer-facing or the product is a marketing tool",
   },
   {
     skill: "ddd",

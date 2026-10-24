@@ -2,7 +2,7 @@
 
 Reusable instructions for AI coding agents to help developers build software that is clear, correct, maintainable, and aligned with product requirements.
 
-**Skills Code Kit** provides focused instruction sets for Clean Code, development workflows, code reviews, test-driven development (TDD), behavior-driven development (BDD), domain-driven design (DDD), databases, data-intensive system design, DevOps and cloud infrastructure, product definition, and UI/UX decisions. Install the instructions you need directly into an existing project without cloning this repository.
+**Skills Code Kit** provides focused instruction sets for Clean Code, development workflows, code reviews, test-driven development (TDD), behavior-driven development (BDD), domain-driven design (DDD), databases, data-intensive system design, DevOps and cloud infrastructure, marketing, product definition, and UI/UX decisions. Install the instructions you need directly into an existing project without cloning this repository.
 
 ## Why Skills Code Kit?
 
@@ -219,18 +219,44 @@ They help AI agents:
 - `actions/ddd.md`
 - `DDD/` — the `README.md` entry point plus one skill folder per chapter.
 
+### 12. Marketing and Product Strategy
+
+**Purpose:** Give a marketing agent a knowledge base for strategy, positioning, the marketing program, and honest persuasion, and check every customer-facing spec against it before it is built.
+
+`actions/strategy.md` sits between `spec-checklist` and `ddd`. It diagnoses the challenge a feature answers, names the best-fit customer and their real alternatives, checks value and positioning, recommends an approach and a first release with a hypothesis and a metric, and, when the product is itself a marketing tool, turns the relevant chapters into domain terms, rules, defaults, and honest-persuasion guardrails. It adds traced `STR` items to the checklist and writes `StrategyBrief.md`; product decisions go back to `spec-definition`.
+
+`Marketing/README.md` routes to one folder per book, so the agent reads only the book that answers the task's question:
+
+- `Marketing/GoodStrategyBadStrategy/` — one skill per chapter of *Good Strategy Bad Strategy* (Richard Rumelt), grouped into `GoodAndBadStrategy/`, `SourcesOfPower/` and `ThinkingLikeAStrategist/`.
+- `Marketing/ObviouslyAwesome/` — one skill per chapter and positioning step of *Obviously Awesome* (April Dunford), grouped into `WhatIsPositioning/`, `PositioningProcess/` and `PuttingPositioningIntoPlay/`.
+- `Marketing/MarketingManagement/` — one skill per chapter of *Marketing Management*, 16th Global Edition (Philip Kotler, Kevin Lane Keller and Alexander Chernev), grouped by the book's seven parts.
+- `Marketing/Influence/` — one skill per chapter of *Influence: The Psychology of Persuasion* (Robert Cialdini), framed for honest use.
+
+They help AI agents:
+
+- Diagnose the challenge and write a strategy with a guiding policy and coherent actions, not a list of goals.
+- Position a product against its real competitive alternatives and capture it in a canvas sales and marketing can use.
+- Plan segmentation, value propositions, brands, pricing, communications, channels, and loyalty programs.
+- Write copy, offers, and sales conversations that persuade with true claims and no dark patterns.
+
+**Installed files:**
+
+- `actions/strategy.md`
+- `Marketing/` — the `README.md` entry point, plus `GoodStrategyBadStrategy/`, `ObviouslyAwesome/`, `MarketingManagement/` and `Influence/`, each with its own `README.md` and one skill folder per chapter.
+
 ## Workflow order
 
 When the workflow groups are installed together, a feature moves through them in this order, and the generated `AGENTS.md` lists the installed stages:
 
 1. Product definition: `plan.md`, then `spec-definition.md`, then `spec-checklist.md`.
-2. Domain model: `actions/ddd.md`, when the change touches domain concepts or rules.
-3. Examples and scenarios: `actions/bdd.md`, when the change has business behavior to illustrate.
-4. UI/UX decisions: `actions/uiux.md`, when the change has a user-facing surface.
-5. Implementation: `actions/dev.md`, with BDD scenarios as the outer loop and `actions/tdd.md` as the inner loop, or in direct mode, as `uiux` recommends.
-6. Review: `actions/review.md`.
+2. Strategy review: `actions/strategy.md`, when the change is customer-facing or the product is a marketing tool.
+3. Domain model: `actions/ddd.md`, when the change touches domain concepts or rules.
+4. Examples and scenarios: `actions/bdd.md`, when the change has business behavior to illustrate.
+5. UI/UX decisions: `actions/uiux.md`, when the change has a user-facing surface.
+6. Implementation: `actions/dev.md`, with BDD scenarios as the outer loop and `actions/tdd.md` as the inner loop, or in direct mode, as `uiux` recommends.
+7. Review: `actions/review.md`.
 
-Clean Code, database, data-intensive system, and DevOps skills apply wherever the task needs them.
+Clean Code, database, data-intensive system, DevOps, and marketing skills apply wherever the task needs them.
 
 ## How installation works
 
@@ -310,6 +336,7 @@ The repository separates its working instruction documents from the templates di
 │   ├── DDD/
 │   ├── DataSystems/
 │   ├── DevOps/
+│   ├── Marketing/
 │   ├── ProductDefinition/
 │   ├── TDD/
 │   ├── UIUX/
@@ -327,12 +354,13 @@ The repository separates its working instruction documents from the templates di
 | `templates/DataSystems/` | Data-intensive system design skills, one per chapter of *Designing Data-Intensive Applications*. |
 | `templates/UIUX/` | UI/UX skill library, one skill per section of the *UI/UX Design Guide*, consulted by `actions/uiux.md`. |
 | `templates/DevOps/` | DevOps skills, one folder per infrastructure: `Practices/`, `AWS/` and `Azure/`, each holding one skill per chapter of its book. |
+| `templates/Marketing/` | Marketing skills, one folder per book: `GoodStrategyBadStrategy/`, `ObviouslyAwesome/`, `MarketingManagement/` and `Influence/`, each holding one skill per chapter. |
 | `templates/DDD/` | DDD pattern library, one skill per chapter of Evans's *Domain-Driven Design*, consulted by `actions/ddd.md`. |
 | `templates/BDD/` | BDD pattern library, one skill per chapter of *BDD in Action*, consulted by `actions/bdd.md`. |
 | `templates/TDD/` | TDD test pattern library, one skill per chapter of Kent Beck's book. |
 | `CleanCode_Uncle_Bob/` | Working copy of the core Clean Code standards. |
 | `ProductDefinition/` | Planning and specification documents. |
-| `actions/` | Development, review, TDD, BDD, DDD, and UI/UX workflows. |
+| `actions/` | Development, review, TDD, BDD, DDD, strategy, and UI/UX workflows. |
 | `AGENTS.md` | Repository-level entry point for AI coding instructions. |
 
 Keep the distributed templates synchronized with their corresponding working copies whenever you update an instruction.
