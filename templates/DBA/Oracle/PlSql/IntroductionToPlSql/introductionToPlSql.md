@@ -1,6 +1,6 @@
 ---
 name: dba-introduction-to-plsql
-description: Writing basic PL/SQL blocks: the declare/begin/exception/end structure, variables, constants, %TYPE and %ROWTYPE anchoring, explicit cursors and cursor attributes, IF/ELSIF, CASE, simple, WHILE, FOR and cursor FOR loops, CONTINUE, and exception handlers, based on Chapter 32 (An Introduction to PL/SQL) of Oracle Database 11g: The Complete Reference. Use when a user asks to write or fix an anonymous block or PL/SQL logic, loop over query results, add error handling, or hits ORA-06550 (compile error in block), ORA-01476 (divisor is zero), ORA-06592 / CASE_NOT_FOUND, ORA-01403 (no data found), ORA-06512 stack lines, or an infinite loop.
+description: "Writing basic PL/SQL blocks: the declare/begin/exception/end structure, variables, constants, %TYPE and %ROWTYPE anchoring, explicit cursors and cursor attributes, IF/ELSIF, CASE, simple, WHILE, FOR and cursor FOR loops, CONTINUE, and exception handlers, based on Chapter 32 (An Introduction to PL/SQL) of Oracle Database 11g: The Complete Reference. Use when a user asks to write or fix an anonymous block or PL/SQL logic, loop over query results, add error handling, or hits ORA-06550 (compile error in block), ORA-01476 (divisor is zero), ORA-06592 / CASE_NOT_FOUND, ORA-01403 (no data found), ORA-06512 stack lines, or an infinite loop."
 ---
 
 # An Introduction to PL/SQL

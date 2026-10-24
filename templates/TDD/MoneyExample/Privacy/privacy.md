@@ -1,6 +1,6 @@
 ---
 name: tdd-privacy
-description: Using a newly built feature (such as equality) to make tests read as statements of truth and to stop tests reaching into internal state, so fields can become private, based on Chapter 4 (Privacy) of Test-Driven Development: By Example. Use when tests assert on public fields or internals, when the user wants to make a field private but tests depend on it, or when a test reads as a sequence of steps instead of a claim.
+description: "Using a newly built feature (such as equality) to make tests read as statements of truth and to stop tests reaching into internal state, so fields can become private, based on Chapter 4 (Privacy) of Test-Driven Development: By Example. Use when tests assert on public fields or internals, when the user wants to make a field private but tests depend on it, or when a test reads as a sequence of steps instead of a claim."
 ---
 
 # Privacy

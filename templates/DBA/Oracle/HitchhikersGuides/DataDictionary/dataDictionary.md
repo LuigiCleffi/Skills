@@ -1,6 +1,6 @@
 ---
 name: dba-data-dictionary
-description: How to answer questions about an Oracle database by querying its data dictionary (USER_/ALL_/DBA_ views, DICT, V$ views), based on Chapter 45 (The Hitchhiker's Guide to the Oracle Data Dictionary) of Oracle Database 11g: The Complete Reference. Use when the agent must find out which tables, columns, indexes, constraints, views, synonyms, sequences, source code, privileges, roles, quotas, segments, partitions, statistics, scheduler jobs or audit settings exist; when decoding an error that names only a constraint (ORA-00001, ORA-02291, ORA-02437); when a compile fails; or before any DDL, grant or tuning change.
+description: "How to answer questions about an Oracle database by querying its data dictionary (USER_/ALL_/DBA_ views, DICT, V$ views), based on Chapter 45 (The Hitchhiker's Guide to the Oracle Data Dictionary) of Oracle Database 11g: The Complete Reference. Use when the agent must find out which tables, columns, indexes, constraints, views, synonyms, sequences, source code, privileges, roles, quotas, segments, partitions, statistics, scheduler jobs or audit settings exist; when decoding an error that names only a constraint (ORA-00001, ORA-02291, ORA-02437); when a compile fails; or before any DDL, grant or tuning change."
 ---
 
 # The Hitchhiker's Guide to the Oracle Data Dictionary

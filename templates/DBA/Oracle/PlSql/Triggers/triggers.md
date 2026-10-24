@@ -1,6 +1,6 @@
 ---
 name: dba-triggers
-description: Designing, writing and managing Oracle triggers (row vs statement level, BEFORE/AFTER/INSTEAD OF, DML, schema DDL and database event triggers, compound triggers, :OLD/:NEW, WHEN clauses, INSERTING/UPDATING/DELETING, RAISE_APPLICATION_ERROR, event attributes such as ora_dict_obj_name, enabling, disabling and recompiling), based on Chapter 34 (Triggers) of Oracle Database 11g: The Complete Reference. Use when a user asks to audit changes, keep a derived column in sync, block certain DML or DDL, run code at logon or startup, update a join view, or hits ORA-04091 (mutating table), ORA-04088 (error during trigger execution), ORA-20xxx from a trigger, slow bulk loads caused by triggers, or an invalid trigger.
+description: "Designing, writing and managing Oracle triggers (row vs statement level, BEFORE/AFTER/INSTEAD OF, DML, schema DDL and database event triggers, compound triggers, :OLD/:NEW, WHEN clauses, INSERTING/UPDATING/DELETING, RAISE_APPLICATION_ERROR, event attributes such as ora_dict_obj_name, enabling, disabling and recompiling), based on Chapter 34 (Triggers) of Oracle Database 11g: The Complete Reference. Use when a user asks to audit changes, keep a derived column in sync, block certain DML or DDL, run code at logon or startup, update a join view, or hits ORA-04091 (mutating table), ORA-04088 (error during trigger execution), ORA-20xxx from a trigger, slow bulk loads caused by triggers, or an invalid trigger."
 ---
 
 # Triggers

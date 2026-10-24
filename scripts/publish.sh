@@ -70,6 +70,9 @@ fi
 step "Installing dependencies"
 npm ci --no-audit --no-fund
 
+step "Checking skill frontmatter"
+npm run check:frontmatter
+
 step "Building"
 npm run build
 

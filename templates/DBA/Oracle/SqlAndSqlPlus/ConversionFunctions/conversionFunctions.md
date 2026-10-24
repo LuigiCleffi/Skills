@@ -1,6 +1,6 @@
 ---
 name: dba-conversion-functions
-description: Converting between Oracle datatypes explicitly (TO_CHAR, TO_DATE, TO_NUMBER, TO_TIMESTAMP and the specialized conversion functions) and avoiding the traps of implicit conversion, based on Chapter 11 (Conversion and Transformation Functions) of Oracle Database 11g: The Complete Reference. Use when SQL compares a VARCHAR2 column to a number or a string to a date, an index on an ID column is not used, a query fails with ORA-01722 (invalid number) or ORA-00932 (inconsistent datatypes), code relies on NLS_DATE_FORMAT, or the user asks about TRANSLATE, BIN_TO_NUM, SCN_TO_TIMESTAMP, CAST or RAWTOHEX.
+description: "Converting between Oracle datatypes explicitly (TO_CHAR, TO_DATE, TO_NUMBER, TO_TIMESTAMP and the specialized conversion functions) and avoiding the traps of implicit conversion, based on Chapter 11 (Conversion and Transformation Functions) of Oracle Database 11g: The Complete Reference. Use when SQL compares a VARCHAR2 column to a number or a string to a date, an index on an ID column is not used, a query fails with ORA-01722 (invalid number) or ORA-00932 (inconsistent datatypes), code relies on NLS_DATE_FORMAT, or the user asks about TRANSLATE, BIN_TO_NUM, SCN_TO_TIMESTAMP, CAST or RAWTOHEX."
 ---
 
 # Conversion and Transformation Functions

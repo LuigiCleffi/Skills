@@ -1,6 +1,6 @@
 ---
 name: tdd-equality-for-all-redux
-description: Removing duplication between sibling classes by moving common code step by step into a superclass, reconciling two implementations until they are identical, and writing missing tests before refactoring under-tested code, based on Chapter 6 (Equality for All, Redux) of Test-Driven Development: By Example. Use when two classes share copied code, when pulling a method up into a base class, or when about to refactor code whose tests do not cover the change.
+description: "Removing duplication between sibling classes by moving common code step by step into a superclass, reconciling two implementations until they are identical, and writing missing tests before refactoring under-tested code, based on Chapter 6 (Equality for All, Redux) of Test-Driven Development: By Example. Use when two classes share copied code, when pulling a method up into a base class, or when about to refactor code whose tests do not cover the change."
 ---
 
 # Equality for All, Redux

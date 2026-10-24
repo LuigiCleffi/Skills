@@ -1,6 +1,6 @@
 ---
 name: tdd-addition-finally
-description: Starting a hard feature by shrinking the test to a smaller step that still shows progress, choosing a metaphor, and writing the test from the assertion backward, based on Chapter 12 (Addition, Finally) of Test-Driven Development: By Example. Use when a requested feature is too big for one test, when the design of a new capability is unclear, when deciding which object owns a responsibility, when the to-do list has become messy, or when choosing between Fake It and Obvious Implementation.
+description: "Starting a hard feature by shrinking the test to a smaller step that still shows progress, choosing a metaphor, and writing the test from the assertion backward, based on Chapter 12 (Addition, Finally) of Test-Driven Development: By Example. Use when a requested feature is too big for one test, when the design of a new capability is unclear, when deciding which object owns a responsibility, when the to-do list has become messy, or when choosing between Fake It and Obvious Implementation."
 ---
 
 # Addition, Finally

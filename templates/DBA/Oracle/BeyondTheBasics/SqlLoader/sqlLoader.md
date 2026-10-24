@@ -1,6 +1,6 @@
 ---
 name: dba-sql-loader
-description: Loading flat files into Oracle tables with SQL*Loader (control files, load methods, error handling, restarts and Direct Path tuning), based on Chapter 23 (Using SQL*Loader to Load Data) of Oracle Database 11g: The Complete Reference. Use when the user needs to bulk-load CSV, fixed-width or multi-line text files, writes or debugs a .ctl control file, runs sqlldr, reads .log/.bad/.dsc output, restarts a partial load, or wants faster loads (DIRECT=TRUE, UNRECOVERABLE, parallel, disabling indexes or triggers).
+description: "Loading flat files into Oracle tables with SQL*Loader (control files, load methods, error handling, restarts and Direct Path tuning), based on Chapter 23 (Using SQL*Loader to Load Data) of Oracle Database 11g: The Complete Reference. Use when the user needs to bulk-load CSV, fixed-width or multi-line text files, writes or debugs a .ctl control file, runs sqlldr, reads .log/.bad/.dsc output, restarts a partial load, or wants faster loads (DIRECT=TRUE, UNRECOVERABLE, parallel, disabling indexes or triggers)."
 ---
 
 # Using SQL*Loader to Load Data

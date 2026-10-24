@@ -1,6 +1,6 @@
 ---
 name: dba-upgrading
-description: Choosing and executing an upgrade path to Oracle Database 11g (DBUA, manual direct upgrade, Data Pump or original Export/Import, data copy over database links), with pre-upgrade checks, backups, fallback and post-upgrade verification, based on Chapter 3 (Upgrading to Oracle Database 11g) of Oracle Database 11g: The Complete Reference. Use when the user plans or runs a database upgrade or migration, mentions dbua, utlu111i.sql, catupgrd.sql, utlrp.sql or startup upgrade, asks which exp/imp version to use between releases, or sees invalid objects or lost CONNECT privileges after an upgrade.
+description: "Choosing and executing an upgrade path to Oracle Database 11g (DBUA, manual direct upgrade, Data Pump or original Export/Import, data copy over database links), with pre-upgrade checks, backups, fallback and post-upgrade verification, based on Chapter 3 (Upgrading to Oracle Database 11g) of Oracle Database 11g: The Complete Reference. Use when the user plans or runs a database upgrade or migration, mentions dbua, utlu111i.sql, catupgrd.sql, utlrp.sql or startup upgrade, asks which exp/imp version to use between releases, or sees invalid objects or lost CONNECT privileges after an upgrade."
 ---
 
 # Upgrading to Oracle Database 11g

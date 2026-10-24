@@ -1,6 +1,6 @@
 ---
 name: tdd-money-retrospective
-description: Reviewing a finished TDD session or its result: what is left to do, how the metaphor shaped the design, test-run rhythm, code metrics, step counts and test quality via coverage and defect insertion, based on Chapter 17 (Money Retrospective) of Test-Driven Development: By Example. Use when the Test List is empty, when the user asks to review or wrap up TDD work, to judge whether test-driven code is done, to assess test quality, coverage or mutation results, or to evaluate a TDD process.
+description: "Reviewing a finished TDD session or its result: what is left to do, how the metaphor shaped the design, test-run rhythm, code metrics, step counts and test quality via coverage and defect insertion, based on Chapter 17 (Money Retrospective) of Test-Driven Development: By Example. Use when the Test List is empty, when the user asks to review or wrap up TDD work, to judge whether test-driven code is done, to assess test quality, coverage or mutation results, or to evaluate a TDD process."
 ---
 
 # Money Retrospective

@@ -1,6 +1,6 @@
 ---
 name: dba-regular-expressions
-description: Searching, extracting, validating and rewriting text with Oracle's POSIX regular expression functions (REGEXP_LIKE, REGEXP_SUBSTR, REGEXP_INSTR, REGEXP_REPLACE, REGEXP_COUNT), their operators, character classes and match parameters, based on Chapter 8 (Searching for Regular Expressions) of Oracle Database 11g: The Complete Reference. Use when the user needs pattern matching beyond LIKE, wants to validate or reformat phone numbers, codes or emails, extract the nth token, count occurrences, do case-insensitive matching, use backreferences, or replaces nested SUBSTR/INSTR logic.
+description: "Searching, extracting, validating and rewriting text with Oracle's POSIX regular expression functions (REGEXP_LIKE, REGEXP_SUBSTR, REGEXP_INSTR, REGEXP_REPLACE, REGEXP_COUNT), their operators, character classes and match parameters, based on Chapter 8 (Searching for Regular Expressions) of Oracle Database 11g: The Complete Reference. Use when the user needs pattern matching beyond LIKE, wants to validate or reformat phone numbers, codes or emails, extract the nth token, count occurrences, do case-insensitive matching, use backreferences, or replaces nested SUBSTR/INSTR logic."
 ---
 
 # Searching for Regular Expressions

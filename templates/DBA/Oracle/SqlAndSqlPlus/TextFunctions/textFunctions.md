@@ -1,6 +1,6 @@
 ---
 name: dba-text-functions
-description: Inspecting and reshaping character data with Oracle string functions (||, CONCAT, LPAD/RPAD, LTRIM/RTRIM/TRIM, UPPER/LOWER/INITCAP, LENGTH, SUBSTR, INSTR, ASCII/CHR, SOUNDEX) and choosing CHAR versus VARCHAR2, based on Chapter 7 (Getting Text Information and Changing It) of Oracle Database 11g: The Complete Reference. Use when the user needs to clean, split, pad, trim, recase or search text columns in SQL, parse "Last, First" names, extract part of a code or phone number, find near-duplicate names, sort or filter by string length, or sees unexpected trimming or blank-padding behaviour.
+description: "Inspecting and reshaping character data with Oracle string functions (||, CONCAT, LPAD/RPAD, LTRIM/RTRIM/TRIM, UPPER/LOWER/INITCAP, LENGTH, SUBSTR, INSTR, ASCII/CHR, SOUNDEX) and choosing CHAR versus VARCHAR2, based on Chapter 7 (Getting Text Information and Changing It) of Oracle Database 11g: The Complete Reference. Use when the user needs to clean, split, pad, trim, recase or search text columns in SQL, parse \"Last, First\" names, extract part of a code or phone number, find near-duplicate names, sort or filter by string length, or sees unexpected trimming or blank-padding behaviour."
 ---
 
 # Getting Text Information and Changing It

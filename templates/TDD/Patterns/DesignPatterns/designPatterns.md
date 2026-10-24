@@ -1,6 +1,6 @@
 ---
 name: tdd-design-patterns
-description: The design patterns that show up in TDD and when each one appears, either while writing a test or while refactoring away duplication (Command, Value Object, Null Object, Template Method, Pluggable Object, Pluggable Selector, Factory Method, Imposter, Composite, Collecting Parameter, Singleton), based on Chapter 30 (Design Patterns) of Test-Driven Development: By Example. Use when repeated null checks or duplicated conditionals appear, when a shared mutable object causes aliasing bugs, when two subclasses share a sequence, when a test needs a new variant of an existing object, when a collection should behave like one item, or when someone proposes a Singleton or a pattern up front.
+description: "The design patterns that show up in TDD and when each one appears, either while writing a test or while refactoring away duplication (Command, Value Object, Null Object, Template Method, Pluggable Object, Pluggable Selector, Factory Method, Imposter, Composite, Collecting Parameter, Singleton), based on Chapter 30 (Design Patterns) of Test-Driven Development: By Example. Use when repeated null checks or duplicated conditionals appear, when a shared mutable object causes aliasing bugs, when two subclasses share a sequence, when a test needs a new variant of an existing object, when a collection should behave like one item, or when someone proposes a Singleton or a pattern up front."
 ---
 
 # Design Patterns

@@ -1,6 +1,6 @@
 ---
 name: dba-introduction-to-java
-description: Core Java language structures mapped to their PL/SQL equivalents for SQL and PL/SQL developers: blocks and declarations, primitive types, operators, if/switch/ternary logic, short-circuit operators, loops, simulating cursor FOR loops, try/catch/finally, classes and main methods, compiling with javac and running with java, based on Chapter 42 (An Introduction to Java) of Oracle Database 11g: The Complete Reference. Use when a PL/SQL developer asks how to write something in Java, translates PL/SQL logic to Java, starts writing Java that will talk to Oracle or run inside it, or confuses PL/SQL and Java terminology (block, exception, elsif, cursor loop).
+description: "Core Java language structures mapped to their PL/SQL equivalents for SQL and PL/SQL developers: blocks and declarations, primitive types, operators, if/switch/ternary logic, short-circuit operators, loops, simulating cursor FOR loops, try/catch/finally, classes and main methods, compiling with javac and running with java, based on Chapter 42 (An Introduction to Java) of Oracle Database 11g: The Complete Reference. Use when a PL/SQL developer asks how to write something in Java, translates PL/SQL logic to Java, starts writing Java that will talk to Oracle or run inside it, or confuses PL/SQL and Java terminology (block, exception, elsif, cursor loop)."
 ---
 
 # An Introduction to Java

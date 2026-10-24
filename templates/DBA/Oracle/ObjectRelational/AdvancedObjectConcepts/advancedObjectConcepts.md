@@ -1,6 +1,6 @@
 ---
 name: dba-advanced-object-concepts
-description: Working with row objects in Oracle: object tables and OIDs, REF columns, the REF, DEREF and VALUE functions, dangling references, object views WITH OBJECT IDENTIFIER and MAKE_REF over existing primary/foreign keys, and object PL/SQL variables, based on Chapter 41 (Advanced Object-Oriented Concepts) of Oracle Database 11g: The Complete Reference. Use when the user writes CREATE TABLE ... OF type, declares a column as REF type, uses REF(), DEREF(), VALUE() or MAKE_REF, sees hex OID strings in query output, asks why a reference broke after a row was deleted and re-inserted, or wants to expose relational tables as referenceable objects to PL/SQL or object-based code.
+description: "Working with row objects in Oracle: object tables and OIDs, REF columns, the REF, DEREF and VALUE functions, dangling references, object views WITH OBJECT IDENTIFIER and MAKE_REF over existing primary/foreign keys, and object PL/SQL variables, based on Chapter 41 (Advanced Object-Oriented Concepts) of Oracle Database 11g: The Complete Reference. Use when the user writes CREATE TABLE ... OF type, declares a column as REF type, uses REF(), DEREF(), VALUE() or MAKE_REF, sees hex OID strings in query output, asks why a reference broke after a row was deleted and re-inserted, or wants to expose relational tables as referenceable objects to PL/SQL or object-based code."
 ---
 
 # Advanced Object-Oriented Concepts

@@ -1,6 +1,6 @@
 ---
 name: dba-number-functions
-description: Calculating with Oracle numbers correctly — single-value functions (ROUND, TRUNC, CEIL, FLOOR, MOD, ABS, SIGN, POWER, SQRT, EXP/LN/LOG), NULL handling (NVL, NVL2, COALESCE, NANVL), aggregates (SUM, AVG, COUNT, MIN, MAX, STDDEV, VARIANCE, DISTINCT), list functions (GREATEST, LEAST) and operator precedence, based on Chapter 9 (Playing the Numbers) of Oracle Database 11g: The Complete Reference. Use when the user computes totals, averages, rounding or differences in SQL, gets NULL from arithmetic, sees ORA-00937 or ORA-00978, needs the row holding a MAX/MIN, or writes where clauses mixing AND and OR.
+description: "Calculating with Oracle numbers correctly — single-value functions (ROUND, TRUNC, CEIL, FLOOR, MOD, ABS, SIGN, POWER, SQRT, EXP/LN/LOG), NULL handling (NVL, NVL2, COALESCE, NANVL), aggregates (SUM, AVG, COUNT, MIN, MAX, STDDEV, VARIANCE, DISTINCT), list functions (GREATEST, LEAST) and operator precedence, based on Chapter 9 (Playing the Numbers) of Oracle Database 11g: The Complete Reference. Use when the user computes totals, averages, rounding or differences in SQL, gets NULL from arithmetic, sees ORA-00937 or ORA-00978, needs the row holding a MAX/MIN, or writes where clauses mixing AND and OR."
 ---
 
 # Playing the Numbers

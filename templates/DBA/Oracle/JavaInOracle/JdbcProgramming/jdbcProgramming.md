@@ -1,6 +1,6 @@
 ---
 name: dba-jdbc-programming
-description: Connecting Java programs to Oracle with JDBC: choosing the Oracle JDBC jar for the JDK, creating connections with OracleDataSource, controlling autocommit, running queries and DML with Statement and PreparedStatement, iterating ResultSets as a cursor loop, and closing resources, based on Chapter 43 (JDBC Programming) of Oracle Database 11g: The Complete Reference. Use when the user writes or debugs Java code that connects to Oracle, sees connection failures from getConnection, picks between ojdbc jars, asks how to run select/insert/update/delete from Java, builds SQL strings in Java, or finds that JDBC changes were committed unexpectedly.
+description: "Connecting Java programs to Oracle with JDBC: choosing the Oracle JDBC jar for the JDK, creating connections with OracleDataSource, controlling autocommit, running queries and DML with Statement and PreparedStatement, iterating ResultSets as a cursor loop, and closing resources, based on Chapter 43 (JDBC Programming) of Oracle Database 11g: The Complete Reference. Use when the user writes or debugs Java code that connects to Oracle, sees connection failures from getConnection, picks between ojdbc jars, asks how to run select/insert/update/delete from Java, builds SQL strings in Java, or finds that JDBC changes were committed unexpectedly."
 ---
 
 # JDBC Programming

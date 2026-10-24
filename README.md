@@ -309,7 +309,7 @@ Keep the distributed templates synchronized with their corresponding working cop
 
 When changing the instructions distributed through npm, update the corresponding files under `templates/` as well.
 
-Publish with the release script. It checks your npm login, bumps the version when the current one is already on npm, installs dependencies, builds, checks the package contents, and publishes:
+Publish with the release script. It checks your npm login, bumps the version when the current one is already on npm, installs dependencies, validates every skill's YAML frontmatter, builds, checks the package contents, and publishes:
 
 ```bash
 npm run release
@@ -321,6 +321,8 @@ Pass `minor` or `major` instead of the default patch bump, or `--dry-run` to run
 npm run release -- minor
 npm run release -- --dry-run
 ```
+
+Run `npm run check:frontmatter` to validate skill frontmatter on its own. A `description` that contains `: ` must be quoted, or GitHub and agent tools reject the whole file.
 
 Use a patch version for fixes, a minor version for backward-compatible features, and a major version for breaking changes. The script does not commit; commit and tag the version change after publishing.
 

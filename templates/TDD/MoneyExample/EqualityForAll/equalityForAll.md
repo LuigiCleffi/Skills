@@ -1,6 +1,6 @@
 ---
 name: tdd-equality-for-all
-description: Driving Value Object equality test-first and using Triangulate to generalize only when two examples demand it, based on Chapter 3 (Equality for All) of Test-Driven Development: By Example. Use when implementing equals/equality for a value type, when an object should behave like a value (immutable, compared by content), when aliasing bugs appear, or when unsure how to generalize from a faked implementation.
+description: "Driving Value Object equality test-first and using Triangulate to generalize only when two examples demand it, based on Chapter 3 (Equality for All) of Test-Driven Development: By Example. Use when implementing equals/equality for a value type, when an object should behave like a value (immutable, compared by content), when aliasing bugs appear, or when unsure how to generalize from a faked implementation."
 ---
 
 # Equality for All

@@ -1,6 +1,6 @@
 ---
 name: dba-planning-applications
-description: Planning an Oracle application around users' tasks, normalizing data to Third Normal Form, naming tables, columns and values in plain business language, avoiding codes and overloaded keys, and budgeting extra testing, based on Chapter 4 (Planning Oracle Applications—Approaches, Risks, and Standards) of Oracle Database 11g: The Complete Reference. Use when the user designs a new schema or data model, asks about normalization or naming conventions, reviews tables with cryptic abbreviations, repeating columns (phone1, phone2), smart or composite codes packed into one key, quoted mixed-case identifiers, or plans the testing of a database project.
+description: "Planning an Oracle application around users' tasks, normalizing data to Third Normal Form, naming tables, columns and values in plain business language, avoiding codes and overloaded keys, and budgeting extra testing, based on Chapter 4 (Planning Oracle Applications—Approaches, Risks, and Standards) of Oracle Database 11g: The Complete Reference. Use when the user designs a new schema or data model, asks about normalization or naming conventions, reviews tables with cryptic abbreviations, repeating columns (phone1, phone2), smart or composite codes packed into one key, quoted mixed-case identifiers, or plans the testing of a database project."
 ---
 
 # Planning Oracle Applications: Approaches, Risks, and Standards

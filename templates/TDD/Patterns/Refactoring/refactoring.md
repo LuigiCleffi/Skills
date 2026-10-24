@@ -1,6 +1,6 @@
 ---
 name: tdd-refactoring
-description: Small-step refactorings for changing a design under green tests (Reconcile Differences, Isolate Change, Migrate Data, Extract Method, Inline Method, Extract Interface, Move Method, Method Object, Add Parameter, Method Parameter to Constructor Parameter), based on Chapter 31 (Refactoring) of Test-Driven Development: By Example. Use when unifying two similar pieces of code, changing a data representation (one to many, old format to new), extracting or inlining methods, introducing an interface for a second implementation or a test double, moving logic to the object it talks to, taming a method with many temporaries, or threading a new parameter through callers.
+description: "Small-step refactorings for changing a design under green tests (Reconcile Differences, Isolate Change, Migrate Data, Extract Method, Inline Method, Extract Interface, Move Method, Method Object, Add Parameter, Method Parameter to Constructor Parameter), based on Chapter 31 (Refactoring) of Test-Driven Development: By Example. Use when unifying two similar pieces of code, changing a data representation (one to many, old format to new), extracting or inlining methods, introducing an interface for a second implementation or a test double, moving logic to the object it talks to, taming a method with many temporaries, or threading a new parameter through callers."
 ---
 
 # Refactoring

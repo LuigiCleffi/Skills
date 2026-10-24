@@ -1,6 +1,6 @@
 ---
 name: dba-result-cache
-description: How to use the SQL Result Cache, PL/SQL function result caching and the OCI client-side query cache to serve repeated queries without re-reading data blocks, based on Chapter 47 (SQL Result Cache and Client-Side Query Cache) of Oracle Database 11g: The Complete Reference. Use when the same read-mostly query or lookup runs thousands of times, the user mentions the RESULT_CACHE hint, RESULT_CACHE_MODE, RESULT_CACHE_MAX_SIZE, DBMS_RESULT_CACHE, V$RESULT_CACHE_*, client result cache or CLIENT_RESULT_CACHE_SIZE, or a cached result looks stale or memory is not released.
+description: "How to use the SQL Result Cache, PL/SQL function result caching and the OCI client-side query cache to serve repeated queries without re-reading data blocks, based on Chapter 47 (SQL Result Cache and Client-Side Query Cache) of Oracle Database 11g: The Complete Reference. Use when the same read-mostly query or lookup runs thousands of times, the user mentions the RESULT_CACHE hint, RESULT_CACHE_MODE, RESULT_CACHE_MAX_SIZE, DBMS_RESULT_CACHE, V$RESULT_CACHE_*, client result cache or CLIENT_RESULT_CACHE_SIZE, or a cached result looks stale or memory is not released."
 ---
 
 # SQL Result Cache and Client-Side Query Cache

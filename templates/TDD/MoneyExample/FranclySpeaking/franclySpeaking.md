@@ -1,6 +1,6 @@
 ---
 name: tdd-francly-speaking
-description: Breaking a too-big test into a smaller stepping-stone test and allowing copy-and-paste to reach green, with the duty to remove the duplication right after, based on Chapter 5 (Franc-ly Speaking) of Test-Driven Development: By Example. Use when the next test on the list feels like too big a leap, when tempted to copy a class to get a sibling working, or when the user asks whether duplication is ever acceptable in TDD.
+description: "Breaking a too-big test into a smaller stepping-stone test and allowing copy-and-paste to reach green, with the duty to remove the duplication right after, based on Chapter 5 (Franc-ly Speaking) of Test-Driven Development: By Example. Use when the next test on the list feels like too big a leap, when tempted to copy a class to get a sibling working, or when the user asks whether duplication is ever acceptable in TDD."
 ---
 
 # Franc-ly Speaking

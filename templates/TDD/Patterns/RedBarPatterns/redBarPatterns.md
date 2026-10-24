@@ -1,6 +1,6 @@
 ---
 name: tdd-red-bar-patterns
-description: Patterns for choosing which test to write next, where tests come from, and when to stop writing them, based on Chapter 26 (Red Bar Patterns) of Test-Driven Development: By Example. Use when picking the next test from a to-do list, writing the very first test for a new feature, adopting an unfamiliar library or API, a bug is reported, a discussion drifts off topic, explaining behavior to teammates, or the agent (or user) is tired, stuck or lost in a tangled change.
+description: "Patterns for choosing which test to write next, where tests come from, and when to stop writing them, based on Chapter 26 (Red Bar Patterns) of Test-Driven Development: By Example. Use when picking the next test from a to-do list, writing the very first test for a new feature, adopting an unfamiliar library or API, a bug is reported, a discussion drifts off topic, explaining behavior to teammates, or the agent (or user) is tired, stuck or lost in a tangled change."
 ---
 
 # Red Bar Patterns

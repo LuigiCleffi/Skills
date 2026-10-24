@@ -1,6 +1,6 @@
 ---
 name: tdd-root-of-all-evil
-description: Deleting classes that no longer earn their keep and pruning tests that only made sense for the old structure, based on Chapter 11 (The Root of All Evil) of Test-Driven Development: By Example. Use when subclasses contain only constructors, when a refactoring has made a class hierarchy unnecessary, when the user asks whether a test can be deleted, or when tests contain redundant assertions that duplicate other tests.
+description: "Deleting classes that no longer earn their keep and pruning tests that only made sense for the old structure, based on Chapter 11 (The Root of All Evil) of Test-Driven Development: By Example. Use when subclasses contain only constructors, when a refactoring has made a class hierarchy unnecessary, when the user asks whether a test can be deleted, or when tests contain redundant assertions that duplicate other tests."
 ---
 
 # The Root of All Evil

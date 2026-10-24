@@ -1,6 +1,6 @@
 ---
 name: dba-tuning-applications-and-sql
-description: How to diagnose and fix slow Oracle applications and SQL, from design-level waste to reading explain plans, access paths, join methods, hints, statistics and stored outlines, based on Chapter 46 (The Hitchhiker's Guide to Tuning Applications and SQL) of Oracle Database 11g: The Complete Reference. Use when a query or screen is slow, the user asks why an index is not used, wants an explain plan read or a hint added, sees TABLE ACCESS FULL, SORT, MERGE JOIN or HASH JOIN in a plan, a plan changed after an upgrade or stats refresh, or code queries DUAL in loops, opens a connection per call or runs one query per form field.
+description: "How to diagnose and fix slow Oracle applications and SQL, from design-level waste to reading explain plans, access paths, join methods, hints, statistics and stored outlines, based on Chapter 46 (The Hitchhiker's Guide to Tuning Applications and SQL) of Oracle Database 11g: The Complete Reference. Use when a query or screen is slow, the user asks why an index is not used, wants an explain plan read or a hint added, sees TABLE ACCESS FULL, SORT, MERGE JOIN or HASH JOIN in a plan, a plan changed after an upgrade or stats refresh, or code queries DUAL in loops, opens a connection per call or runs one query per form field."
 ---
 
 # The Hitchhiker's Guide to Tuning Applications and SQL

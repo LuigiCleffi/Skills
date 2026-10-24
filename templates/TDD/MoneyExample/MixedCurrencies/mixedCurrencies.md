@@ -1,6 +1,6 @@
 ---
 name: tdd-mixed-currencies
-description: Landing the original goal test when it will not compile in one step, by backing off to a more specific version, then generalizing declarations from the leaves back to the test while following the compiler, based on Chapter 15 (Mixed Currencies) of Test-Driven Development: By Example. Use when the test you want triggers a cascade of compile errors, when generalizing a concrete type to an interface across many signatures, when a type change ripples through the codebase, or when stubs are needed to get back to compiling.
+description: "Landing the original goal test when it will not compile in one step, by backing off to a more specific version, then generalizing declarations from the leaves back to the test while following the compiler, based on Chapter 15 (Mixed Currencies) of Test-Driven Development: By Example. Use when the test you want triggers a cascade of compile errors, when generalizing a concrete type to an interface across many signatures, when a type change ripples through the codebase, or when stubs are needed to get back to compiling."
 ---
 
 # Mixed Currencies

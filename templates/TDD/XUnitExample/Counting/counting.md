@@ -1,6 +1,6 @@
 ---
 name: tdd-counting
-description: Choosing the order of tests, backing up when stuck, and growing a result/report object (run and failure counts, summary string) from a faked constant, based on Chapter 21 (Counting) of Test-Driven Development: By Example. Use when building a test result, report, summary or metrics object; when the next test turns out too hard and you are stuck; when a test needs infrastructure (like exception capture) that does not exist yet; or when deciding which test on the list to write next.
+description: "Choosing the order of tests, backing up when stuck, and growing a result/report object (run and failure counts, summary string) from a faked constant, based on Chapter 21 (Counting) of Test-Driven Development: By Example. Use when building a test result, report, summary or metrics object; when the next test turns out too hard and you are stuck; when a test needs infrastructure (like exception capture) that does not exist yet; or when deciding which test on the list to write next."
 ---
 
 # Counting

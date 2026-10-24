@@ -1,6 +1,6 @@
 ---
 name: tdd-change
-description: Passing a new case with quick ugly code, moving the knowledge to the right owner with Add Parameter, removing data duplication between test and code, using a Learning Test to check a language assumption, and writing a test when a refactoring surprises you, based on Chapter 14 (Change) of Test-Driven Development: By Example. Use when a hard-coded rule appears in the wrong class, when you are unsure how a library or language feature behaves, when a helper class is introduced during refactoring, or when a refactoring unexpectedly turns the bar red.
+description: "Passing a new case with quick ugly code, moving the knowledge to the right owner with Add Parameter, removing data duplication between test and code, using a Learning Test to check a language assumption, and writing a test when a refactoring surprises you, based on Chapter 14 (Change) of Test-Driven Development: By Example. Use when a hard-coded rule appears in the wrong class, when you are unsure how a library or language feature behaves, when a helper class is introduced during refactoring, or when a refactoring unexpectedly turns the bar red."
 ---
 
 # Change

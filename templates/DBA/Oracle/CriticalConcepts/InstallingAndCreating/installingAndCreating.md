@@ -1,6 +1,6 @@
 ---
 name: dba-installing-and-creating
-description: Planning and performing an Oracle software installation with the Oracle Universal Installer and creating a database with DBCA, including the decisions that cannot be changed later, based on Chapter 2 (Installing Oracle Database 11g and Creating a Database) of Oracle Database 11g: The Complete Reference. Use when the user plans a new Oracle install or database, runs runInstaller or dbca, chooses a block size or character set, picks an edition, asks which accounts are unlocked after creation, or a fresh install fails prerequisite checks.
+description: "Planning and performing an Oracle software installation with the Oracle Universal Installer and creating a database with DBCA, including the decisions that cannot be changed later, based on Chapter 2 (Installing Oracle Database 11g and Creating a Database) of Oracle Database 11g: The Complete Reference. Use when the user plans a new Oracle install or database, runs runInstaller or dbca, chooses a block size or character set, picks an edition, asks which accounts are unlocked after creation, or a fresh install fails prerequisite checks."
 ---
 
 # Installing Oracle Database 11g and Creating a Database

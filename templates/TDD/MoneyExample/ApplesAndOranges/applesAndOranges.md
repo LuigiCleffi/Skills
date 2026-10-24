@@ -1,6 +1,6 @@
 ---
 name: tdd-apples-and-oranges
-description: Turning a nagging doubt into a test, fixing it in a reasonable but imperfect way, and deferring new design until there is better motivation, based on Chapter 7 (Apples and Oranges) of Test-Driven Development: By Example. Use when the user or agent wonders "what happens if…", when two different types might wrongly compare equal, or when tempted to introduce a new concept or abstraction that no test demands yet.
+description: "Turning a nagging doubt into a test, fixing it in a reasonable but imperfect way, and deferring new design until there is better motivation, based on Chapter 7 (Apples and Oranges) of Test-Driven Development: By Example. Use when the user or agent wonders \"what happens if…\", when two different types might wrongly compare equal, or when tempted to introduce a new concept or abstraction that no test demands yet."
 ---
 
 # Apples and Oranges

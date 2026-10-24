@@ -1,6 +1,6 @@
 ---
 name: tdd-makin-objects
-description: Moving toward removing redundant subclasses by reconciling method signatures, declaring shared methods in the superclass, and decoupling tests from concrete classes with Factory Methods, based on Chapter 8 (Makin' Objects) of Test-Driven Development: By Example. Use when tests construct concrete subclasses directly, when subclasses do too little to justify existing, when two variants of a method differ only in return type, or when deciding whether a now-redundant test can be deleted.
+description: "Moving toward removing redundant subclasses by reconciling method signatures, declaring shared methods in the superclass, and decoupling tests from concrete classes with Factory Methods, based on Chapter 8 (Makin' Objects) of Test-Driven Development: By Example. Use when tests construct concrete subclasses directly, when subclasses do too little to justify existing, when two variants of a method differ only in return type, or when deciding whether a now-redundant test can be deleted."
 ---
 
 # Makin' Objects

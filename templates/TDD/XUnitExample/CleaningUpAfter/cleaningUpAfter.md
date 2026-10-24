@@ -1,6 +1,6 @@
 ---
 name: tdd-cleaning-up-after
-description: Test-driving tearDown and other lifecycle hooks, and verifying call order with a Log String instead of a pile of flags, based on Chapter 20 (Cleaning Up After) of Test-Driven Development: By Example. Use when tests allocate external resources (files, sockets, DB connections, temp dirs) that must be released, when adding teardown/afterEach to a runner, when a test needs to assert the order in which hooks or callbacks fire, or when spy flags are multiplying.
+description: "Test-driving tearDown and other lifecycle hooks, and verifying call order with a Log String instead of a pile of flags, based on Chapter 20 (Cleaning Up After) of Test-Driven Development: By Example. Use when tests allocate external resources (files, sockets, DB connections, temp dirs) that must be released, when adding teardown/afterEach to a runner, when a test needs to assert the order in which hooks or callbacks fire, or when spy flags are multiplying."
 ---
 
 # Cleaning Up After

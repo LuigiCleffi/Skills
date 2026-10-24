@@ -1,6 +1,6 @@
 ---
 name: dba-dates
-description: Storing, computing, comparing and formatting dates and times in Oracle — DATE arithmetic, SYSDATE/CURRENT_DATE/SYSTIMESTAMP, ADD_MONTHS, MONTHS_BETWEEN, NEXT_DAY, LAST_DAY, ROUND/TRUNC on dates, TO_DATE/TO_CHAR format models, EXTRACT, NEW_TIME, the RR century rule, TIMESTAMP and INTERVAL types, based on Chapter 10 (Dates: Then, Now, and the Difference) of Oracle Database 11g: The Complete Reference. Use when the user computes ages, durations or due dates, filters by date ranges, gets fractional day differences, sees ORA-01843, ORA-01858 or ORA-01722 around dates, finds years off by a century, confuses MM and MI, or needs time zones or fractional seconds.
+description: "Storing, computing, comparing and formatting dates and times in Oracle — DATE arithmetic, SYSDATE/CURRENT_DATE/SYSTIMESTAMP, ADD_MONTHS, MONTHS_BETWEEN, NEXT_DAY, LAST_DAY, ROUND/TRUNC on dates, TO_DATE/TO_CHAR format models, EXTRACT, NEW_TIME, the RR century rule, TIMESTAMP and INTERVAL types, based on Chapter 10 (Dates: Then, Now, and the Difference) of Oracle Database 11g: The Complete Reference. Use when the user computes ages, durations or due dates, filters by date ranges, gets fractional day differences, sees ORA-01843, ORA-01858 or ORA-01722 around dates, finds years off by a century, confuses MM and MI, or needs time zones or fractional seconds."
 ---
 
 # Dates: Then, Now, and the Difference

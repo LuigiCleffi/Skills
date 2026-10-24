@@ -1,6 +1,6 @@
 ---
 name: dba-data-pump
-description: Exporting and importing Oracle schemas, tables and metadata with Data Pump (expdp/impdp), including filtering, remapping, job control and DDL generation, based on Chapter 24 (Using Data Pump Export and Import) of Oracle Database 11g: The Complete Reference. Use when the user wants to copy a schema between databases, refresh a test environment, back up metadata, run expdp or impdp, write a .par file, use REMAP_SCHEMA, INCLUDE/EXCLUDE/QUERY, TABLE_EXISTS_ACTION, SQLFILE, NETWORK_LINK, or attach to, stop or restart a running Data Pump job.
+description: "Exporting and importing Oracle schemas, tables and metadata with Data Pump (expdp/impdp), including filtering, remapping, job control and DDL generation, based on Chapter 24 (Using Data Pump Export and Import) of Oracle Database 11g: The Complete Reference. Use when the user wants to copy a schema between databases, refresh a test environment, back up metadata, run expdp or impdp, write a .par file, use REMAP_SCHEMA, INCLUDE/EXCLUDE/QUERY, TABLE_EXISTS_ACTION, SQLFILE, NETWORK_LINK, or attach to, stop or restart a running Data Pump job."
 ---
 
 # Using Data Pump Export and Import

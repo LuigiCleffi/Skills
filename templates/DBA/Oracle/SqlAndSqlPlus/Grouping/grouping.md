@@ -1,6 +1,6 @@
 ---
 name: dba-grouping
-description: Writing correct and efficient aggregate queries with GROUP BY, HAVING and ORDER BY, building views and inline views over groups, and finding duplicate keys, based on Chapter 12 (Grouping Things Together) of Oracle Database 11g: The Complete Reference. Use when a query fails with ORA-00937 (not a single-group group function) or ORA-00904 on an alias used in HAVING, the user asks for counts, averages or percentages per category, a unique index cannot be created because of duplicates, or a HAVING clause filters on a grouping column instead of an aggregate.
+description: "Writing correct and efficient aggregate queries with GROUP BY, HAVING and ORDER BY, building views and inline views over groups, and finding duplicate keys, based on Chapter 12 (Grouping Things Together) of Oracle Database 11g: The Complete Reference. Use when a query fails with ORA-00937 (not a single-group group function) or ORA-00904 on an alias used in HAVING, the user asks for counts, averages or percentages per category, a unique index cannot be created because of duplicates, or a HAVING clause filters on a grouping column instead of an aggregate."
 ---
 
 # Grouping Things Together

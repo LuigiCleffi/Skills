@@ -1,6 +1,6 @@
 ---
 name: dba-tablespaces
-description: Understanding and planning Oracle tablespaces, datafiles, segments, quotas, recycle bin space, read-only, nologging, temporary, undo, bigfile, encrypted and transportable tablespaces, based on Chapter 22 (Working with Tablespaces) of Oracle Database 11g: The Complete Reference. Use when deciding where tables and indexes are stored, creating or altering tablespaces, checking quota or free space, running out of space (e.g. ORA-01536 quota exceeded, unable to extend), choosing nologging or read-only, sizing temp or undo, or planning a tablespace layout for an application.
+description: "Understanding and planning Oracle tablespaces, datafiles, segments, quotas, recycle bin space, read-only, nologging, temporary, undo, bigfile, encrypted and transportable tablespaces, based on Chapter 22 (Working with Tablespaces) of Oracle Database 11g: The Complete Reference. Use when deciding where tables and indexes are stored, creating or altering tablespaces, checking quota or free space, running out of space (e.g. ORA-01536 quota exceeded, unable to extend), choosing nologging or read-only, sizing temp or undo, or planning a tablespace layout for an application."
 ---
 
 # Working with Tablespaces

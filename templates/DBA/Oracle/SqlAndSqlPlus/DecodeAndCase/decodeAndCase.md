@@ -1,6 +1,6 @@
 ---
 name: dba-decode-and-case
-description: Expressing if-then-else logic inside Oracle SQL with DECODE, simple and searched CASE, COALESCE, NVL and NULLIF, and building crosstab reports with MAX(DECODE(...)), PIVOT and UNPIVOT, based on Chapter 16 (DECODE and CASE: if, then, and else in SQL) of Oracle Database 11g: The Complete Reference. Use when the user asks to map codes to labels, apply tiered rates or thresholds in a query, turn rows into columns (crosstab, pivot table) or columns into rows, replace NULLs with fallbacks, or maintain deeply nested DECODE expressions that should become CASE.
+description: "Expressing if-then-else logic inside Oracle SQL with DECODE, simple and searched CASE, COALESCE, NVL and NULLIF, and building crosstab reports with MAX(DECODE(...)), PIVOT and UNPIVOT, based on Chapter 16 (DECODE and CASE: if, then, and else in SQL) of Oracle Database 11g: The Complete Reference. Use when the user asks to map codes to labels, apply tiered rates or thresholds in a query, turn rows into columns (crosstab, pivot table) or columns into rows, replace NULLs with fallbacks, or maintain deeply nested DECODE expressions that should become CASE."
 ---
 
 # DECODE and CASE: if, then, and else in SQL

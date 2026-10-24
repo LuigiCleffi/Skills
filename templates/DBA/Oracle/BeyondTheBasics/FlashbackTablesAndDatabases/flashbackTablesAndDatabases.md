@@ -1,6 +1,6 @@
 ---
 name: dba-flashback-tables-and-databases
-description: Recovering from human or application error by rewinding a whole table (FLASHBACK TABLE to an SCN, a timestamp or before drop) or the whole database (FLASHBACK DATABASE), based on Chapter 30 (Flashback—Tables and Databases) of Oracle Database 11g: The Complete Reference. Use when a user says "I dropped a table by mistake", "an update without a where clause was committed", "undo this batch job", "restore the table to how it was an hour ago", asks about the recycle bin, BIN$ objects, PURGE, RECYCLEBIN, row movement, ORA-08189 (row movement not enabled), flashback logs, the flash recovery area, DB_FLASHBACK_RETENTION_TARGET, or a fast alternative to incomplete recovery.
+description: "Recovering from human or application error by rewinding a whole table (FLASHBACK TABLE to an SCN, a timestamp or before drop) or the whole database (FLASHBACK DATABASE), based on Chapter 30 (Flashback—Tables and Databases) of Oracle Database 11g: The Complete Reference. Use when a user says \"I dropped a table by mistake\", \"an update without a where clause was committed\", \"undo this batch job\", \"restore the table to how it was an hour ago\", asks about the recycle bin, BIN$ objects, PURGE, RECYCLEBIN, row movement, ORA-08189 (row movement not enabled), flashback logs, the flash recovery area, DB_FLASHBACK_RETENTION_TARGET, or a fast alternative to incomplete recovery."
 ---
 
 # Flashback—Tables and Databases

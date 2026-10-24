@@ -1,6 +1,6 @@
 ---
 name: dba-plsql-tuning
-description: Tuning PL/SQL code by fixing its SQL first, applying procedural best practices, profiling line-by-line with DBMS_PROFILER, and replacing row-by-row loops with FORALL and BULK COLLECT, based on Chapter 37 (PL/SQL Tuning) of Oracle Database 11g: The Complete Reference. Use when a procedure, package or batch job is slow, when the user asks "why is this PL/SQL slow", "profile this block", "speed up this loop", when code does insert/update/delete or fetch inside a cursor FOR loop over many rows, or when choosing VARCHAR2 sizes and condition ordering in hot code.
+description: "Tuning PL/SQL code by fixing its SQL first, applying procedural best practices, profiling line-by-line with DBMS_PROFILER, and replacing row-by-row loops with FORALL and BULK COLLECT, based on Chapter 37 (PL/SQL Tuning) of Oracle Database 11g: The Complete Reference. Use when a procedure, package or batch job is slow, when the user asks \"why is this PL/SQL slow\", \"profile this block\", \"speed up this loop\", when code does insert/update/delete or fetch inside a cursor FOR loop over many rows, or when choosing VARCHAR2 sizes and condition ordering in hot code."
 ---
 
 # PL/SQL Tuning

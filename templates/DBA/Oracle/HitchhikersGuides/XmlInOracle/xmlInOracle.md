@@ -1,6 +1,6 @@
 ---
 name: dba-xml-in-oracle
-description: How to work with XML in Oracle: well-formed vs valid documents, DTD and XML Schema basics, generating XML from queries and applying XML to tables with the XML-SQL Utility (DBMS_XMLQuery, DBMS_XMLSave, Java OracleXMLQuery), and storing and querying XMLType columns, based on Chapter 52 (The Hitchhiker's Guide to XML in Oracle) of Oracle Database 11g: The Complete Reference. Use when the user needs to export table rows as XML, load or update tables from XML documents, design a DTD or XSD for data interchange, create an XMLType column, query it with XPath (extract, existsNode, getClobVal), or index XML content.
+description: "How to work with XML in Oracle: well-formed vs valid documents, DTD and XML Schema basics, generating XML from queries and applying XML to tables with the XML-SQL Utility (DBMS_XMLQuery, DBMS_XMLSave, Java OracleXMLQuery), and storing and querying XMLType columns, based on Chapter 52 (The Hitchhiker's Guide to XML in Oracle) of Oracle Database 11g: The Complete Reference. Use when the user needs to export table rows as XML, load or update tables from XML documents, design a DTD or XSD for data interchange, create an XMLType column, query it with XPath (extract, existsNode, getClobVal), or index XML content."
 ---
 
 # The Hitchhiker's Guide to XML in Oracle

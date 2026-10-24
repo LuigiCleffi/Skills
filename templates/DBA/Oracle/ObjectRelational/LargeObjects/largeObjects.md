@@ -1,6 +1,6 @@
 ---
 name: dba-large-objects
-description: Storing and manipulating large data with BLOB, CLOB, NCLOB and BFILE columns: LOB storage clauses, empty locators, directories and BFILENAME, SQL string functions on CLOBs, the DBMS_LOB package (READ, SUBSTR, INSTR, GETLENGTH, COMPARE, WRITE, APPEND, ERASE, TRIM, COPY, file open/close and load), migrating LONG columns and deleting LOBs, based on Chapter 40 (Using Large Objects) of Oracle Database 11g: The Complete Reference. Use when the user creates a table with LOB columns, writes a LOB ... STORE AS clause, uses EMPTY_CLOB/EMPTY_BLOB/BFILENAME or CREATE DIRECTORY, calls DBMS_LOB, reads files from the database server, converts LONG or LONG RAW, or sees LOB output truncated in SQL*Plus.
+description: "Storing and manipulating large data with BLOB, CLOB, NCLOB and BFILE columns: LOB storage clauses, empty locators, directories and BFILENAME, SQL string functions on CLOBs, the DBMS_LOB package (READ, SUBSTR, INSTR, GETLENGTH, COMPARE, WRITE, APPEND, ERASE, TRIM, COPY, file open/close and load), migrating LONG columns and deleting LOBs, based on Chapter 40 (Using Large Objects) of Oracle Database 11g: The Complete Reference. Use when the user creates a table with LOB columns, writes a LOB ... STORE AS clause, uses EMPTY_CLOB/EMPTY_BLOB/BFILENAME or CREATE DIRECTORY, calls DBMS_LOB, reads files from the database server, converts LONG or LONG RAW, or sees LOB output truncated in SQL*Plus."
 ---
 
 # Using Large Objects

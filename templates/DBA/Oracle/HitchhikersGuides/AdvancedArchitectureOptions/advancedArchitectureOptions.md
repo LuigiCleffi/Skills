@@ -1,6 +1,6 @@
 ---
 name: dba-advanced-architecture-options
-description: How Oracle Database Vault restricts even privileged users through realms, command rules, factors and separation of duties, and what Content Database, Records Database and Universal Records Manager add for document and retention management, based on Chapter 49 (Advanced Architecture Options—DB Vault, Content DB, and Records DB) of Oracle Database 11g: The Complete Reference. Use when the user must stop DBAs or SYSDBA from reading application data, mentions SOX/HIPAA internal controls, DV_OWNER, DV_ADMIN, DVSYS.DBMS_MACADM, realms or command rules, a patch or install fails with Database Vault enabled, or asks about Content DB, Records DB or record retention.
+description: "How Oracle Database Vault restricts even privileged users through realms, command rules, factors and separation of duties, and what Content Database, Records Database and Universal Records Manager add for document and retention management, based on Chapter 49 (Advanced Architecture Options—DB Vault, Content DB, and Records DB) of Oracle Database 11g: The Complete Reference. Use when the user must stop DBAs or SYSDBA from reading application data, mentions SOX/HIPAA internal controls, DV_OWNER, DV_ADMIN, DVSYS.DBMS_MACADM, realms or command rules, a patch or install fails with Database Vault enabled, or asks about Content DB, Records DB or record retention."
 ---
 
 # Advanced Architecture Options: Database Vault, Content DB, Records DB

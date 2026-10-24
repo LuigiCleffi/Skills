@@ -1,6 +1,6 @@
 ---
 name: dba-virtual-private-database
-description: Enforcing row- and column-level security with Oracle Virtual Private Database (application contexts, logon triggers, DBMS_RLS policy functions, column masking, policy groups), based on Chapter 20 (Advanced Security—Virtual Private Databases) of Oracle Database 11g: The Complete Reference. Use when users of a shared table must see only their own rows regardless of tool, for multi-tenant row isolation, when writing DBMS_RLS.ADD_POLICY or SYS_CONTEXT-based predicates, masking sensitive columns, or when hitting ORA-28115 or "no rows selected" surprises caused by a policy.
+description: "Enforcing row- and column-level security with Oracle Virtual Private Database (application contexts, logon triggers, DBMS_RLS policy functions, column masking, policy groups), based on Chapter 20 (Advanced Security—Virtual Private Databases) of Oracle Database 11g: The Complete Reference. Use when users of a shared table must see only their own rows regardless of tool, for multi-tenant row isolation, when writing DBMS_RLS.ADD_POLICY or SYS_CONTEXT-based predicates, masking sensitive columns, or when hitting ORA-28115 or \"no rows selected\" surprises caused by a policy."
 ---
 
 # Advanced Security—Virtual Private Databases

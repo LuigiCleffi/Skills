@@ -1,6 +1,6 @@
 ---
 name: tdd-interesting-times
-description: Making two similar methods identical by backing up, asking the test suite instead of reasoning, and handling a red bar caused by an experiment, based on Chapter 10 (Interesting Times) of Test-Driven Development: By Example. Use when two methods look alike but are not identical, when you are debating a design question the tests could answer, when an experiment turns the bar red, when a failure message is unreadable, or when equality compares classes instead of values.
+description: "Making two similar methods identical by backing up, asking the test suite instead of reasoning, and handling a red bar caused by an experiment, based on Chapter 10 (Interesting Times) of Test-Driven Development: By Example. Use when two methods look alike but are not identical, when you are debating a design question the tests could answer, when an experiment turns the bar red, when a failure message is unreadable, or when equality compares classes instead of values."
 ---
 
 # Interesting Times

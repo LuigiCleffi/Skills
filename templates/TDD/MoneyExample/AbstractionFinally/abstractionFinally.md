@@ -1,6 +1,6 @@
 ---
 name: tdd-abstraction-finally
-description: Finishing an abstraction by implementing the remaining interface operations with tests written for future readers, following compiler ripples, and running short experiments you discard if they fail, based on Chapter 16 (Abstraction, Finally) of Test-Driven Development: By Example. Use when completing stubbed interface methods, when a test is longer than the code it drives, when deciding how to construct test inputs for clarity, when weighing whether TDD pays off, or when an implementation-detail experiment is not working out.
+description: "Finishing an abstraction by implementing the remaining interface operations with tests written for future readers, following compiler ripples, and running short experiments you discard if they fail, based on Chapter 16 (Abstraction, Finally) of Test-Driven Development: By Example. Use when completing stubbed interface methods, when a test is longer than the code it drives, when deciding how to construct test inputs for clarity, when weighing whether TDD pays off, or when an implementation-detail experiment is not working out."
 ---
 
 # Abstraction, Finally

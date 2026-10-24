@@ -1,6 +1,6 @@
 ---
 name: dba-sql-replay
-description: Capturing a production database workload and replaying it on an isolated test database (Database Replay with DBMS_WORKLOAD_CAPTURE, DBMS_WORKLOAD_REPLAY and the wrc replay client) to measure the impact of changes, based on Chapter 31 (SQL Replay) of Oracle Database 11g: The Complete Reference. Use when a user wants to "test an upgrade/parameter change/patch with real production load", "replay production traffic", compare AWR before and after a change, evaluate a packaged application whose code they cannot see, or asks about workload capture filters, PROCESS_CAPTURE, wrc calibrate, REMAP_CONNECTION, think time or connect time scaling.
+description: "Capturing a production database workload and replaying it on an isolated test database (Database Replay with DBMS_WORKLOAD_CAPTURE, DBMS_WORKLOAD_REPLAY and the wrc replay client) to measure the impact of changes, based on Chapter 31 (SQL Replay) of Oracle Database 11g: The Complete Reference. Use when a user wants to \"test an upgrade/parameter change/patch with real production load\", \"replay production traffic\", compare AWR before and after a change, evaluate a packaged application whose code they cannot see, or asks about workload capture filters, PROCESS_CAPTURE, wrc calibrate, REMAP_CONNECTION, think time or connect time scaling."
 ---
 
 # SQL Replay

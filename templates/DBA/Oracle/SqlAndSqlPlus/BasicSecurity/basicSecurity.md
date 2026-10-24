@@ -1,6 +1,6 @@
 ---
 name: dba-basic-security
-description: Managing Oracle users, passwords, profiles, roles, system and object privileges, view-based security, synonyms and quotas, based on Chapter 19 (Basic Oracle Security) of Oracle Database 11g: The Complete Reference. Use when creating or dropping users, granting or revoking privileges or roles, designing application roles, setting password policies (lock, expiry, reuse), granting via views or PUBLIC, or when hitting ORA-01031, ORA-00942, ORA-01720, ORA-28000, ORA-28001 or ORA-28007.
+description: "Managing Oracle users, passwords, profiles, roles, system and object privileges, view-based security, synonyms and quotas, based on Chapter 19 (Basic Oracle Security) of Oracle Database 11g: The Complete Reference. Use when creating or dropping users, granting or revoking privileges or roles, designing application roles, setting password policies (lock, expiry, reuse), granting via views or PUBLIC, or when hitting ORA-01031, ORA-00942, ORA-01720, ORA-28000, ORA-28001 or ORA-28007."
 ---
 
 # Basic Oracle Security

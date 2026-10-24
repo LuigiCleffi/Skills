@@ -1,6 +1,6 @@
 ---
 name: tdd-times-were-livin-in
-description: Reconciling near-duplicate classes by pushing their differences out to the caller and then pulling identical code up, while consciously adjusting step size, based on Chapter 9 (Times We're Livin' In) of Test-Driven Development: By Example. Use when two subclasses or modules differ only in a constant or constructor detail, when you feel stuck on a big design idea, when a refactoring tempts you into a side trip, or when deciding whether to take tiny or large refactoring steps.
+description: "Reconciling near-duplicate classes by pushing their differences out to the caller and then pulling identical code up, while consciously adjusting step size, based on Chapter 9 (Times We're Livin' In) of Test-Driven Development: By Example. Use when two subclasses or modules differ only in a constant or constructor detail, when you feel stuck on a big design idea, when a refactoring tempts you into a side trip, or when deciding whether to take tiny or large refactoring steps."
 ---
 
 # Times We're Livin' In

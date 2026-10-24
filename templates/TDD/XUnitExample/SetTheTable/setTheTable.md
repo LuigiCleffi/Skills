@@ -1,6 +1,6 @@
 ---
 name: tdd-set-the-table
-description: Building test fixtures with setUp so every test gets fresh, isolated objects, and test-driving the setUp hook itself, based on Chapter 19 (Set the Table) of Test-Driven Development: By Example. Use when several tests repeat the same arrange code, when tests share objects to save time, when a test fails only after (or only before) another test, when one failure cascades into many, when deciding between per-test and shared fixtures, or when adding a setUp/beforeEach hook to a runner.
+description: "Building test fixtures with setUp so every test gets fresh, isolated objects, and test-driving the setUp hook itself, based on Chapter 19 (Set the Table) of Test-Driven Development: By Example. Use when several tests repeat the same arrange code, when tests share objects to save time, when a test fails only after (or only before) another test, when one failure cascades into many, when deciding between per-test and shared fixtures, or when adding a setUp/beforeEach hook to a runner."
 ---
 
 # Set the Table

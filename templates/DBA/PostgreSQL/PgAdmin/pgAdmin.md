@@ -1,6 +1,6 @@
 ---
 name: postgres-pgadmin
-description: Using pgAdmin as a graphical front end to PostgreSQL for connecting, browsing catalogs, generating SQL, granting privileges, importing and exporting files, running pg_dump/pg_restore through wizards, reading graphical explain plans and scheduling jobs with pgAgent, based on Chapter 4 (Using pgAdmin) of PostgreSQL: Up and Running, 3rd edition. Use when the user works in pgAdmin 3 or 4, registers a server connection, asks where a pgAdmin menu or tab is, uses the Grant Wizard or Default Privileges tab, the Backup/Restore/Backup Globals dialogs, the Import/Export dialog, graphical explain, the adminpack extension, or creates, debugs or reports on pgAgent jobs (pgagent schema, pga_job, pga_jobsteplog).
+description: "Using pgAdmin as a graphical front end to PostgreSQL for connecting, browsing catalogs, generating SQL, granting privileges, importing and exporting files, running pg_dump/pg_restore through wizards, reading graphical explain plans and scheduling jobs with pgAgent, based on Chapter 4 (Using pgAdmin) of PostgreSQL: Up and Running, 3rd edition. Use when the user works in pgAdmin 3 or 4, registers a server connection, asks where a pgAdmin menu or tab is, uses the Grant Wizard or Default Privileges tab, the Backup/Restore/Backup Globals dialogs, the Import/Export dialog, graphical explain, the adminpack extension, or creates, debugs or reports on pgAgent jobs (pgagent schema, pga_job, pga_jobsteplog)."
 ---
 
 # Using pgAdmin

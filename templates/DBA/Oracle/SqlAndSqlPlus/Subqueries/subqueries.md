@@ -1,6 +1,6 @@
 ---
 name: dba-subqueries
-description: Combining queries in Oracle with nested and correlated subqueries, EXISTS and NOT EXISTS, ANSI inner, outer, natural and full joins, and the set operators UNION, UNION ALL, INTERSECT and MINUS, based on Chapter 13 (When One Query Depends upon Another) of Oracle Database 11g: The Complete Reference. Use when the user asks for rows with or without matches in another table ("customers with no orders"), converts old (+) outer-join syntax, sees ORA-01789 (query block has incorrect number of result columns), gets missing or duplicated rows from a join or UNION, or must choose between IN, EXISTS, joins and set operators.
+description: "Combining queries in Oracle with nested and correlated subqueries, EXISTS and NOT EXISTS, ANSI inner, outer, natural and full joins, and the set operators UNION, UNION ALL, INTERSECT and MINUS, based on Chapter 13 (When One Query Depends upon Another) of Oracle Database 11g: The Complete Reference. Use when the user asks for rows with or without matches in another table (\"customers with no orders\"), converts old (+) outer-join syntax, sees ORA-01789 (query block has incorrect number of result columns), gets missing or duplicated rows from a join or UNION, or must choose between IN, EXISTS, joins and set operators."
 ---
 
 # When One Query Depends upon Another

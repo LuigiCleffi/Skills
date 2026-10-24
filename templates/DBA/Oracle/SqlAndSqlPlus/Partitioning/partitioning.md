@@ -1,6 +1,6 @@
 ---
 name: dba-partitioning
-description: Splitting large Oracle tables and indexes into partitions (range, hash, list, composite, reference, interval) and maintaining them, based on Chapter 18 (Partitioning) of Oracle Database 11g: The Complete Reference. Use when a table is very large or time-based, when designing data aging/archiving, choosing a partition key, writing PARTITION BY clauses, choosing local vs global indexes, doing bulk loads with exchange partition, or when partition maintenance (add, drop, split, truncate, exchange) is requested.
+description: "Splitting large Oracle tables and indexes into partitions (range, hash, list, composite, reference, interval) and maintaining them, based on Chapter 18 (Partitioning) of Oracle Database 11g: The Complete Reference. Use when a table is very large or time-based, when designing data aging/archiving, choosing a partition key, writing PARTITION BY clauses, choosing local vs global indexes, doing bulk loads with exchange partition, or when partition maintenance (add, drop, split, truncate, exchange) is requested."
 ---
 
 # Partitioning

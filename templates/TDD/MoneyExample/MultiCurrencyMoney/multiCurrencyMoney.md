@@ -1,6 +1,6 @@
 ---
 name: tdd-multi-currency-money
-description: Starting a feature test-first with a to-do list, an imagined interface, stubs to compile, a faked green bar and duplication removal between test and code, based on Chapter 1 (Multi-Currency Money) of Test-Driven Development: By Example. Use when the user says "let's TDD this", asks where to start a new feature, how to write the first test, what the red/green/refactor cycle looks like step by step, or when a passing implementation still hard-codes the expected answer.
+description: "Starting a feature test-first with a to-do list, an imagined interface, stubs to compile, a faked green bar and duplication removal between test and code, based on Chapter 1 (Multi-Currency Money) of Test-Driven Development: By Example. Use when the user says \"let's TDD this\", asks where to start a new feature, how to write the first test, what the red/green/refactor cycle looks like step by step, or when a passing implementation still hard-codes the expected answer."
 ---
 
 # Multi-Currency Money

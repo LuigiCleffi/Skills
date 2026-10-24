@@ -1,6 +1,6 @@
 ---
 name: tdd-first-steps-to-xunit
-description: Bootstrapping test-first development of tooling that must verify itself (a test runner, assertion library, linter, build step), and the core xUnit mechanic of a test case that runs a named method, based on Chapter 18 (First Steps to xUnit) of Test-Driven Development: By Example. Use when the user asks to build a test framework, test harness, plugin runner or self-checking tool; when there is no test infrastructure yet to run the first test; when a test runner "runs" but you cannot tell whether a test method was actually invoked; or when dynamic method dispatch by name (getattr, reflection) is being introduced.
+description: "Bootstrapping test-first development of tooling that must verify itself (a test runner, assertion library, linter, build step), and the core xUnit mechanic of a test case that runs a named method, based on Chapter 18 (First Steps to xUnit) of Test-Driven Development: By Example. Use when the user asks to build a test framework, test harness, plugin runner or self-checking tool; when there is no test infrastructure yet to run the first test; when a test runner \"runs\" but you cannot tell whether a test method was actually invoked; or when dynamic method dispatch by name (getattr, reflection) is being introduced."
 ---
 
 # First Steps to xUnit

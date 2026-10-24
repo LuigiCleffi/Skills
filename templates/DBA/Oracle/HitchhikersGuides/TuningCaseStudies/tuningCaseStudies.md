@@ -1,6 +1,6 @@
 ---
 name: dba-tuning-case-studies
-description: A diagnostic method for Oracle performance problems drawn from three cases (I/O waits, application-killing queries, long batch loads), covering per-second AWR analysis, query rewrite, the 10053 optimizer trace and partition-exchange loading, based on Chapter 48 (Case Studies in Tuning) of Oracle Database 11g: The Complete Reference. Use when the system slows under concurrency or month-end batch, AWR/Statspack shows high db file sequential read or buffer busy waits, a query uses leading-wildcard LIKE, LOWER() on an indexed column or literals instead of binds, plans differ between environments, or a daily load overruns its window.
+description: "A diagnostic method for Oracle performance problems drawn from three cases (I/O waits, application-killing queries, long batch loads), covering per-second AWR analysis, query rewrite, the 10053 optimizer trace and partition-exchange loading, based on Chapter 48 (Case Studies in Tuning) of Oracle Database 11g: The Complete Reference. Use when the system slows under concurrency or month-end batch, AWR/Statspack shows high db file sequential read or buffer busy waits, a query uses leading-wildcard LIKE, LOWER() on an indexed column or literals instead of binds, plans differ between environments, or a daily load overruns its window."
 ---
 
 # Case Studies in Tuning

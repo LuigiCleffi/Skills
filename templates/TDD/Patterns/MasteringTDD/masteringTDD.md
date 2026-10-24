@@ -1,6 +1,6 @@
 ---
 name: tdd-mastering-tdd
-description: Decision guidance for practicing TDD in real projects, organized by question (step size, what not to test, how to tell good tests, how many tests, when to delete tests, legacy code, application-level tests, scaling, patterns, XP practices), based on Chapter 32 (Mastering TDD) of Test-Driven Development: By Example. Use when the user asks how big TDD steps should be, what doesn't need tests, whether the tests are good or too many, whether to delete a redundant test, how to start TDD in an existing untested codebase, whether to drive from acceptance tests, or why setup is long and tests are slow or brittle.
+description: "Decision guidance for practicing TDD in real projects, organized by question (step size, what not to test, how to tell good tests, how many tests, when to delete tests, legacy code, application-level tests, scaling, patterns, XP practices), based on Chapter 32 (Mastering TDD) of Test-Driven Development: By Example. Use when the user asks how big TDD steps should be, what doesn't need tests, whether the tests are good or too many, whether to delete a redundant test, how to start TDD in an existing untested codebase, whether to drive from acceptance tests, or why setup is long and tests are slow or brittle."
 ---
 
 # Mastering TDD

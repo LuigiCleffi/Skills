@@ -1,6 +1,6 @@
 ---
 name: tdd-degenerate-objects
-description: The three-phase TDD cycle (write a test, make it run, make it right) and choosing between Fake It and Obvious Implementation to reach green, based on Chapter 2 (Degenerate Objects) of Test-Driven Development: By Example. Use when deciding how much code to write to pass a test, when an expected red turns up unexpectedly, when an object mutates on an operation and should not, or when a design dislike (side effects, aliasing) should become a test.
+description: "The three-phase TDD cycle (write a test, make it run, make it right) and choosing between Fake It and Obvious Implementation to reach green, based on Chapter 2 (Degenerate Objects) of Test-Driven Development: By Example. Use when deciding how much code to write to pass a test, when an expected red turns up unexpectedly, when an object mutates on an operation and should not, or when a design dislike (side effects, aliasing) should become a test."
 ---
 
 # Degenerate Objects

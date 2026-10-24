@@ -1,6 +1,6 @@
 ---
 name: tdd-patterns
-description: The strategic TDD patterns (what a test is, when to write it, what logic and data to test), based on Chapter 25 (Test-Driven Development Patterns) of Test-Driven Development: By Example. Use when starting a TDD session, deciding what to test or when to write tests, planning a test list, writing a test from the assertion backwards, choosing test data, the user says "no time to test", tests share state or depend on run order, or test values look like unexplained magic numbers.
+description: "The strategic TDD patterns (what a test is, when to write it, what logic and data to test), based on Chapter 25 (Test-Driven Development Patterns) of Test-Driven Development: By Example. Use when starting a TDD session, deciding what to test or when to write tests, planning a test list, writing a test from the assertion backwards, choosing test data, the user says \"no time to test\", tests share state or depend on run order, or test values look like unexplained magic numbers."
 ---
 
 # Test-Driven Development Patterns

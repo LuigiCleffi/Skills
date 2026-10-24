@@ -1,6 +1,6 @@
 ---
 name: tdd-xunit-patterns
-description: How to use an xUnit-family framework well (Assertion, Fixture, External Fixture, Test Method, Exception Test, All Tests), based on Chapter 29 (xUnit Patterns) of Test-Driven Development: By Example. Use when writing or reviewing assertions, deciding whether to move setup into setUp/fixtures, releasing files/connections in tearDown, naming test methods, testing that code raises an exception, or wiring a suite that runs every test in the project.
+description: "How to use an xUnit-family framework well (Assertion, Fixture, External Fixture, Test Method, Exception Test, All Tests), based on Chapter 29 (xUnit Patterns) of Test-Driven Development: By Example. Use when writing or reviewing assertions, deciding whether to move setup into setUp/fixtures, releasing files/connections in tearDown, naming test methods, testing that code raises an exception, or wiring a suite that runs every test in the project."
 ---
 
 # xUnit Patterns

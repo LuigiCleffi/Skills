@@ -1,6 +1,6 @@
 ---
 name: dba-object-types
-description: Creating and using Oracle object types, sharing them across schemas, indexing their attributes, layering object views over relational tables, writing INSTEAD OF triggers, and defining member, map and order methods, based on Chapter 38 (Implementing Object Types, Object Views, and Methods) of Oracle Database 11g: The Complete Reference. Use when the user writes CREATE TYPE ... AS OBJECT or CREATE TYPE BODY, queries attributes like t.col.attr, gets PLS-00201 or "Type created with compilation errors" referencing another schema's type, needs to index an object attribute, wants an object view over an existing table, hits ORA-01779 updating a join view, or needs methods to compare or sort objects.
+description: "Creating and using Oracle object types, sharing them across schemas, indexing their attributes, layering object views over relational tables, writing INSTEAD OF triggers, and defining member, map and order methods, based on Chapter 38 (Implementing Object Types, Object Views, and Methods) of Oracle Database 11g: The Complete Reference. Use when the user writes CREATE TYPE ... AS OBJECT or CREATE TYPE BODY, queries attributes like t.col.attr, gets PLS-00201 or \"Type created with compilation errors\" referencing another schema's type, needs to index an object attribute, wants an object view over an existing table, hits ORA-01779 updating a join view, or needs methods to compare or sort objects."
 ---
 
 # Implementing Object Types, Object Views, and Methods

@@ -1,6 +1,6 @@
 ---
 name: tdd-make-it
-description: Turning a Fake It into a real implementation when the path back is not obvious, by writing tests that force the needed objects, passing with ugly code, and then moving code where it belongs and replacing type checks with polymorphism, based on Chapter 13 (Make It) of Test-Driven Development: By Example. Use when a test passes with a hard-coded value, when it is unclear how to generalize a fake, when code casts or checks types with instanceof, or when you are tempted to add a parameter you only expect to need.
+description: "Turning a Fake It into a real implementation when the path back is not obvious, by writing tests that force the needed objects, passing with ugly code, and then moving code where it belongs and replacing type checks with polymorphism, based on Chapter 13 (Make It) of Test-Driven Development: By Example. Use when a test passes with a hard-coded value, when it is unclear how to generalize a fake, when code casts or checks types with instanceof, or when you are tempted to add a parameter you only expect to need."
 ---
 
 # Make It

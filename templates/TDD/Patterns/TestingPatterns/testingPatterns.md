@@ -1,6 +1,6 @@
 ---
 name: tdd-testing-patterns
-description: Detailed techniques for writing individual tests (shrinking an oversized test, faking expensive collaborators, checking communication and call order, forcing error paths, ending a session), based on Chapter 27 (Testing Patterns) of Test-Driven Development: By Example. Use when a test needs too many changes to pass, code depends on a database, network or other slow or global resource, you must verify callbacks, observers or call order, error-handling code is untested, or you are ending a work session solo or committing to a shared branch.
+description: "Detailed techniques for writing individual tests (shrinking an oversized test, faking expensive collaborators, checking communication and call order, forcing error paths, ending a session), based on Chapter 27 (Testing Patterns) of Test-Driven Development: By Example. Use when a test needs too many changes to pass, code depends on a database, network or other slow or global resource, you must verify callbacks, observers or call order, error-handling code is untested, or you are ending a work session solo or committing to a shared branch."
 ---
 
 # Testing Patterns

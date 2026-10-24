@@ -1,6 +1,6 @@
 ---
 name: postgres-data-types
-description: Choosing and using PostgreSQL data types and their functions and operators - serial and sequences, generate_series, text types and string/regex functions, date/time types and time zones, intervals, arrays, range types, json and jsonb, xml, full text search (tsvector, tsquery, ranking) and custom composite types and operators, based on Chapter 5 (Data Types) of PostgreSQL: Up and Running, 3rd edition. Use when designing columns, choosing timestamp vs timestamptz, char vs varchar vs text, json vs jsonb, querying with ->, ->>, @>, &&, ?, regexp_matches, unnest, string_to_array, array_agg, daterange or tstzrange, building full text search with to_tsvector, to_tsquery and @@, or creating CREATE TYPE and CREATE OPERATOR.
+description: "Choosing and using PostgreSQL data types and their functions and operators - serial and sequences, generate_series, text types and string/regex functions, date/time types and time zones, intervals, arrays, range types, json and jsonb, xml, full text search (tsvector, tsquery, ranking) and custom composite types and operators, based on Chapter 5 (Data Types) of PostgreSQL: Up and Running, 3rd edition. Use when designing columns, choosing timestamp vs timestamptz, char vs varchar vs text, json vs jsonb, querying with ->, ->>, @>, &&, ?, regexp_matches, unnest, string_to_array, array_agg, daterange or tstzrange, building full text search with to_tsvector, to_tsquery and @@, or creating CREATE TYPE and CREATE OPERATOR."
 ---
 
 # Data Types

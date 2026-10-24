@@ -1,6 +1,6 @@
 ---
 name: tdd-green-bar-patterns
-description: The four ways to make a failing test pass (Fake It, Triangulate, Obvious Implementation, One to Many) and how to choose step size, based on Chapter 28 (Green Bar Patterns) of Test-Driven Development: By Example. Use when a test is red and you must decide the first implementation, the user asks whether returning a constant is cheating, the right abstraction is unclear, an "obvious" implementation keeps failing, or an operation must work over a collection.
+description: "The four ways to make a failing test pass (Fake It, Triangulate, Obvious Implementation, One to Many) and how to choose step size, based on Chapter 28 (Green Bar Patterns) of Test-Driven Development: By Example. Use when a test is red and you must decide the first implementation, the user asks whether returning a constant is cheating, the right abstraction is unclear, an \"obvious\" implementation keeps failing, or an operation must work over a collection."
 ---
 
 # Green Bar Patterns

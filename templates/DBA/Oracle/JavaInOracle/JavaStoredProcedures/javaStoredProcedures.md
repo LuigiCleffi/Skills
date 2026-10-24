@@ -1,6 +1,6 @@
 ---
 name: dba-java-stored-procedures
-description: Writing Java classes that run inside Oracle, loading them with loadjava, publishing their static methods as PL/SQL call specs with LANGUAGE JAVA NAME, calling them from SQL*Plus and PL/SQL, debugging with DBMS_JAVA.SET_OUTPUT, and deciding between Java and PL/SQL for performance, based on Chapter 44 (Java Stored Procedures) of Oracle Database 11g: The Complete Reference. Use when the user runs loadjava, writes CREATE PROCEDURE/FUNCTION ... AS LANGUAGE JAVA, uses jdbc:default:connection, sees ORA-29524 or unresolved Java classes, asks why the first call of a Java procedure is slow, or wants to move logic between Java and PL/SQL.
+description: "Writing Java classes that run inside Oracle, loading them with loadjava, publishing their static methods as PL/SQL call specs with LANGUAGE JAVA NAME, calling them from SQL*Plus and PL/SQL, debugging with DBMS_JAVA.SET_OUTPUT, and deciding between Java and PL/SQL for performance, based on Chapter 44 (Java Stored Procedures) of Oracle Database 11g: The Complete Reference. Use when the user runs loadjava, writes CREATE PROCEDURE/FUNCTION ... AS LANGUAGE JAVA, uses jdbc:default:connection, sees ORA-29524 or unresolved Java classes, asks why the first call of a Java procedure is slow, or wants to move logic between Java and PL/SQL."
 ---
 
 # Java Stored Procedures

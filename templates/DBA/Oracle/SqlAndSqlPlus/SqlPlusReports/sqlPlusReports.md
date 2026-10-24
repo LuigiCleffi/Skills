@@ -1,6 +1,6 @@
 ---
 name: dba-sqlplus-reports
-description: Building repeatable formatted reports and working efficiently in SQL*Plus (start files, column/break/compute, titles, page layout, spool, buffer editing, login.sql), based on Chapter 6 (Basic SQL*Plus Reports and Commands) of Oracle Database 11g: The Complete Reference. Use when the user asks to format query output in SQL*Plus, write a .sql report script, add subtotals or averages per group, set headings or column widths, spool results to a file, fix wrapped or truncated columns, edit the SQL buffer, set up login.sql/glogin.sql, or mixes up SQL*Plus formatting commands with SQL.
+description: "Building repeatable formatted reports and working efficiently in SQL*Plus (start files, column/break/compute, titles, page layout, spool, buffer editing, login.sql), based on Chapter 6 (Basic SQL*Plus Reports and Commands) of Oracle Database 11g: The Complete Reference. Use when the user asks to format query output in SQL*Plus, write a .sql report script, add subtotals or averages per group, set headings or column widths, spool results to a file, fix wrapped or truncated columns, edit the SQL buffer, set up login.sql/glogin.sql, or mixes up SQL*Plus formatting commands with SQL."
 ---
 
 # Basic SQL*Plus Reports and Commands

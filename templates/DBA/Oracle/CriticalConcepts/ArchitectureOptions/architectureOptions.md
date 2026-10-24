@@ -1,6 +1,6 @@
 ---
 name: dba-architecture-options
-description: Map of the Oracle architecture building blocks (database vs instance, table and index types, tablespaces, ASM, undo, recycle bin, security, programmatic interfaces) and how to pick the right one for a requirement, based on Chapter 1 (Oracle Database 11g Architecture Options) of Oracle Database 11g: The Complete Reference. Use when the user asks "which Oracle feature should I use for X", needs to explain database vs instance or SGA, chooses a table or index type, wonders why dropped tables still use space, or reviews an existing schema for features it could adopt after an upgrade.
+description: "Map of the Oracle architecture building blocks (database vs instance, table and index types, tablespaces, ASM, undo, recycle bin, security, programmatic interfaces) and how to pick the right one for a requirement, based on Chapter 1 (Oracle Database 11g Architecture Options) of Oracle Database 11g: The Complete Reference. Use when the user asks \"which Oracle feature should I use for X\", needs to explain database vs instance or SGA, chooses a table or index type, wonders why dropped tables still use space, or reviews an existing schema for features it could adopt after an upgrade."
 ---
 
 # Oracle Database 11g Architecture Options

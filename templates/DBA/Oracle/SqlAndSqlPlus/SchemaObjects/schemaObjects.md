@@ -1,6 +1,6 @@
 ---
 name: dba-schema-objects
-description: Designing and changing Oracle tables, constraints, views, indexes, clusters and sequences, based on Chapter 17 (Creating and Managing Tables, Views, Indexes, Clusters, and Sequences) of Oracle Database 11g: The Complete Reference. Use when writing or reviewing CREATE/ALTER/DROP TABLE, adding or dropping columns, choosing column widths and NUMBER precision, naming constraints, creating views, B-tree/bitmap/function-based/invisible indexes, index-organized tables, CTAS, sequences, or when hitting ORA-12899, ORA-01438, ORA-01758, ORA-00001, ORA-04063 or DDL lock timeouts.
+description: "Designing and changing Oracle tables, constraints, views, indexes, clusters and sequences, based on Chapter 17 (Creating and Managing Tables, Views, Indexes, Clusters, and Sequences) of Oracle Database 11g: The Complete Reference. Use when writing or reviewing CREATE/ALTER/DROP TABLE, adding or dropping columns, choosing column widths and NUMBER precision, naming constraints, creating views, B-tree/bitmap/function-based/invisible indexes, index-organized tables, CTAS, sequences, or when hitting ORA-12899, ORA-01438, ORA-01758, ORA-00001, ORA-04063 or DDL lock timeouts."
 ---
 
 # Creating and Managing Tables, Views, Indexes, Clusters, and Sequences

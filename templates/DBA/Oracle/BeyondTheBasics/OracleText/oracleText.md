@@ -1,6 +1,6 @@
 ---
 name: dba-oracle-text
-description: Building full-text search in Oracle with Oracle Text (CONTEXT and CTXCAT indexes, CONTAINS and CATSEARCH queries, scoring, fuzzy, stem and proximity search, index sync and index sets), based on Chapter 27 (Using Oracle Text for Text Searches) of Oracle Database 11g: The Complete Reference. Use when the user needs keyword or relevance search over text or CLOB columns, replaces slow LIKE '%word%' queries, writes CONTAINS, CATSEARCH or SCORE, creates an index with INDEXTYPE IS CTXSYS.CONTEXT or CTXSYS.CTXCAT, or finds new rows missing from text search results.
+description: "Building full-text search in Oracle with Oracle Text (CONTEXT and CTXCAT indexes, CONTAINS and CATSEARCH queries, scoring, fuzzy, stem and proximity search, index sync and index sets), based on Chapter 27 (Using Oracle Text for Text Searches) of Oracle Database 11g: The Complete Reference. Use when the user needs keyword or relevance search over text or CLOB columns, replaces slow LIKE '%word%' queries, writes CONTAINS, CATSEARCH or SCORE, creates an index with INDEXTYPE IS CTXSYS.CONTEXT or CTXSYS.CTXCAT, or finds new rows missing from text search results."
 ---
 
 # Using Oracle Text for Text Searches

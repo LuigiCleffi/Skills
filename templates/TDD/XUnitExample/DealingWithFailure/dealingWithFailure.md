@@ -1,6 +1,6 @@
 ---
 name: tdd-dealing-with-failure
-description: Unblocking a large failing test with a smaller, more granular test, and making a runner catch and record failures instead of crashing, based on Chapter 22 (Dealing with Failure) of Test-Driven Development: By Example. Use when a test runner, job runner, batch processor or plugin host must survive a failing unit of work and report it; when a big test is red and the next step is unclear; when testing a reporter separately from the code that feeds it; or when you notice a new risk mid-task (e.g. errors in setup) and are tempted to fix it right away.
+description: "Unblocking a large failing test with a smaller, more granular test, and making a runner catch and record failures instead of crashing, based on Chapter 22 (Dealing with Failure) of Test-Driven Development: By Example. Use when a test runner, job runner, batch processor or plugin host must survive a failing unit of work and report it; when a big test is red and the next step is unclear; when testing a reporter separately from the code that feeds it; or when you notice a new risk mid-task (e.g. errors in setup) and are tempted to fix it right away."
 ---
 
 # Dealing with Failure

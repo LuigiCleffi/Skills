@@ -1,6 +1,6 @@
 ---
 name: dba-complex-queries
-description: Building layered summary views, hypothetical rankings (RANK and PERCENT_RANK WITHIN GROUP), global temporary tables, subtotals with ROLLUP, CUBE and GROUPING, and tree reports with START WITH / CONNECT BY PRIOR and LEVEL, based on Chapter 14 (Some Complex Possibilities) of Oracle Database 11g: The Complete Reference. Use when the user needs subtotals and grand totals in a single SQL statement, a crosstab of all total combinations, an org chart, bill of materials or parent-child hierarchy report, "where would this value rank", or a session- or transaction-scoped scratch table.
+description: "Building layered summary views, hypothetical rankings (RANK and PERCENT_RANK WITHIN GROUP), global temporary tables, subtotals with ROLLUP, CUBE and GROUPING, and tree reports with START WITH / CONNECT BY PRIOR and LEVEL, based on Chapter 14 (Some Complex Possibilities) of Oracle Database 11g: The Complete Reference. Use when the user needs subtotals and grand totals in a single SQL statement, a crosstab of all total combinations, an org chart, bill of materials or parent-child hierarchy report, \"where would this value rank\", or a session- or transaction-scoped scratch table."
 ---
 
 # Some Complex Possibilities

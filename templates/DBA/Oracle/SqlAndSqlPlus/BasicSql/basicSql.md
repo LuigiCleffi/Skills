@@ -1,6 +1,6 @@
 ---
 name: dba-basic-sql
-description: Writing basic Oracle queries in SQL*Plus: connecting, describe, select/from/where/order by, comparison, LIKE, NULL and list operators, AND/OR precedence, simple subqueries, joins and views, based on Chapter 5 (The Basic Parts of Speech in SQL) of Oracle Database 11g: The Complete Reference. Use when the user writes or debugs a simple query, a filter returns too many or too few rows, a LIKE or case-sensitive match fails, NULL comparisons misbehave, numbers stored as text sort wrongly, or errors such as ORA-01017, ORA-01427, ORA-00904 or an ambiguous column appear.
+description: "Writing basic Oracle queries in SQL*Plus: connecting, describe, select/from/where/order by, comparison, LIKE, NULL and list operators, AND/OR precedence, simple subqueries, joins and views, based on Chapter 5 (The Basic Parts of Speech in SQL) of Oracle Database 11g: The Complete Reference. Use when the user writes or debugs a simple query, a filter returns too many or too few rows, a LIKE or case-sensitive match fails, NULL comparisons misbehave, numbers stored as text sort wrongly, or errors such as ORA-01017, ORA-01427, ORA-00904 or an ambiguous column appear."
 ---
 
 # The Basic Parts of Speech in SQL

@@ -1,6 +1,6 @@
 ---
 name: dba-materialized-views
-description: Creating, refreshing and tuning materialized views and materialized view logs for local replicas and precomputed summaries, including query rewrite and the SQL Access Advisor, based on Chapter 26 (Using Materialized Views) of Oracle Database 11g: The Complete Reference. Use when the user wants a local copy of remote data, a summary table that stays in sync, faster aggregate queries, CREATE MATERIALIZED VIEW or MATERIALIZED VIEW LOG, fast versus complete refresh, DBMS_MVIEW.REFRESH, EXPLAIN_MVIEW, EXPLAIN_REWRITE, ENABLE QUERY REWRITE, or asks why a fast refresh or rewrite is not happening.
+description: "Creating, refreshing and tuning materialized views and materialized view logs for local replicas and precomputed summaries, including query rewrite and the SQL Access Advisor, based on Chapter 26 (Using Materialized Views) of Oracle Database 11g: The Complete Reference. Use when the user wants a local copy of remote data, a summary table that stays in sync, faster aggregate queries, CREATE MATERIALIZED VIEW or MATERIALIZED VIEW LOG, fast versus complete refresh, DBMS_MVIEW.REFRESH, EXPLAIN_MVIEW, EXPLAIN_REWRITE, ENABLE QUERY REWRITE, or asks why a fast refresh or rewrite is not happening."
 ---
 
 # Using Materialized Views

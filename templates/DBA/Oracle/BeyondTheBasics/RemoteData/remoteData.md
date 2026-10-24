@@ -1,6 +1,6 @@
 ---
 name: dba-remote-data
-description: Querying and changing data in other Oracle databases through database links, synonyms and views, based on Chapter 25 (Accessing Remote Data) of Oracle Database 11g: The Complete Reference. Use when the user writes table@link SQL, creates or debugs a database link (CREATE DATABASE LINK, public, private, shared, CONNECT TO CURRENT_USER), hits link errors around tnsnames.ora, GLOBAL_NAMES or OPEN_LINKS, wants location transparency with synonyms, or needs to restrict what remote accounts can see.
+description: "Querying and changing data in other Oracle databases through database links, synonyms and views, based on Chapter 25 (Accessing Remote Data) of Oracle Database 11g: The Complete Reference. Use when the user writes table@link SQL, creates or debugs a database link (CREATE DATABASE LINK, public, private, shared, CONNECT TO CURRENT_USER), hits link errors around tnsnames.ora, GLOBAL_NAMES or OPEN_LINKS, wants location transparency with synonyms, or needs to restrict what remote accounts can see."
 ---
 
 # Accessing Remote Data

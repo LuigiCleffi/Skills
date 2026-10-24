@@ -1,6 +1,6 @@
 ---
 name: dba-transparent-data-encryption
-description: Encrypting Oracle data at rest with Transparent Data Encryption (wallet setup, master key, opening and closing the wallet, column encryption with or without salt, encrypted tablespaces), based on Chapter 21 (Advanced Security: Transparent Data Encryption) of Oracle Database 11g: The Complete Reference. Use when sensitive columns must be encrypted for compliance, when configuring ENCRYPTION_WALLET_LOCATION or a wallet on single-instance or RAC, adding ENCRYPT to columns or tablespaces, after a restart when encrypted data fails with ORA-28365 (wallet is not open), or when an encrypted column's index stops being used for range queries.
+description: "Encrypting Oracle data at rest with Transparent Data Encryption (wallet setup, master key, opening and closing the wallet, column encryption with or without salt, encrypted tablespaces), based on Chapter 21 (Advanced Security: Transparent Data Encryption) of Oracle Database 11g: The Complete Reference. Use when sensitive columns must be encrypted for compliance, when configuring ENCRYPTION_WALLET_LOCATION or a wallet on single-instance or RAC, adding ENCRYPT to columns or tablespaces, after a restart when encrypted data fails with ORA-28365 (wallet is not open), or when an encrypted column's index stops being used for range queries."
 ---
 
 # Advanced Security: Transparent Data Encryption

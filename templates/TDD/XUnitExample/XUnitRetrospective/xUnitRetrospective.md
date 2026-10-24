@@ -1,6 +1,6 @@
 ---
 name: tdd-xunit-retrospective
-description: The test sequence for building an xUnit-style framework, when to roll your own, the difference between failures and errors, and plugging other kinds of tests into an xUnit runner, based on Chapter 24 (xUnit Retrospective) of Test-Driven Development: By Example. Use when the user wants to write a test framework or harness, learn a new language by building one, understand how unittest/JUnit/pytest work internally, report assertion failures separately from errors, or make scripts or non-code checks run alongside ordinary test cases.
+description: "The test sequence for building an xUnit-style framework, when to roll your own, the difference between failures and errors, and plugging other kinds of tests into an xUnit runner, based on Chapter 24 (xUnit Retrospective) of Test-Driven Development: By Example. Use when the user wants to write a test framework or harness, learn a new language by building one, understand how unittest/JUnit/pytest work internally, report assertion failures separately from errors, or make scripts or non-code checks run alongside ordinary test cases."
 ---
 
 # xUnit Retrospective

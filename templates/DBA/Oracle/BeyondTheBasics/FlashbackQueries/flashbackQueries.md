@@ -1,6 +1,6 @@
 ---
 name: dba-flashback-queries
-description: Reading data as it was in the past with flashback queries (AS OF TIMESTAMP / AS OF SCN), version queries (VERSIONS BETWEEN), ORA_ROWSCN and FLASHBACK_TRANSACTION_QUERY to recover from bad commits, based on Chapter 29 (Using Flashback Queries) of Oracle Database 11g: The Complete Reference. Use when the user accidentally committed a wrong UPDATE or DELETE, asks what a row looked like earlier, who changed it or when, needs to restore rows without a full recovery, uses DBMS_FLASHBACK or SCN_TO_TIMESTAMP, or hits ORA-30052 or ORA-01555 during a flashback query.
+description: "Reading data as it was in the past with flashback queries (AS OF TIMESTAMP / AS OF SCN), version queries (VERSIONS BETWEEN), ORA_ROWSCN and FLASHBACK_TRANSACTION_QUERY to recover from bad commits, based on Chapter 29 (Using Flashback Queries) of Oracle Database 11g: The Complete Reference. Use when the user accidentally committed a wrong UPDATE or DELETE, asks what a row looked like earlier, who changed it or when, needs to restore rows without a full recovery, uses DBMS_FLASHBACK or SCN_TO_TIMESTAMP, or hits ORA-30052 or ORA-01555 during a flashback query."
 ---
 
 # Using Flashback Queries

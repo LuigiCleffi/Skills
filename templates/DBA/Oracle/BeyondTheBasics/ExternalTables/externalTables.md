@@ -1,6 +1,6 @@
 ---
 name: dba-external-tables
-description: Querying flat files in place and unloading query results to dump files with Oracle external tables (ORGANIZATION EXTERNAL, ORACLE_LOADER and ORACLE_DATAPUMP drivers), based on Chapter 28 (Using External Tables) of Oracle Database 11g: The Complete Reference. Use when the user wants to read a CSV or delimited file with SQL without loading it, stage files for INSERT /*+ APPEND */ ... SELECT loads, writes ACCESS PARAMETERS, sets REJECT LIMIT, sees errors only at query time, hits ORA-30657 on constraints or indexes, or needs to unload a table to a portable dump file.
+description: "Querying flat files in place and unloading query results to dump files with Oracle external tables (ORGANIZATION EXTERNAL, ORACLE_LOADER and ORACLE_DATAPUMP drivers), based on Chapter 28 (Using External Tables) of Oracle Database 11g: The Complete Reference. Use when the user wants to read a CSV or delimited file with SQL without loading it, stage files for INSERT /*+ APPEND */ ... SELECT loads, writes ACCESS PARAMETERS, sets REJECT LIMIT, sees errors only at query time, hits ORA-30657 on constraints or indexes, or needs to unload a table to a portable dump file."
 ---
 
 # Using External Tables

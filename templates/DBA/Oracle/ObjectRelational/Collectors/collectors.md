@@ -1,6 +1,6 @@
 ---
 name: dba-collectors
-description: Storing repeating values in a row with varying arrays (VARRAY) and nested tables, querying and changing them with TABLE(), using collection functions such as CARDINALITY and MULTISET, and deciding between a varray, a nested table and a separate relational table, based on Chapter 39 (Collectors (Nested Tables and Varying Arrays)) of Oracle Database 11g: The Complete Reference. Use when the user writes CREATE TYPE ... AS VARRAY or AS TABLE OF, NESTED TABLE ... STORE AS, queries TABLE(t.col), gets ORA-22909 (exceeded maximum VARRAY limit), needs to insert/update/delete elements of a nested table, or asks whether to model a one-to-many relationship as a collection column.
+description: "Storing repeating values in a row with varying arrays (VARRAY) and nested tables, querying and changing them with TABLE(), using collection functions such as CARDINALITY and MULTISET, and deciding between a varray, a nested table and a separate relational table, based on Chapter 39 (Collectors (Nested Tables and Varying Arrays)) of Oracle Database 11g: The Complete Reference. Use when the user writes CREATE TYPE ... AS VARRAY or AS TABLE OF, NESTED TABLE ... STORE AS, queries TABLE(t.col), gets ORA-22909 (exceeded maximum VARRAY limit), needs to insert/update/delete elements of a nested table, or asks whether to model a one-to-many relationship as a collection column."
 ---
 
 # Collectors (Nested Tables and Varying Arrays)

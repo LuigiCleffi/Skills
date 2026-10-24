@@ -1,6 +1,6 @@
 ---
 name: tdd-how-suite-it-is
-description: Composing tests into suites with Composite and accumulating results with Collecting Parameter, plus changing an interface under test, based on Chapter 23 (How Suite It Is) of Test-Driven Development: By Example. Use when building or using a test suite, a group runner, or any tree where a single item and a group must answer the same calls; when results from many runs must be gathered into one report; when a list of near-identical invocation lines appears; or when a method signature change breaks many existing tests.
+description: "Composing tests into suites with Composite and accumulating results with Collecting Parameter, plus changing an interface under test, based on Chapter 23 (How Suite It Is) of Test-Driven Development: By Example. Use when building or using a test suite, a group runner, or any tree where a single item and a group must answer the same calls; when results from many runs must be gathered into one report; when a list of near-identical invocation lines appears; or when a method signature change breaks many existing tests."
 ---
 
 # How Suite It Is

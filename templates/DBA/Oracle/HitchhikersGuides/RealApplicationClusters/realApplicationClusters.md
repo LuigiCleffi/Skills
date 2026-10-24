@@ -1,6 +1,6 @@
 ---
 name: dba-real-application-clusters
-description: How to plan, install, configure and operate Oracle Real Application Clusters: interconnect and storage prerequisites, cluster-wide parameters, SRVCTL start/stop, services and transparent application failover, and adding or removing nodes and instances, based on Chapter 50 (Oracle Real Application Clusters) of Oracle Database 11g: The Complete Reference. Use when the user mentions RAC, CRS/clusterware, srvctl, instances or threads, interconnect or MTU, TAF or failover in tnsnames.ora, V$ACTIVE_INSTANCES, cluster parameter mismatches, or contention between nodes on the same blocks.
+description: "How to plan, install, configure and operate Oracle Real Application Clusters: interconnect and storage prerequisites, cluster-wide parameters, SRVCTL start/stop, services and transparent application failover, and adding or removing nodes and instances, based on Chapter 50 (Oracle Real Application Clusters) of Oracle Database 11g: The Complete Reference. Use when the user mentions RAC, CRS/clusterware, srvctl, instances or threads, interconnect or MTU, TAF or failover in tnsnames.ora, V$ACTIVE_INSTANCES, cluster parameter mismatches, or contention between nodes on the same blocks."
 ---
 
 # Oracle Real Application Clusters
