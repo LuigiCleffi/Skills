@@ -1,6 +1,6 @@
 ---
 name: dev
-description: Implement software changes from an approved task or specification. Coordinate spec-checklist, bdd, uiux, tdd, and review when appropriate. Own production code, verification, and final reporting.
+description: Implement software changes from an approved task or specification. Coordinate spec-checklist, ddd, bdd, uiux, tdd, and review when appropriate. Own production code, verification, and final reporting.
 ---
 
 # dev — Implementation Orchestrator
@@ -9,11 +9,12 @@ description: Implement software changes from an approved task or specification. 
 
 Implement the requested behavior in the existing repository with the smallest correct change.
 
-`dev` owns production-code changes and coordinates the workflow. Delegate requirement analysis to `spec-checklist` when applicable, examples and executable scenarios to `bdd` when the change has business behavior worth illustrating, UI/UX decisions to `uiux` when the change has a user-facing surface, test-first preparation to `tdd` when appropriate, and independent code-quality analysis to `review`.
+`dev` owns production-code changes and coordinates the workflow. Delegate requirement analysis to `spec-checklist` when applicable, domain modeling to `ddd` when the change adds or alters domain concepts or rules, examples and executable scenarios to `bdd` when the change has business behavior worth illustrating, UI/UX decisions to `uiux` when the change has a user-facing surface, test-first preparation to `tdd` when appropriate, and independent code-quality analysis to `review`.
 
 ## Skill boundaries
 
 - `spec-checklist`: expands a specification into a detailed, feature-specific requirements checklist and identifies ambiguities. It does not implement or test the code.
+- `ddd`: turns the approved requirements into a domain model record (`DomainModel.md`) and maintains the ubiquitous language glossary: bounded context, entities, value objects, aggregates and their invariants, services, events, repositories, and layer placement. It does not implement or test the code.
 - `bdd`: turns the approved requirements into confirmed examples and executable Gherkin scenarios, automates them as failing acceptance tests, and owns feature files and step definitions. It does not modify production code.
 - `uiux`: turns the approved requirements into a UI/UX decisions record (`UIUXDecisions.md`): flows, screens and states, components, accessibility, copy, the recommended implementation mode and slice order, and UI acceptance checks. It does not implement or test the code.
 - `tdd`: writes or updates tests before the corresponding production implementation and reports the observed test result. It must not modify production code.
@@ -36,7 +37,13 @@ If a specification is provided, named, or required for a substantial feature, in
 
 Use the checklist as a requirements-quality gate, not as a progress tracker for implementation.
 
-If the change has business behavior worth illustrating and `bdd` is available, invoke it after `spec-checklist`, or use the existing feature files for the scope. Treat its confirmed scenarios as acceptance criteria, and do not implement behavior whose scenarios are held back by open questions. When BDD does not apply, note "BDD: not applicable" and continue.
+If the change adds or alters domain concepts, rules, or boundaries and `ddd` is available, invoke it after `spec-checklist`, or use the existing `DomainModel.md` and glossary for the scope.
+
+- Implement the model as recorded: the same names, the same aggregate boundaries (one aggregate per transaction), invariants enforced inside the aggregate root or value object, repositories per aggregate root, and domain code free of persistence and framework concerns.
+- If the code shows the model is wrong or awkward, stop on that item and return to `ddd` and the user; the model and the code change together.
+- When the change does not touch the model, note "DDD: not applicable" and continue.
+
+If the change has business behavior worth illustrating and `bdd` is available, invoke it after `ddd` (or after `spec-checklist` when DDD does not apply), or use the existing feature files for the scope. Treat its confirmed scenarios as acceptance criteria, and do not implement behavior whose scenarios are held back by open questions. When BDD does not apply, note "BDD: not applicable" and continue.
 
 If the change adds or alters a user-facing surface and `uiux` is available, invoke it after `bdd` (or after `spec-checklist` when BDD does not apply) and before implementation, or use an existing `UIUXDecisions.md` for the scope.
 
@@ -116,6 +123,7 @@ Provide a concise report containing:
 
 - **Implemented:** behavior and important files changed.
 - **Requirements:** checklist status or unresolved items, when applicable.
+- **DDD:** model elements and `DM` invariants implemented, glossary terms added, model changes agreed with the user, or "not applicable".
 - **BDD:** scenarios passing, failing, or held back, with the command and result, or "not applicable".
 - **UI/UX:** UX decision IDs implemented and how each was verified, deviations agreed with the user, or "not applicable".
 - **Tests and validation:** commands actually run and observed results; distinguish passed, failed, skipped, and not run.

@@ -58,6 +58,13 @@ const skills: Skill[] = [
     directories: ["TDD"],
   },
   {
+    value: "ddd",
+    name: "Domain-driven design",
+    description: "Domain modeling, ubiquitous language, and the DDD pattern library",
+    files: ["actions/ddd.md", "DDD/README.md"],
+    directories: ["DDD"],
+  },
+  {
     value: "bdd",
     name: "Behavior-driven development",
     description: "Examples, executable Gherkin scenarios, and the BDD pattern library",
@@ -109,6 +116,10 @@ const workflowStages: { skill: string; step: string }[] = [
   {
     skill: "product",
     step: "`ProductDefinition/plan.md`, then `ProductDefinition/specs/spec-definition.md`, then `ProductDefinition/specs/spec-checklist.md`",
+  },
+  {
+    skill: "ddd",
+    step: "`actions/ddd.md` — domain model and ubiquitous language, when the change touches domain concepts or rules",
   },
   {
     skill: "bdd",

@@ -14,9 +14,9 @@ Decide how the specified behavior is presented to and operated by its users, and
 ## Position in the workflow
 
 ```text
-plan → spec-definition → spec-checklist → bdd → uiux → dev ─┬─ TDD mode: tdd ⇄ dev
-                                                            └─ direct mode
-                                                        → review → other skills
+plan → spec-definition → spec-checklist → ddd → bdd → uiux → dev ─┬─ TDD mode: tdd ⇄ dev
+                                                                  └─ direct mode
+                                                              → review → other skills
 ```
 
 Run `uiux` when the scoped work adds or changes anything a person sees or operates: screens, pages, components, forms, navigation, notifications, emails, copy, error messages, or CLI output meant for people.
@@ -38,6 +38,7 @@ Do not copy another skill's full workflow into this skill. Invoke it and use its
 - The approved specification (`SpecifyRequirements.md`) and its requirement and user-story IDs.
 - The `spec-checklist` result. Only items marked **Ready** may be designed; items marked **Needs clarification** that affect the UI block the affected decisions.
 - The product plan, for goals, target users, platforms, and success criteria.
+- The `ddd` glossary, when it exists. Use its terms in labels and copy wherever the domain term is meaningful to users, so the interface, the scenarios, and the code name things the same way.
 - The `bdd` feature files and scenario IDs, when they exist. They already state the business rules and expected outcomes; reference them instead of restating them, and add only UI-specific decisions and checks.
 - The existing interface in the repository: design system or component library, design tokens, style guide, routes and layouts, i18n setup, accessibility tooling, and the end-to-end and component test frameworks and their selector conventions.
 - External guidelines the project already follows (brand guide, Apple HIG, Material Design, GOV.UK, an internal pattern library).

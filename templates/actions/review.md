@@ -58,6 +58,7 @@ Do not report a generic vulnerability category without showing how the changed c
 ### 2. Correctness and code quality
 
 Assess:
+- Domain model, when `DomainModel.md` exists: names match the glossary, invariants live in the aggregate root or value object, one aggregate per transaction, other aggregates referenced by identity, no persistence or framework types in the domain layer, and translation at bounded context edges.
 - BDD scenarios, when present: declarative, in domain language, traced to requirement IDs, thin step definitions, and automated at the lowest layer that proves the behavior.
 - Behavior against the requirements and existing contracts, and against `UIUXDecisions.md` when the change has a user-facing surface: specified states, interaction rules, copy, and accessibility requirements.
 - Error handling, boundary conditions, and state consistency.

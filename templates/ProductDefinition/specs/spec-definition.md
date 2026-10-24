@@ -474,7 +474,7 @@ State the expected system behavior for each important case.
 
 Include only when the feature involves meaningful domain data.
 
-Describe each entity, its meaning, relevant attributes, relationships, and lifecycle constraints without prescribing a database schema.
+Describe each entity, its meaning, relevant attributes, relationships, and lifecycle constraints without prescribing a database schema. Use the terms domain experts use; `ddd` refines these entities into the domain model and glossary.
 
 ## 8. Success Criteria
 
@@ -541,7 +541,7 @@ When this skill is invoked:
 5. Generate and validate the specification.
 6. Save the resulting `SpecifyRequirements.md` in the location requested by the user or appropriate to the current project context.
 7. Summarize the specification and identify any remaining decisions.
-8. Name the next stage: `spec-checklist`, then `bdd` when the feature has business behavior to illustrate with examples, then `uiux` when it has a user-facing surface, then `dev`.
+8. Name the next stage: `spec-checklist`, then `ddd` when the feature adds or changes domain concepts or rules, then `bdd` when the feature has business behavior to illustrate with examples, then `uiux` when it has a user-facing surface, then `dev`.
 
 Do not implement the feature, modify production code, or generate an implementation plan unless the user explicitly requests those additional activities.
 

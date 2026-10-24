@@ -14,10 +14,10 @@ Make the agreed behavior concrete before code exists. Turn each approved require
 ## Position in the workflow
 
 ```text
-plan → spec-definition → spec-checklist → bdd → uiux → dev
-                                                       ├─ outer loop: bdd scenario (red → green)
-                                                       └─ inner loop: tdd ⇄ dev, until the scenario passes
-                                                     → review → other skills
+plan → spec-definition → spec-checklist → ddd → bdd → uiux → dev
+                                                             ├─ outer loop: bdd scenario (red → green)
+                                                             └─ inner loop: tdd ⇄ dev, until the scenario passes
+                                                           → review → other skills
 ```
 
 Run `bdd` when the scoped work has business behavior with rules worth illustrating: calculations, eligibility, workflows, permissions, state changes, integrations with observable outcomes.
@@ -40,7 +40,7 @@ Do not copy another skill's full workflow into this skill. Invoke it and use its
 - The approved specification (`SpecifyRequirements.md`): user stories, acceptance scenarios, functional requirement IDs, edge cases.
 - The `spec-checklist` result. Only items marked **Ready** may become scenarios.
 - Existing feature files, step definitions, glue code, the scenario runner command, and its reports.
-- The project's domain vocabulary (glossary, entity names, the words users and the spec use).
+- The project's domain vocabulary: the `ddd` glossary and `DomainModel.md` when they exist, otherwise entity names and the words users and the spec use. Write scenarios in those exact terms; when a scenario needs a term or rule the glossary lacks, send it back to `ddd` rather than coining one.
 
 Never invent a rule to complete an example. A question that changes the expected outcome is a product question: send it back to `spec-definition` and leave that example out until it is answered.
 
