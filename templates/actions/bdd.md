@@ -62,6 +62,8 @@ When `BDD/README.md` is installed, it routes to one skill per chapter of *BDD in
 | Reports and living documentation | `BDD/TakingBddFurther/LivingDocumentation/livingDocumentation.md` |
 | Running scenarios in CI and the delivery pipeline | `BDD/TakingBddFurther/BuildProcess/buildProcess.md` |
 
+When the project is JavaScript or TypeScript and `JavaScript/README.md` is installed, write step definitions and test helpers following its language skills, and use its browser, async, HTTP, and Node.js skills when automating through the UI or APIs.
+
 ## Workflow
 
 ### 1. Confirm readiness and scope

@@ -66,6 +66,7 @@ Assess:
 - Resource lifecycle, concurrency, and failure recovery when relevant.
 - Test quality: meaningful assertions, realistic boundaries, missing important scenarios, and tests that merely mirror implementation details.
 - TDD leftovers: faked constants or hardcoded results that were never generalized, duplication between test and production code left after green, and tests with long setup or many mocks that signal a design problem. When `TDD/README.md` is installed, use `TDD/Patterns/MasteringTDD/masteringTDD.md` to judge whether the tests are good.
+- JavaScript or TypeScript idioms, when `JavaScript/README.md` is installed: check the changed code against the "Red flags" of the language skills it routes to (loose equality and coercion, shared mutation, unhandled promise rejections, swallowed errors, leaking globals, unsafe DOM writes).
 - Compatibility, observability, and maintainability impacts introduced by the change.
 
 Do not treat stylistic preferences as defects unless they conflict with project conventions or materially impair correctness or maintenance.
