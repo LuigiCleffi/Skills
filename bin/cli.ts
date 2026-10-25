@@ -72,6 +72,13 @@ const skills: Skill[] = [
     directories: ["BDD"],
   },
   {
+    value: "javascript",
+    name: "JavaScript",
+    description: "Idiomatic JavaScript for dev, tdd, bdd, and review: language, browser, and Node.js",
+    files: ["JavaScript/README.md"],
+    directories: ["JavaScript"],
+  },
+  {
     value: "dba",
     name: "Databases (DBA): Oracle and PostgreSQL",
     description: "SQL, schema design, security, tuning, and administration per engine",

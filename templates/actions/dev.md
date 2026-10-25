@@ -86,6 +86,8 @@ If `tdd` is unavailable, explain the limitation and ask whether to proceed direc
 
 ### 4. Implement the smallest correct change
 
+When the project is JavaScript or TypeScript and `JavaScript/README.md` is installed, read the language skills it routes to for the code you are about to write (functions, data structures, objects and classes, errors, modules, async, DOM and events, HTTP, Node.js) and follow their idioms and red flags.
+
 - Follow approved requirements and established architecture.
 - Reuse existing abstractions where appropriate.
 - Preserve compatibility and existing behavior unless the task requires a change.

@@ -23,6 +23,8 @@ When `TDD/README.md` is installed, it routes to one skill per chapter of Kent Be
 
 The skills under `TDD/MoneyExample/` and `TDD/XUnitExample/` show the same moves inside a worked session; consult them when a step needs an illustration.
 
+When the project is JavaScript or TypeScript and `JavaScript/README.md` is installed, read the language skill for the behavior under test; each has a "Testing notes" section on what to assert and where tests go wrong (coercion and equality, floating point, mutation, async and rejected promises, timers, the DOM, HTTP, the file system).
+
 ## Workflow
 
 ### 1. Understand the scoped behavior

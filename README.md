@@ -2,7 +2,7 @@
 
 Reusable instructions for AI coding agents to help developers build software that is clear, correct, maintainable, and aligned with product requirements.
 
-**Skills Code Kit** provides focused instruction sets for Clean Code, development workflows, code reviews, test-driven development (TDD), behavior-driven development (BDD), domain-driven design (DDD), databases, data-intensive system design, DevOps and cloud infrastructure, marketing, product definition, and UI/UX decisions. Install the instructions you need directly into an existing project without cloning this repository.
+**Skills Code Kit** provides focused instruction sets for Clean Code, development workflows, code reviews, test-driven development (TDD), behavior-driven development (BDD), domain-driven design (DDD), JavaScript, databases, data-intensive system design, DevOps and cloud infrastructure, marketing, product definition, and UI/UX decisions. Install the instructions you need directly into an existing project without cloning this repository.
 
 ## Why Skills Code Kit?
 
@@ -244,6 +244,23 @@ They help AI agents:
 - `actions/strategy.md`
 - `Marketing/` — the `README.md` entry point, plus `GoodStrategyBadStrategy/`, `ObviouslyAwesome/`, `MarketingManagement/` and `Influence/`, each with its own `README.md` and one skill folder per chapter.
 
+### 13. JavaScript
+
+**Purpose:** Teach agents to write idiomatic, correct JavaScript while they run the `dev`, `tdd`, `bdd`, and `review` workflows on a JavaScript or TypeScript project.
+
+`JavaScript/README.md` routes to one skill per chapter of Marijn Haverbeke's *Eloquent JavaScript*, 4th edition, grouped into `Language/`, `Browser/` and `Node/`. Each skill gives the rules, idioms, a workflow, red flags, and testing notes for its topic; the project chapters are distilled into the design lessons they demonstrate.
+
+They help AI agents:
+
+- Avoid coercion, equality, floating-point, and mutation bugs, and choose the right data structure.
+- Write small pure functions, use closures and higher-order functions, and design classes with private state.
+- Handle errors, regular expressions, modules, promises, and `async`/`await` correctly.
+- Work with the DOM, events, canvas, `fetch`, forms, and Node.js servers and file system safely.
+
+**Installed files:**
+
+- `JavaScript/` — the `README.md` entry point plus one skill folder per chapter.
+
 ## Workflow order
 
 When the workflow groups are installed together, a feature moves through them in this order, and the generated `AGENTS.md` lists the installed stages:
@@ -256,7 +273,7 @@ When the workflow groups are installed together, a feature moves through them in
 6. Implementation: `actions/dev.md`, with BDD scenarios as the outer loop and `actions/tdd.md` as the inner loop, or in direct mode, as `uiux` recommends.
 7. Review: `actions/review.md`.
 
-Clean Code, database, data-intensive system, DevOps, and marketing skills apply wherever the task needs them.
+Clean Code, JavaScript, database, data-intensive system, DevOps, and marketing skills apply wherever the task needs them.
 
 ## How installation works
 
@@ -336,6 +353,7 @@ The repository separates its working instruction documents from the templates di
 │   ├── DDD/
 │   ├── DataSystems/
 │   ├── DevOps/
+│   ├── JavaScript/
 │   ├── Marketing/
 │   ├── ProductDefinition/
 │   ├── TDD/
@@ -357,6 +375,7 @@ The repository separates its working instruction documents from the templates di
 | `templates/Marketing/` | Marketing skills, one folder per book: `GoodStrategyBadStrategy/`, `ObviouslyAwesome/`, `MarketingManagement/` and `Influence/`, each holding one skill per chapter. |
 | `templates/DDD/` | DDD pattern library, one skill per chapter of Evans's *Domain-Driven Design*, consulted by `actions/ddd.md`. |
 | `templates/BDD/` | BDD pattern library, one skill per chapter of *BDD in Action*, consulted by `actions/bdd.md`. |
+| `templates/JavaScript/` | JavaScript skill library, one skill per chapter of *Eloquent JavaScript*, consulted by `dev`, `tdd`, `bdd` and `review`. |
 | `templates/TDD/` | TDD test pattern library, one skill per chapter of Kent Beck's book. |
 | `CleanCode_Uncle_Bob/` | Working copy of the core Clean Code standards. |
 | `ProductDefinition/` | Planning and specification documents. |

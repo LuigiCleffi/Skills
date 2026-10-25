@@ -86,6 +86,12 @@ Read when discovering examples for a feature, writing Gherkin scenarios, automat
 
 Read when writing tests first, choosing the next test, getting a failing test to pass, or refactoring under green. It routes to one skill per chapter of Kent Beck's *Test-Driven Development: By Example*.
 
+### JavaScript
+
+`templates/JavaScript/README.md`
+
+Read when writing, testing, or reviewing JavaScript or TypeScript: values and coercion, functions and closures, arrays and objects, higher-order functions, classes, errors, regular expressions, modules, async code, the DOM and events, canvas, HTTP and forms, or Node.js. It routes to one skill per chapter of Marijn Haverbeke's *Eloquent JavaScript*, consulted by `actions/dev.md`, `actions/tdd.md`, `actions/bdd.md`, and `actions/review.md` when the project is JavaScript.
+
 ## Working Rules
 
 1. **Understand before changing.** Inspect the relevant code, architecture, dependencies, existing conventions, and applicable instructions.
