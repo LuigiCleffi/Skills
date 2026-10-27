@@ -64,6 +64,8 @@ When `BDD/README.md` is installed, it routes to one skill per chapter of *BDD in
 
 When the project is JavaScript or TypeScript and `JavaScript/README.md` is installed, write step definitions and test helpers following its language skills, and use its browser, async, HTTP, and Node.js skills when automating through the UI or APIs.
 
+When a scenario's outcome depends on a large language model and `LLM/README.md` is installed, keep scenarios on observable, checkable outcomes (structure, cited sources, refusals, tool calls made) and move quality judgments to the evaluation sets its skills describe.
+
 ## Workflow
 
 ### 1. Confirm readiness and scope

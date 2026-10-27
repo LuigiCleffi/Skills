@@ -88,6 +88,8 @@ If `tdd` is unavailable, explain the limitation and ask whether to proceed direc
 
 When the project is JavaScript or TypeScript and `JavaScript/README.md` is installed, read the language skills it routes to for the code you are about to write (functions, data structures, objects and classes, errors, modules, async, DOM and events, HTTP, Node.js) and follow their idioms and red flags.
 
+When the change uses a large language model or another ML model and `LLM/README.md` is installed, read the skills it routes to for the component you are building (prompts, retrieval, agents and tools, fine-tuning, embeddings, inference, data pipelines, deployment) and check the change against their red flags.
+
 - Follow approved requirements and established architecture.
 - Reuse existing abstractions where appropriate.
 - Preserve compatibility and existing behavior unless the task requires a change.

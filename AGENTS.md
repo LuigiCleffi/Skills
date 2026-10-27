@@ -92,6 +92,12 @@ Read when writing tests first, choosing the next test, getting a failing test to
 
 Read when writing, testing, or reviewing JavaScript or TypeScript: values and coercion, functions and closures, arrays and objects, higher-order functions, classes, errors, regular expressions, modules, async code, the DOM and events, canvas, HTTP and forms, or Node.js. It routes to one skill per chapter of Marijn Haverbeke's *Eloquent JavaScript*, consulted by `actions/dev.md`, `actions/tdd.md`, `actions/bdd.md`, and `actions/review.md` when the project is JavaScript.
 
+### LLMs and Machine Learning Systems
+
+`templates/LLM/README.md`
+
+Read when building, adapting, evaluating, or reviewing features that use large language models or other ML models: choosing a model, prompts, RAG, agents and tools, fine-tuning, embeddings and semantic search, evaluation and AI-as-judge, inference cost and latency, model internals in PyTorch, training data and features, deployment, and production failures. It routes to one folder per book (Huyen's *AI Engineering*, Alammar and Grootendorst's *Hands-On Large Language Models*, Raschka's *Build a Large Language Model (From Scratch)*, Huyen's *Designing Machine Learning Systems*), each with one skill per chapter.
+
 ## Working Rules
 
 1. **Understand before changing.** Inspect the relevant code, architecture, dependencies, existing conventions, and applicable instructions.

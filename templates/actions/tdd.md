@@ -25,6 +25,8 @@ The skills under `TDD/MoneyExample/` and `TDD/XUnitExample/` show the same moves
 
 When the project is JavaScript or TypeScript and `JavaScript/README.md` is installed, read the language skill for the behavior under test; each has a "Testing notes" section on what to assert and where tests go wrong (coercion and equality, floating point, mutation, async and rejected promises, timers, the DOM, HTTP, the file system).
 
+When the behavior under test calls a large language model or another ML model and `LLM/README.md` is installed, use the "Testing notes" of the skill for that component: unit test the deterministic code around the model with fakes, and cover the model's own behavior with evaluation sets and thresholds rather than exact-string assertions.
+
 ## Workflow
 
 ### 1. Understand the scoped behavior

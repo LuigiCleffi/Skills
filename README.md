@@ -2,7 +2,7 @@
 
 Reusable instructions for AI coding agents to help developers build software that is clear, correct, maintainable, and aligned with product requirements.
 
-**Skills Code Kit** provides focused instruction sets for Clean Code, development workflows, code reviews, test-driven development (TDD), behavior-driven development (BDD), domain-driven design (DDD), JavaScript, databases, data-intensive system design, DevOps and cloud infrastructure, marketing, product definition, and UI/UX decisions. Install the instructions you need directly into an existing project without cloning this repository.
+**Skills Code Kit** provides focused instruction sets for Clean Code, development workflows, code reviews, test-driven development (TDD), behavior-driven development (BDD), domain-driven design (DDD), JavaScript, LLMs and machine learning systems, databases, data-intensive system design, DevOps and cloud infrastructure, marketing, product definition, and UI/UX decisions. Install the instructions you need directly into an existing project without cloning this repository.
 
 ## Why Skills Code Kit?
 
@@ -261,6 +261,23 @@ They help AI agents:
 
 - `JavaScript/` — the `README.md` entry point plus one skill folder per chapter.
 
+### 14. LLMs and machine learning systems
+
+**Purpose:** Teach agents to build, evaluate, and ship features that use large language models and other ML models, and to work on the models themselves.
+
+`LLM/README.md` routes to one folder per book, each with its own `README.md` and one skill per chapter: Chip Huyen's *AI Engineering* (`AIEngineering/`), Jay Alammar and Maarten Grootendorst's *Hands-On Large Language Models* (`HandsOnLLM/`), Sebastian Raschka's *Build a Large Language Model (From Scratch)* (`BuildLLMFromScratch/`), and Chip Huyen's *Designing Machine Learning Systems* (`DesigningMLSystems/`).
+
+They help AI agents:
+
+- Choose between prompting, retrieval, agents, and fine-tuning, and evaluate every change against a versioned evaluation set.
+- Use tokenizers, embeddings, semantic search, RAG, and pretrained models for classification, clustering, and generation.
+- Understand and modify transformer internals: attention, the GPT architecture, pretraining, decoding, and LoRA.
+- Build the data, features, deployment, and monitoring that keep a model working in production.
+
+**Installed files:**
+
+- `LLM/` — the `README.md` entry point, plus `AIEngineering/`, `HandsOnLLM/`, `BuildLLMFromScratch/` and `DesigningMLSystems/`, each with its own `README.md` and one skill folder per chapter.
+
 ## Workflow order
 
 When the workflow groups are installed together, a feature moves through them in this order, and the generated `AGENTS.md` lists the installed stages:
@@ -273,7 +290,7 @@ When the workflow groups are installed together, a feature moves through them in
 6. Implementation: `actions/dev.md`, with BDD scenarios as the outer loop and `actions/tdd.md` as the inner loop, or in direct mode, as `uiux` recommends.
 7. Review: `actions/review.md`.
 
-Clean Code, JavaScript, database, data-intensive system, DevOps, and marketing skills apply wherever the task needs them.
+Clean Code, JavaScript, LLM, database, data-intensive system, DevOps, and marketing skills apply wherever the task needs them.
 
 ## How installation works
 
@@ -354,6 +371,7 @@ The repository separates its working instruction documents from the templates di
 │   ├── DataSystems/
 │   ├── DevOps/
 │   ├── JavaScript/
+│   ├── LLM/
 │   ├── Marketing/
 │   ├── ProductDefinition/
 │   ├── TDD/
@@ -376,6 +394,7 @@ The repository separates its working instruction documents from the templates di
 | `templates/DDD/` | DDD pattern library, one skill per chapter of Evans's *Domain-Driven Design*, consulted by `actions/ddd.md`. |
 | `templates/BDD/` | BDD pattern library, one skill per chapter of *BDD in Action*, consulted by `actions/bdd.md`. |
 | `templates/JavaScript/` | JavaScript skill library, one skill per chapter of *Eloquent JavaScript*, consulted by `dev`, `tdd`, `bdd` and `review`. |
+| `templates/LLM/` | LLM and ML skills, one folder per book: `AIEngineering/`, `HandsOnLLM/`, `BuildLLMFromScratch/` and `DesigningMLSystems/`, each holding one skill per chapter. |
 | `templates/TDD/` | TDD test pattern library, one skill per chapter of Kent Beck's book. |
 | `CleanCode_Uncle_Bob/` | Working copy of the core Clean Code standards. |
 | `ProductDefinition/` | Planning and specification documents. |

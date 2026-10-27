@@ -79,6 +79,13 @@ const skills: Skill[] = [
     directories: ["JavaScript"],
   },
   {
+    value: "llm",
+    name: "LLMs and machine learning systems",
+    description: "Foundation-model apps, prompts, RAG, agents, evaluation, fine-tuning, LLM internals, and production ML systems",
+    files: ["LLM/README.md"],
+    directories: ["LLM"],
+  },
+  {
     value: "dba",
     name: "Databases (DBA): Oracle and PostgreSQL",
     description: "SQL, schema design, security, tuning, and administration per engine",
