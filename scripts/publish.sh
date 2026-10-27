@@ -52,9 +52,17 @@ npm_user=$(npm whoami 2>/dev/null) || fail "Not logged in to npm. Run 'npm login
 echo "Logged in as $npm_user"
 
 step "Choosing the version"
+# Bump from npm's latest when it is ahead of package.json (a release whose bump was never committed).
+latest_version=$(npm view "$package_name" version 2>/dev/null || echo "0.0.0")
+base_version=$(node -p "
+  const parse = (version) => version.split('-')[0].split('.').map(Number);
+  const [local, latest] = [parse('$current_version'), parse('$latest_version')];
+  const firstDifference = latest.findIndex((part, index) => part !== local[index]);
+  firstDifference !== -1 && latest[firstDifference] > local[firstDifference] ? '$latest_version' : '$current_version';
+")
 if is_published "$current_version"; then
   next_version=$(node -p "
-    const [major, minor, patch] = '$current_version'.split('-')[0].split('.').map(Number);
+    const [major, minor, patch] = '$base_version'.split('-')[0].split('.').map(Number);
     ({ major: [major + 1, 0, 0], minor: [major, minor + 1, 0], patch: [major, minor, patch + 1] })['$bump'].join('.');
   ")
   echo "$current_version is already published; releasing $bump version $next_version"
