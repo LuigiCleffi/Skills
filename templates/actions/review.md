@@ -9,6 +9,8 @@ description: Independently review code changes for security, code quality, and a
 
 Provide an independent assessment of changed code after implementation. Focus on security, correctness, maintainability, and architectural fit.
 
+For a standalone review of a committed diff against a named fixed point, split into a Standards axis and a Spec axis with a citation on every finding, use `code-review` instead.
+
 `review` analyzes and reports. It does not implement fixes, rewrite code, or change tests as part of the review. `dev` owns remediation and re-validation unless the user explicitly delegates implementation to `review`.
 
 Review the smallest relevant context first, then expand only when required to establish impact. Do not read the entire repository by default.

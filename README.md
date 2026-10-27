@@ -81,6 +81,12 @@ The review workflow focuses on:
 
 `actions/review.md`
 
+`actions/code-review.md` is a separate, standalone review of the committed diff between `HEAD` and a fixed point you name (a commit, branch, tag, `main`, `HEAD~5`). It runs two axes in separate sub-agents. Standards checks the code against the repository's own documented conventions first, then against the installed knowledge base: the Clean Code heuristic catalog as the smell baseline, plus the JavaScript, LLM, TDD, BDD, DDD, DBA, DataSystems, DevOps, and UI/UX skills that match what the diff touches. Spec checks it against the originating issue or `SpecifyRequirements.md` and its companion records (`DomainModel.md`, feature files, `UIUXDecisions.md`, `StrategyBrief.md`). Every finding cites a rule, a heuristic code, or a spec line. The report keeps the two axes apart and never gives one blended verdict. Run it from a fresh session, not the one that wrote the code.
+
+**Installed file:**
+
+`actions/code-review.md`
+
 ### 4. Test-Driven Development (TDD)
 
 **Purpose:** Encourage implementation guided by observable, testable behavior.
@@ -288,7 +294,7 @@ When the workflow groups are installed together, a feature moves through them in
 4. Examples and scenarios: `actions/bdd.md`, when the change has business behavior to illustrate.
 5. UI/UX decisions: `actions/uiux.md`, when the change has a user-facing surface.
 6. Implementation: `actions/dev.md`, with BDD scenarios as the outer loop and `actions/tdd.md` as the inner loop, or in direct mode, as `uiux` recommends.
-7. Review: `actions/review.md`.
+7. Review: `actions/review.md`, then `actions/code-review.md` on the committed diff from a fresh session.
 
 Clean Code, JavaScript, LLM, database, data-intensive system, DevOps, and marketing skills apply wherever the task needs them.
 
@@ -358,7 +364,8 @@ The repository separates its working instruction documents from the templates di
 │       └── spec-definition.md
 ├── actions/
 │   ├── dev.md
-│   └── review.md
+│   ├── review.md
+│   └── code-review.md
 ├── bin/
 │   └── cli.ts
 ├── dist/
@@ -398,7 +405,7 @@ The repository separates its working instruction documents from the templates di
 | `templates/TDD/` | TDD test pattern library, one skill per chapter of Kent Beck's book. |
 | `CleanCode_Uncle_Bob/` | Working copy of the core Clean Code standards. |
 | `ProductDefinition/` | Planning and specification documents. |
-| `actions/` | Development, review, TDD, BDD, DDD, strategy, and UI/UX workflows. |
+| `actions/` | Development, review, code review, TDD, BDD, DDD, strategy, and UI/UX workflows. |
 | `AGENTS.md` | Repository-level entry point for AI coding instructions. |
 
 Keep the distributed templates synchronized with their corresponding working copies whenever you update an instruction.

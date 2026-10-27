@@ -51,6 +51,12 @@ const skills: Skill[] = [
     files: ["actions/review.md"],
   },
   {
+    value: "code-review",
+    name: "Standards and spec code review",
+    description: "Two-axis review of a committed diff against repo standards, the knowledge base, and the spec",
+    files: ["actions/code-review.md"],
+  },
+  {
     value: "tdd",
     name: "Test-driven development",
     description: "Testing workflow and the TDD test pattern library",
@@ -157,6 +163,10 @@ const workflowStages: { skill: string; step: string }[] = [
   { skill: "dev", step: "`actions/dev.md` — implementation, in TDD or direct mode" },
   { skill: "tdd", step: "`actions/tdd.md` — tests first, before each production change" },
   { skill: "review", step: "`actions/review.md` — incremental and final review" },
+  {
+    skill: "code-review",
+    step: "`actions/code-review.md` — standards and spec review of the committed diff, from a fresh session",
+  },
 ];
 
 async function exists(filePath: string): Promise<boolean> {

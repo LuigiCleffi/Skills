@@ -26,6 +26,7 @@ Consult the relevant files when planning features, defining requirements, changi
 
 - `actions/dev.md` — development and implementation workflow.
 - `actions/review.md` — code review workflow.
+- `actions/code-review.md` — standards and spec review of a committed diff against a named fixed point, using the repository's standards and the installed knowledge base.
 - `actions/tdd.md` — test-driven development workflow.
 - `actions/strategy.md` — strategy review of a checked spec against the marketing knowledge base, before the domain model.
 - `actions/ddd.md` — domain model and ubiquitous language from specs, before scenarios, screens, and code.
@@ -36,7 +37,7 @@ Follow the applicable workflow for the task. Consult multiple workflows when nec
 
 ### Workflow Order
 
-For a feature, follow the stages in this order: `ProductDefinition/plan.md`, then `spec-definition.md`, then `spec-checklist.md`, then `actions/strategy.md` when the change is customer-facing or the product is a marketing tool, then `actions/ddd.md` when the change touches domain concepts or rules, then `actions/bdd.md` when the change has business behavior to illustrate, then `actions/uiux.md` when the change has a user-facing surface, then `actions/dev.md` (scenarios as the outer loop, `actions/tdd.md` as the inner loop), then `actions/review.md`. Apply the other instruction sources where the task needs them.
+For a feature, follow the stages in this order: `ProductDefinition/plan.md`, then `spec-definition.md`, then `spec-checklist.md`, then `actions/strategy.md` when the change is customer-facing or the product is a marketing tool, then `actions/ddd.md` when the change touches domain concepts or rules, then `actions/bdd.md` when the change has business behavior to illustrate, then `actions/uiux.md` when the change has a user-facing surface, then `actions/dev.md` (scenarios as the outer loop, `actions/tdd.md` as the inner loop), then `actions/review.md`, then `actions/code-review.md` from a fresh session on the committed diff. Apply the other instruction sources where the task needs them.
 
 ### UI/UX Design
 
