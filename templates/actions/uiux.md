@@ -42,6 +42,7 @@ Do not copy another skill's full workflow into this skill. Invoke it and use its
 - The `bdd` feature files and scenario IDs, when they exist. They already state the business rules and expected outcomes; reference them instead of restating them, and add only UI-specific decisions and checks.
 - The existing interface in the repository: design system or component library, design tokens, style guide, routes and layouts, i18n setup, accessibility tooling, and the end-to-end and component test frameworks and their selector conventions.
 - External guidelines the project already follows (brand guide, Apple HIG, Material Design, GOV.UK, an internal pattern library).
+- The ADRs the gate routes to: run `adr` in consult mode for the front-end areas in scope (component library, state management, rendering strategy, routing, i18n framework).
 
 Never fill a product gap with a design decision. If a choice would change scope, business rules, permissions, data handling, or success criteria, it is a product question: send it back to `spec-definition` or the product plan.
 
@@ -110,6 +111,7 @@ Never choose a dark pattern (hidden costs, forced continuity, confirm-shaming, d
 - Product-level question: return it to `spec-definition` or the product plan. Do not decide it here.
 - Design-level question: ask the user one focused question at a time, with a recommendation and the trade-off.
 - Record every answer as a decision. Do not interpret silence as consent.
+- A front-end architecture decision that outlives this feature (adopting a component library or design system, a state-management approach, a rendering or routing strategy) goes to `adr` in record mode; link the ADR from the decisions log.
 
 ### 7. Choose the implementation approach for dev
 

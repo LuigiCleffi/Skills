@@ -63,7 +63,7 @@ If no spec exists, skip the Spec sub-agent. The Spec block then says `No spec av
 
 The repository always overrides the knowledge base. Collect, in this order of precedence:
 
-1. **The repository's documented standards:** `CODING_STANDARDS.md`, `CONTRIBUTING.md`, style guides, architecture decision records, and conventions stated in `AGENTS.md` or `CLAUDE.md`.
+1. **The repository's documented standards:** `CODING_STANDARDS.md`, `CONTRIBUTING.md`, style guides, conventions stated in `AGENTS.md` or `CLAUDE.md`, and the architecture decision records the ADR gate (`docs/adr/README.md`) routes the changed areas and paths to. Read only the accepted ADRs the gate selects, cite them by ID, and flag an architectural decision the diff makes without an ADR.
 2. **Linter, formatter, and type-checker configuration.** These define what the axis skips: never report what a configured tool already enforces.
 3. **The installed knowledge base**, read only for what the diff touches:
 

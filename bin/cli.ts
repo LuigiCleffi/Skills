@@ -57,6 +57,12 @@ const skills: Skill[] = [
     files: ["actions/code-review.md"],
   },
   {
+    value: "adr",
+    name: "Architecture decision records",
+    description: "One ADR per architectural decision, plus the gate that routes each task to the ADRs that govern it",
+    files: ["actions/adr.md"],
+  },
+  {
     value: "tdd",
     name: "Test-driven development",
     description: "Testing workflow and the TDD test pattern library",
@@ -160,6 +166,10 @@ const workflowStages: { skill: string; step: string }[] = [
     skill: "uiux",
     step: "`actions/uiux.md` — UI/UX decisions, when the change has a user-facing surface",
   },
+  {
+    skill: "adr",
+    step: "`actions/adr.md` — pass the ADR gate before designing or implementing, and record every architectural decision as an ADR",
+  },
   { skill: "dev", step: "`actions/dev.md` — implementation, in TDD or direct mode" },
   { skill: "tdd", step: "`actions/tdd.md` — tests first, before each production change" },
   { skill: "review", step: "`actions/review.md` — incremental and final review" },
@@ -230,6 +240,18 @@ ${stages.join("\n")}
 `
       : "";
 
+  const adrSection = selectedValues.includes("adr")
+    ? `## Architecture Decisions
+
+Before designing or implementing anything, open the ADR gate,
+\`docs/adr/README.md\`. State what the task is about to decide or touch,
+then read only the ADRs the gate routes that to. Accepted ADRs are
+binding. Every new architectural decision gets its own ADR and a gate
+entry, following \`actions/adr.md\`.
+
+`
+    : "";
+
   return `# AGENTS.md
 
 ## Purpose
@@ -244,7 +266,7 @@ Use them to guide implementation, code reviews, testing, and planning.
 
 ${sections.join("\n\n")}
 
-${workflowSection}## Working Rules
+${workflowSection}${adrSection}## Working Rules
 
 1. Understand the existing codebase and architecture before making changes.
 2. Read the relevant instruction files before starting a task.

@@ -41,7 +41,8 @@ Do not copy another skill's full workflow into this skill. Invoke it and use its
 - The approved specification (`SpecifyRequirements.md`): user stories, functional requirements, domain rules and invariants, Key Entities, edge cases.
 - The `spec-checklist` result. Only items marked **Ready** may be modeled.
 - The existing model in the code: domain modules, entities, value types, services, repositories, events, and their names. The code is the current model, whatever older documents say.
-- The existing glossary (`docs/glossary.md` or the project's equivalent) and any context map or architecture decision records.
+- The existing glossary (`docs/glossary.md` or the project's equivalent) and any context map.
+- The ADRs the gate routes to: run `adr` in consult mode for the contexts, layers, and integrations in scope. Accepted ADRs bind the model; a model that needs to break one goes to the user as a superseding decision.
 - Domain experts: the user, the product owner, or the people the spec names. Their words are the starting point for the language.
 
 Never fill a gap in business knowledge with a modeling guess. A question about how the business works is a product question: send it back to `spec-definition`.
@@ -125,6 +126,7 @@ Map every element to a layer (domain, application, infrastructure, interface) or
 - Business question: return it to `spec-definition` or the product plan.
 - Modeling question with real alternatives: ask the user one focused question with a recommendation and the trade-off.
 - Record every answer as a decision.
+- A decision that outlives this feature (a new bounded context, a context relationship, a layering or module rule, an integration style) is architectural: run `adr` in record mode for it and link the ADR from the decisions log.
 
 ### 8. Write the record and hand off
 
