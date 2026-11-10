@@ -296,6 +296,39 @@ They help AI agents:
 
 - `LLM/` — the `README.md` entry point, plus `AIEngineering/`, `HandsOnLLM/`, `BuildLLMFromScratch/` and `DesigningMLSystems/`, each with its own `README.md` and one skill folder per chapter.
 
+### 16. Scrum Team of Role Agents
+
+**Purpose:** Run a product request through Scrum with one agent playing each role, so the work is refined, planned, built, and accepted the way a real team would, with the user as the customer.
+
+The roles say who works and when; each routes to the installed workflows and knowledge base for the how instead of repeating them:
+
+- **PO:** the ordered Product Backlog, acceptance criteria, the Sprint Goal, and accepting the increment.
+- **PM (Project Manager and Scrum Master):** the board, the ceremonies, impediments, and sprint metrics.
+- **Tech Lead:** the bridge between PO and PM and the developers: design, tasks per role, the ADR gate, the Definition of Done, and review.
+- **Dev:** full-stack production code and tests, including routine database work.
+- **DBA:** schema, migrations with rollback, query performance, and data security.
+- **DevOps:** CI/CD, infrastructure as code, environments, deployment, and monitoring.
+
+Five ceremony playbooks (Backlog Refinement, Sprint Planning, Daily Scrum, Sprint Review, Retrospective) each end with a defined output. A sprint is bounded by scope (3 to 5 items by default) instead of days, and the Daily Scrum runs at the start of each session and whenever a task reaches Review. The board lives in the project at `docs/scrum/` (backlog, one file per sprint, Definitions of Ready and Done, working agreements), so a new session continues from the board alone.
+
+The team stops for the user at four gates: the backlog and Sprint Goal, every new ADR, the Sprint Review, and every commit or merge.
+
+Selecting this group also installs the workflows it routes to: product definition, ADR, DDD, BDD, UI/UX, development, TDD, review, and code review. Clean Code, JavaScript, LLM, DBA, data-intensive systems, DevOps, and marketing are used when installed.
+
+**Installed files:**
+
+`scrum/` — the `README.md` entry point, `roles/` (one file per role), `ceremonies/` (one playbook per ceremony), and `board/` (the templates the PM copies to `docs/scrum/` on first use).
+
+**Native agents per AI tool:** the installer looks for the tool the project uses and offers to install the six roles as that tool's own sub-agents, with the detected tools preselected. Each agent is a short wrapper that points to its role file, so the instructions live in one place.
+
+| Tool | Detected by | Agents installed |
+|---|---|---|
+| Claude Code | `.claude/`, `CLAUDE.md` | `.claude/agents/scrum-<role>.md`, plus a `CLAUDE.md` that imports `AGENTS.md` when the project has none |
+| OpenCode | `.opencode/`, `opencode.json`, `opencode.jsonc` | `.opencode/agents/scrum-<role>.md` (`mode: subagent`) |
+| Codex | `.codex/` | `.codex/agents/scrum-<role>.toml` |
+
+An existing `CLAUDE.md` is never replaced; the installer asks you to add `@AGENTS.md` to it when it does not mention `AGENTS.md`.
+
 ## Workflow order
 
 When the workflow groups are installed together, a feature moves through them in this order, and the generated `AGENTS.md` lists the installed stages:
@@ -311,6 +344,8 @@ When the workflow groups are installed together, a feature moves through them in
 Architecture decision records run alongside every stage: `ddd`, `uiux`, and `dev` pass the ADR gate (`docs/adr/README.md`) before deciding and record each new architectural decision through `actions/adr.md`, and both reviews check the diff against the ADRs the gate routes to.
 
 Clean Code, JavaScript, LLM, database, data-intensive system, DevOps, and marketing skills apply wherever the task needs them.
+
+With the Scrum team installed, the ceremonies run these stages instead: Backlog Refinement covers product definition, strategy, and BDD discovery; Sprint Planning covers DDD, UI/UX, and the ADR gate; the Daily Scrum covers implementation and review per task; the Sprint Review covers acceptance and code review. The generated `AGENTS.md` then points to `scrum/README.md` instead of listing the stage order.
 
 ## How installation works
 
@@ -381,6 +416,7 @@ The repository separates its working instruction documents from the templates di
 │   ├── review.md
 │   └── code-review.md
 ├── bin/
+│   ├── agents.ts
 │   └── cli.ts
 ├── dist/
 │   └── cli.js
@@ -397,7 +433,8 @@ The repository separates its working instruction documents from the templates di
 │   ├── ProductDefinition/
 │   ├── TDD/
 │   ├── UIUX/
-│   └── actions/
+│   ├── actions/
+│   └── scrum/
 ├── package.json
 └── tsconfig.json
 ```
@@ -405,6 +442,7 @@ The repository separates its working instruction documents from the templates di
 | Location | Responsibility |
 |---|---|
 | `bin/cli.ts` | TypeScript source code for the installer. |
+| `bin/agents.ts` | Detects the project's AI tool and generates the Scrum role agents in its native format. |
 | `dist/cli.js` | Compiled executable invoked by npm. |
 | `templates/` | Instruction files distributed to users. |
 | `templates/DBA/` | Database skills, one folder per engine. `Oracle/` and `PostgreSQL/` each hold one skill per chapter of their book. |
@@ -417,6 +455,7 @@ The repository separates its working instruction documents from the templates di
 | `templates/JavaScript/` | JavaScript skill library, one skill per chapter of *Eloquent JavaScript*, consulted by `dev`, `tdd`, `bdd` and `review`. |
 | `templates/LLM/` | LLM and ML skills, one folder per book: `AIEngineering/`, `HandsOnLLM/`, `BuildLLMFromScratch/` and `DesigningMLSystems/`, each holding one skill per chapter. |
 | `templates/TDD/` | TDD test pattern library, one skill per chapter of Kent Beck's book. |
+| `templates/scrum/` | Scrum team: `roles/`, `ceremonies/`, and the `board/` templates copied to a project's `docs/scrum/`. |
 | `CleanCode_Uncle_Bob/` | Working copy of the core Clean Code standards. |
 | `ProductDefinition/` | Planning and specification documents. |
 | `actions/` | Development, review, code review, TDD, BDD, DDD, strategy, UI/UX, and ADR workflows. |

@@ -1,6 +1,6 @@
 ---
 name: dev
-description: Implement software changes from an approved task or specification. Coordinate spec-checklist, ddd, bdd, uiux, tdd, and review when appropriate. Own production code, verification, and final reporting.
+description: Implement software changes from an approved task or specification. Coordinate spec-checklist, ddd, bdd, uiux, tdd, and review when appropriate; for a task from a Scrum sprint board, use the records its ceremonies already produced instead. Own production code, verification, and final reporting.
 ---
 
 # dev — Implementation Orchestrator
@@ -23,6 +23,15 @@ Implement the requested behavior in the existing repository with the smallest co
 - `review`: independently analyzes changed code for security, quality, and architecture. It reports findings but does not fix them unless explicitly asked to take on implementation.
 
 Do not copy another skill's full workflow into this skill. Invoke it and use its output.
+
+## Working a Scrum task
+
+When the task comes from a sprint board (`scrum/README.md`), Backlog Refinement and Sprint Planning have already run `spec-checklist`, `ddd`, `bdd`, `uiux`, and the ADR gate for its item. Do not run them again:
+
+- Skip step 1. Read the task's item, acceptance criteria, and the records and ADRs linked from it instead. If they are missing or contradict the code, move the task to Blocked with the reason; the Tech Lead routes it.
+- Run steps 2 to 6 for this task only. The Tech Lead's review in the Daily Scrum is the final review of the task.
+- Replace the final report with the task note on the board: what changed, which checks ran and their results, what remains. Then move the task to Review.
+- Never commit, push, or merge; the Tech Lead asks the user first (G4).
 
 ## Workflow
 
