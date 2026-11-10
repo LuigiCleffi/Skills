@@ -84,6 +84,7 @@ Assess:
 - Duplication of business rules across layers.
 - Migration and backward-compatibility implications.
 - Whether the implementation follows established project patterns or introduces a justified, explicit change.
+- Architecture decision records: pass the ADR gate (`docs/adr/README.md`) with the areas and paths the diff touches, and check the diff against the Compliance section of every accepted ADR it routes to. Report a violation with the ADR ID as its evidence. Report an architectural decision the diff makes without an ADR (a new dependency, datastore, integration style, boundary, or security model) as a finding that asks for one through `adr`.
 
 Do not recommend a large redesign merely because another architecture is possible. Tie architectural findings to concrete costs or risks.
 

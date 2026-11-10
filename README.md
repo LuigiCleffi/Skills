@@ -87,7 +87,19 @@ The review workflow focuses on:
 
 `actions/code-review.md`
 
-### 4. Test-Driven Development (TDD)
+### 4. Architecture Decision Records (ADR)
+
+**Purpose:** Give agents the project memory architects rely on, so a decision made once is followed everywhere instead of being re-decided in each session.
+
+`actions/adr.md` keeps every architectural decision as its own file in `docs/adr/NNNN-short-title.md`: context, options considered, the decision, consequences, and a Compliance section concrete enough for an agent to follow and a reviewer to check. Accepted ADRs are never rewritten; a changed decision gets a new ADR that supersedes the old one.
+
+`docs/adr/README.md` is the **ADR gate**. It is organized by what the agent is looking for ("add or change how data is stored", "authenticate a user", "call an external service"), with keywords and paths, and routes each intent to the ADRs that govern it. Before designing or implementing, the agent states what the task is about to decide or touch, reads the gate, and opens only the ADRs it points to. `ddd`, `uiux`, and `dev` consult the gate and record new decisions through `adr`. `review` and `code-review` check diffs against the routed ADRs and flag architectural decisions made without one.
+
+**Installed file:**
+
+`actions/adr.md`. The project's `docs/adr/` folder and its gate are created the first time a decision is recorded.
+
+### 5. Test-Driven Development (TDD)
 
 **Purpose:** Encourage implementation guided by observable, testable behavior.
 
@@ -106,7 +118,7 @@ It also installs a test pattern library: one skill per chapter of Kent Beck's *T
 - `actions/tdd.md`
 - `TDD/` — the `README.md` entry point plus one skill folder per chapter, grouped into `MoneyExample/`, `XUnitExample/` and `Patterns/`.
 
-### 5. Databases (DBA): Oracle and PostgreSQL
+### 6. Databases (DBA): Oracle and PostgreSQL
 
 **Purpose:** Guide work on Oracle databases and the applications built on them, from SQL and schema design to security, data movement, tuning, and administration.
 
@@ -128,7 +140,7 @@ They help AI agents:
 
 `DBA/` — the `README.md` entry point, plus `Oracle/` and `PostgreSQL/`, each with its own `README.md` and one skill folder per chapter.
 
-### 6. Data-Intensive Systems
+### 7. Data-Intensive Systems
 
 **Purpose:** Guide the design and change of systems whose hard problems are the amount, complexity, and rate of change of their data rather than CPU.
 
@@ -146,7 +158,7 @@ They help AI agents:
 
 `DataSystems/` — the `README.md` entry point plus one skill folder per chapter.
 
-### 7. Product Definition
+### 8. Product Definition
 
 **Purpose:** Clarify what should be built and how success should be evaluated before implementation begins.
 
@@ -164,7 +176,7 @@ This group includes planning and specification documents to help define:
 - `ProductDefinition/specs/spec-definition.md`
 - `ProductDefinition/specs/spec-checklist.md`
 
-### 8. UI/UX Decisions
+### 9. UI/UX Decisions
 
 **Purpose:** Make the UI/UX decisions for an approved specification and tell the developer which approach to follow, so the interface is not improvised during implementation.
 
@@ -177,7 +189,7 @@ This group includes planning and specification documents to help define:
 - `actions/uiux.md`
 - `UIUX/` — the `README.md` entry point plus one skill folder per section.
 
-### 9. DevOps and Cloud Infrastructure
+### 10. DevOps and Cloud Infrastructure
 
 **Purpose:** Guide how software gets built, deployed, operated, and observed, on whichever infrastructure the project runs.
 
@@ -199,7 +211,7 @@ They help AI agents:
 
 `DevOps/` — the `README.md` entry point, plus `Practices/`, `AWS/` and `Azure/`, each with its own `README.md` and one skill folder per chapter.
 
-### 10. Behavior-Driven Development (BDD)
+### 11. Behavior-Driven Development (BDD)
 
 **Purpose:** Make the agreed behavior concrete with examples before code exists, and keep those examples running as acceptance tests.
 
@@ -212,7 +224,7 @@ They help AI agents:
 - `actions/bdd.md`
 - `BDD/` — the `README.md` entry point plus one skill folder per chapter.
 
-### 11. Domain-Driven Design (DDD)
+### 12. Domain-Driven Design (DDD)
 
 **Purpose:** Give features a domain model the code can express, in the language the business uses, before scenarios, screens, and code are written.
 
@@ -225,7 +237,7 @@ They help AI agents:
 - `actions/ddd.md`
 - `DDD/` — the `README.md` entry point plus one skill folder per chapter.
 
-### 12. Marketing and Product Strategy
+### 13. Marketing and Product Strategy
 
 **Purpose:** Give a marketing agent a knowledge base for strategy, positioning, the marketing program, and honest persuasion, and check every customer-facing spec against it before it is built.
 
@@ -250,7 +262,7 @@ They help AI agents:
 - `actions/strategy.md`
 - `Marketing/` — the `README.md` entry point, plus `GoodStrategyBadStrategy/`, `ObviouslyAwesome/`, `MarketingManagement/` and `Influence/`, each with its own `README.md` and one skill folder per chapter.
 
-### 13. JavaScript
+### 14. JavaScript
 
 **Purpose:** Teach agents to write idiomatic, correct JavaScript while they run the `dev`, `tdd`, `bdd`, and `review` workflows on a JavaScript or TypeScript project.
 
@@ -267,7 +279,7 @@ They help AI agents:
 
 - `JavaScript/` — the `README.md` entry point plus one skill folder per chapter.
 
-### 14. LLMs and machine learning systems
+### 15. LLMs and machine learning systems
 
 **Purpose:** Teach agents to build, evaluate, and ship features that use large language models and other ML models, and to work on the models themselves.
 
@@ -284,6 +296,39 @@ They help AI agents:
 
 - `LLM/` — the `README.md` entry point, plus `AIEngineering/`, `HandsOnLLM/`, `BuildLLMFromScratch/` and `DesigningMLSystems/`, each with its own `README.md` and one skill folder per chapter.
 
+### 16. Scrum Team of Role Agents
+
+**Purpose:** Run a product request through Scrum with one agent playing each role, so the work is refined, planned, built, and accepted the way a real team would, with the user as the customer.
+
+The roles say who works and when; each routes to the installed workflows and knowledge base for the how instead of repeating them:
+
+- **PO:** the ordered Product Backlog, acceptance criteria, the Sprint Goal, and accepting the increment.
+- **PM (Project Manager and Scrum Master):** the board, the ceremonies, impediments, and sprint metrics.
+- **Tech Lead:** the bridge between PO and PM and the developers: design, tasks per role, the ADR gate, the Definition of Done, and review.
+- **Dev:** full-stack production code and tests, including routine database work.
+- **DBA:** schema, migrations with rollback, query performance, and data security.
+- **DevOps:** CI/CD, infrastructure as code, environments, deployment, and monitoring.
+
+Five ceremony playbooks (Backlog Refinement, Sprint Planning, Daily Scrum, Sprint Review, Retrospective) each end with a defined output. A sprint is bounded by scope (3 to 5 items by default) instead of days, and the Daily Scrum runs at the start of each session and whenever a task reaches Review. The board lives in the project at `docs/scrum/` (backlog, one file per sprint, Definitions of Ready and Done, working agreements), so a new session continues from the board alone.
+
+The team stops for the user at four gates: the backlog and Sprint Goal, every new ADR, the Sprint Review, and every commit or merge.
+
+Selecting this group also installs the workflows it routes to: product definition, ADR, DDD, BDD, UI/UX, development, TDD, review, and code review. Clean Code, JavaScript, LLM, DBA, data-intensive systems, DevOps, and marketing are used when installed.
+
+**Installed files:**
+
+`scrum/` — the `README.md` entry point, `roles/` (one file per role), `ceremonies/` (one playbook per ceremony), and `board/` (the templates the PM copies to `docs/scrum/` on first use).
+
+**Native agents per AI tool:** the installer looks for the tool the project uses and offers to install the six roles as that tool's own sub-agents, with the detected tools preselected. Each agent is a short wrapper that points to its role file, so the instructions live in one place.
+
+| Tool | Detected by | Agents installed |
+|---|---|---|
+| Claude Code | `.claude/`, `CLAUDE.md` | `.claude/agents/scrum-<role>.md`, plus a `CLAUDE.md` that imports `AGENTS.md` when the project has none |
+| OpenCode | `.opencode/`, `opencode.json`, `opencode.jsonc` | `.opencode/agents/scrum-<role>.md` (`mode: subagent`) |
+| Codex | `.codex/` | `.codex/agents/scrum-<role>.toml` |
+
+An existing `CLAUDE.md` is never replaced; the installer asks you to add `@AGENTS.md` to it when it does not mention `AGENTS.md`.
+
 ## Workflow order
 
 When the workflow groups are installed together, a feature moves through them in this order, and the generated `AGENTS.md` lists the installed stages:
@@ -296,7 +341,11 @@ When the workflow groups are installed together, a feature moves through them in
 6. Implementation: `actions/dev.md`, with BDD scenarios as the outer loop and `actions/tdd.md` as the inner loop, or in direct mode, as `uiux` recommends.
 7. Review: `actions/review.md`, then `actions/code-review.md` on the committed diff from a fresh session.
 
+Architecture decision records run alongside every stage: `ddd`, `uiux`, and `dev` pass the ADR gate (`docs/adr/README.md`) before deciding and record each new architectural decision through `actions/adr.md`, and both reviews check the diff against the ADRs the gate routes to.
+
 Clean Code, JavaScript, LLM, database, data-intensive system, DevOps, and marketing skills apply wherever the task needs them.
+
+With the Scrum team installed, the ceremonies run these stages instead: Backlog Refinement covers product definition, strategy, and BDD discovery; Sprint Planning covers DDD, UI/UX, and the ADR gate; the Daily Scrum covers implementation and review per task; the Sprint Review covers acceptance and code review. The generated `AGENTS.md` then points to `scrum/README.md` instead of listing the stage order.
 
 ## How installation works
 
@@ -367,6 +416,7 @@ The repository separates its working instruction documents from the templates di
 │   ├── review.md
 │   └── code-review.md
 ├── bin/
+│   ├── agents.ts
 │   └── cli.ts
 ├── dist/
 │   └── cli.js
@@ -383,7 +433,8 @@ The repository separates its working instruction documents from the templates di
 │   ├── ProductDefinition/
 │   ├── TDD/
 │   ├── UIUX/
-│   └── actions/
+│   ├── actions/
+│   └── scrum/
 ├── package.json
 └── tsconfig.json
 ```
@@ -391,6 +442,7 @@ The repository separates its working instruction documents from the templates di
 | Location | Responsibility |
 |---|---|
 | `bin/cli.ts` | TypeScript source code for the installer. |
+| `bin/agents.ts` | Detects the project's AI tool and generates the Scrum role agents in its native format. |
 | `dist/cli.js` | Compiled executable invoked by npm. |
 | `templates/` | Instruction files distributed to users. |
 | `templates/DBA/` | Database skills, one folder per engine. `Oracle/` and `PostgreSQL/` each hold one skill per chapter of their book. |
@@ -403,9 +455,10 @@ The repository separates its working instruction documents from the templates di
 | `templates/JavaScript/` | JavaScript skill library, one skill per chapter of *Eloquent JavaScript*, consulted by `dev`, `tdd`, `bdd` and `review`. |
 | `templates/LLM/` | LLM and ML skills, one folder per book: `AIEngineering/`, `HandsOnLLM/`, `BuildLLMFromScratch/` and `DesigningMLSystems/`, each holding one skill per chapter. |
 | `templates/TDD/` | TDD test pattern library, one skill per chapter of Kent Beck's book. |
+| `templates/scrum/` | Scrum team: `roles/`, `ceremonies/`, and the `board/` templates copied to a project's `docs/scrum/`. |
 | `CleanCode_Uncle_Bob/` | Working copy of the core Clean Code standards. |
 | `ProductDefinition/` | Planning and specification documents. |
-| `actions/` | Development, review, code review, TDD, BDD, DDD, strategy, and UI/UX workflows. |
+| `actions/` | Development, review, code review, TDD, BDD, DDD, strategy, UI/UX, and ADR workflows. |
 | `AGENTS.md` | Repository-level entry point for AI coding instructions. |
 
 Keep the distributed templates synchronized with their corresponding working copies whenever you update an instruction.

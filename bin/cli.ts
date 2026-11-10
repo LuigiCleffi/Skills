@@ -5,11 +5,18 @@ import {
   access,
   copyFile,
   mkdir,
+  readFile,
   readdir,
   writeFile,
 } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  type AgentTool,
+  agentTools,
+  detectAgentTools,
+  generateAgentFiles,
+} from "./agents.js";
 
 type Skill = {
   value: string;
@@ -19,6 +26,8 @@ type Skill = {
   files: string[];
   // Template directories installed in full, alongside the entry points.
   directories?: string[];
+  // Other groups this one routes to; installed with it.
+  requires?: string[];
 };
 
 const currentFile = fileURLToPath(import.meta.url);
@@ -55,6 +64,12 @@ const skills: Skill[] = [
     name: "Standards and spec code review",
     description: "Two-axis review of a committed diff against repo standards, the knowledge base, and the spec",
     files: ["actions/code-review.md"],
+  },
+  {
+    value: "adr",
+    name: "Architecture decision records",
+    description: "One ADR per architectural decision, plus the gate that routes each task to the ADRs that govern it",
+    files: ["actions/adr.md"],
   },
   {
     value: "tdd",
@@ -136,6 +151,24 @@ const skills: Skill[] = [
     files: ["actions/uiux.md", "UIUX/README.md"],
     directories: ["UIUX"],
   },
+  {
+    value: "scrum",
+    name: "Scrum team of role agents",
+    description: "PO, PM, Tech Lead, Dev, DBA, and DevOps roles, the ceremonies, and a board in docs/scrum/",
+    files: ["scrum/README.md"],
+    directories: ["scrum"],
+    requires: [
+      "product",
+      "adr",
+      "ddd",
+      "bdd",
+      "uiux",
+      "dev",
+      "tdd",
+      "review",
+      "code-review",
+    ],
+  },
 ];
 
 // Delivery stages in the order an agent should follow them.
@@ -159,6 +192,10 @@ const workflowStages: { skill: string; step: string }[] = [
   {
     skill: "uiux",
     step: "`actions/uiux.md` — UI/UX decisions, when the change has a user-facing surface",
+  },
+  {
+    skill: "adr",
+    step: "`actions/adr.md` — pass the ADR gate before designing or implementing, and record every architectural decision as an ADR",
   },
   { skill: "dev", step: "`actions/dev.md` — implementation, in TDD or direct mode" },
   { skill: "tdd", step: "`actions/tdd.md` — tests first, before each production change" },
@@ -196,12 +233,70 @@ async function listTemplateFiles(directory: string): Promise<string[]> {
   return nestedFiles.flat().sort();
 }
 
+// Adds every group a selected group requires, keeping the catalog order.
+function withRequiredSkills(selected: Skill[]): Skill[] {
+  const values = new Set(selected.map((skill) => skill.value));
+  const added: Skill[] = [];
+
+  for (const skill of selected) {
+    for (const required of skill.requires ?? []) {
+      if (values.has(required)) continue;
+
+      const requiredSkill = skills.find((candidate) => candidate.value === required);
+      if (!requiredSkill) {
+        throw new Error(`"${skill.value}" requires unknown group "${required}"`);
+      }
+
+      values.add(required);
+      added.push(requiredSkill);
+    }
+  }
+
+  for (const skill of added) {
+    console.log(`  + ${skill.name} (required by the groups you selected)`);
+  }
+
+  return skills.filter((skill) => values.has(skill.value));
+}
+
 async function listSkillFiles(skill: Skill): Promise<string[]> {
   const directoryFiles = await Promise.all(
     (skill.directories ?? []).map(listTemplateFiles),
   );
 
   return [...skill.files, ...directoryFiles.flat()];
+}
+
+// With the Scrum team installed, its ceremonies decide when each workflow
+// runs, so AGENTS.md points to them instead of listing the stage order.
+function generateWorkflowSection(
+  selectedValues: string[],
+  stages: string[],
+): string {
+  if (selectedValues.includes("scrum")) {
+    return `## Scrum Team
+
+For a product request or a feature, work as the Scrum team in
+\`scrum/README.md\`: read the board in \`docs/scrum/\`, run the ceremony it
+calls for, and play one role at a time. The ceremonies decide when each
+installed workflow runs, and the user approves the backlog and Sprint
+Goal, new ADRs, the Sprint Review, and every commit or merge. For a
+question or a small fix with no product decision, use the workflows
+directly.
+
+`;
+  }
+
+  if (stages.length <= 1) return "";
+
+  return `## Workflow Order
+
+Follow the installed stages in this order, then apply any other installed
+instructions where the task needs them:
+
+${stages.join("\n")}
+
+`;
 }
 
 function generateAgentsMd(selectedSkills: Skill[]): string {
@@ -218,17 +313,19 @@ function generateAgentsMd(selectedSkills: Skill[]): string {
     .filter((stage) => selectedValues.includes(stage.skill))
     .map((stage, index) => `${index + 1}. ${stage.step}`);
 
-  const workflowSection =
-    stages.length > 1
-      ? `## Workflow Order
+  const workflowSection = generateWorkflowSection(selectedValues, stages);
 
-Follow the installed stages in this order, then apply any other installed
-instructions where the task needs them:
+  const adrSection = selectedValues.includes("adr")
+    ? `## Architecture Decisions
 
-${stages.join("\n")}
+Before designing or implementing anything, open the ADR gate,
+\`docs/adr/README.md\`. State what the task is about to decide or touch,
+then read only the ADRs the gate routes that to. Accepted ADRs are
+binding. Every new architectural decision gets its own ADR and a gate
+entry, following \`actions/adr.md\`.
 
 `
-      : "";
+    : "";
 
   return `# AGENTS.md
 
@@ -244,7 +341,7 @@ Use them to guide implementation, code reviews, testing, and planning.
 
 ${sections.join("\n\n")}
 
-${workflowSection}## Working Rules
+${workflowSection}${adrSection}## Working Rules
 
 1. Understand the existing codebase and architecture before making changes.
 2. Read the relevant instruction files before starting a task.
@@ -276,7 +373,7 @@ are clearly communicated.
 
 async function installFiles(
   filesToInstall: string[],
-  selectedSkills: Skill[],
+  generatedFiles: Map<string, string>,
 ): Promise<void> {
   const conflicts: string[] = [];
 
@@ -321,12 +418,10 @@ async function installFiles(
 
     await mkdir(path.dirname(destination), { recursive: true });
 
-    if (file === "AGENTS.md") {
-      await writeFile(
-        destination,
-        generateAgentsMd(selectedSkills),
-        "utf8",
-      );
+    const generatedContent = generatedFiles.get(file);
+
+    if (generatedContent !== undefined) {
+      await writeFile(destination, generatedContent, "utf8");
     } else {
       const source = path.join(templateDirectory, file);
 
@@ -403,8 +498,8 @@ async function main(): Promise<void> {
       required: true,
     });
 
-    selectedSkills = skills.filter((skill) =>
-      selectedValues.includes(skill.value),
+    selectedSkills = withRequiredSkills(
+      skills.filter((skill) => selectedValues.includes(skill.value)),
     );
   }
 
@@ -415,8 +510,20 @@ async function main(): Promise<void> {
 
   // AGENTS.md is always generated to provide an entry point to the
   // instruction files selected by the developer.
+  const generatedFiles = new Map([
+    ["AGENTS.md", generateAgentsMd(selectedSkills)],
+  ]);
+
+  if (selectedSkills.some((skill) => skill.value === "scrum")) {
+    for (const file of await generateScrumAgentFiles()) {
+      generatedFiles.set(file.path, file.content);
+    }
+  }
+
   const skillFiles = await Promise.all(selectedSkills.map(listSkillFiles));
-  const filesToInstall = [...new Set([...skillFiles.flat(), "AGENTS.md"])];
+  const filesToInstall = [
+    ...new Set([...skillFiles.flat(), ...generatedFiles.keys()]),
+  ];
 
   console.log("\nThe following files will be installed:\n");
 
@@ -434,7 +541,62 @@ async function main(): Promise<void> {
     return;
   }
 
-  await installFiles(filesToInstall, selectedSkills);
+  await installFiles(filesToInstall, generatedFiles);
+}
+
+// Asks which AI tools get native Scrum role agents, preselecting the tools
+// found in the project.
+async function chooseAgentTools(): Promise<AgentTool[]> {
+  const detected = await detectAgentTools(projectDirectory);
+
+  console.log(
+    detected.length > 0
+      ? `\nAI tools found in this project: ${detected.map((tool) => tool.name).join(", ")}`
+      : "\nNo AI tool configuration found in this project.",
+  );
+
+  const selectedValues = await checkbox({
+    message: "Install the Scrum role agents for:",
+    choices: agentTools.map((tool) => ({
+      name: tool.name,
+      value: tool.value,
+      checked: detected.includes(tool),
+      description: `Detected by ${tool.markers.join(", ")}`,
+    })),
+  });
+
+  return agentTools.filter((tool) => selectedValues.includes(tool.value));
+}
+
+// Claude Code reads CLAUDE.md, not AGENTS.md, so it gets a CLAUDE.md that
+// imports AGENTS.md. An existing CLAUDE.md is never replaced.
+async function claudeEntryPoint(): Promise<{ path: string; content: string }[]> {
+  const claudeMd = path.join(projectDirectory, "CLAUDE.md");
+
+  if (!(await exists(claudeMd))) {
+    return [{ path: "CLAUDE.md", content: "@AGENTS.md\n" }];
+  }
+
+  if (!(await readFile(claudeMd, "utf8")).includes("AGENTS.md")) {
+    console.log(
+      "\nYour CLAUDE.md does not mention AGENTS.md. Add the line @AGENTS.md to it so Claude Code reads the installed instructions.",
+    );
+  }
+
+  return [];
+}
+
+async function generateScrumAgentFiles(): Promise<
+  { path: string; content: string }[]
+> {
+  const tools = await chooseAgentTools();
+  const files = generateAgentFiles(tools);
+
+  if (tools.some((tool) => tool.value === "claude")) {
+    files.push(...(await claudeEntryPoint()));
+  }
+
+  return files;
 }
 
 main().catch((error: unknown) => {

@@ -1,6 +1,6 @@
 ---
 name: dev
-description: Implement software changes from an approved task or specification. Coordinate spec-checklist, ddd, bdd, uiux, tdd, and review when appropriate. Own production code, verification, and final reporting.
+description: Implement software changes from an approved task or specification. Coordinate spec-checklist, ddd, bdd, uiux, tdd, and review when appropriate; for a task from a Scrum sprint board, use the records its ceremonies already produced instead. Own production code, verification, and final reporting.
 ---
 
 # dev — Implementation Orchestrator
@@ -9,7 +9,7 @@ description: Implement software changes from an approved task or specification. 
 
 Implement the requested behavior in the existing repository with the smallest correct change.
 
-`dev` owns production-code changes and coordinates the workflow. Delegate requirement analysis to `spec-checklist` when applicable, domain modeling to `ddd` when the change adds or alters domain concepts or rules, examples and executable scenarios to `bdd` when the change has business behavior worth illustrating, UI/UX decisions to `uiux` when the change has a user-facing surface, test-first preparation to `tdd` when appropriate, and independent code-quality analysis to `review`.
+`dev` owns production-code changes and coordinates the workflow. Delegate requirement analysis to `spec-checklist` when applicable, domain modeling to `ddd` when the change adds or alters domain concepts or rules, examples and executable scenarios to `bdd` when the change has business behavior worth illustrating, UI/UX decisions to `uiux` when the change has a user-facing surface, architecture decision records to `adr` whenever the change depends on or makes an architectural decision, test-first preparation to `tdd` when appropriate, and independent code-quality analysis to `review`.
 
 ## Skill boundaries
 
@@ -17,11 +17,21 @@ Implement the requested behavior in the existing repository with the smallest co
 - `ddd`: turns the approved requirements into a domain model record (`DomainModel.md`) and maintains the ubiquitous language glossary: bounded context, entities, value objects, aggregates and their invariants, services, events, repositories, and layer placement. It does not implement or test the code.
 - `bdd`: turns the approved requirements into confirmed examples and executable Gherkin scenarios, automates them as failing acceptance tests, and owns feature files and step definitions. It does not modify production code.
 - `uiux`: turns the approved requirements into a UI/UX decisions record (`UIUXDecisions.md`): flows, screens and states, components, accessibility, copy, the recommended implementation mode and slice order, and UI acceptance checks. It does not implement or test the code.
+- `adr`: owns the architecture decision records in `docs/adr/` and the ADR gate (`docs/adr/README.md`) that routes a task to the decisions that govern it. It records decisions; it does not implement them.
 - `tdd`: writes or updates tests before the corresponding production implementation and reports the observed test result. It must not modify production code.
 - `dev`: implements production code, runs validation, decides how to address review findings, and reports completion.
 - `review`: independently analyzes changed code for security, quality, and architecture. It reports findings but does not fix them unless explicitly asked to take on implementation.
 
 Do not copy another skill's full workflow into this skill. Invoke it and use its output.
+
+## Working a Scrum task
+
+When the task comes from a sprint board (`scrum/README.md`), Backlog Refinement and Sprint Planning have already run `spec-checklist`, `ddd`, `bdd`, `uiux`, and the ADR gate for its item. Do not run them again:
+
+- Skip step 1. Read the task's item, acceptance criteria, and the records and ADRs linked from it instead. If they are missing or contradict the code, move the task to Blocked with the reason; the Tech Lead routes it.
+- Run steps 2 to 6 for this task only. The Tech Lead's review in the Daily Scrum is the final review of the task.
+- Replace the final report with the task note on the board: what changed, which checks ran and their results, what remains. Then move the task to Review.
+- Never commit, push, or merge; the Tech Lead asks the user first (G4).
 
 ## Workflow
 
@@ -64,6 +74,8 @@ Inspect only the context needed for the task:
 
 Preserve unrelated work. Run baseline checks when practical if existing failures could affect confidence.
 
+Pass the ADR gate before choosing an approach: run `adr` in consult mode with what the task is about to decide or touch, and follow the accepted ADRs it routes to. When an ADR blocks the task, stop on that item and raise it with the user instead of working around it. When no ADR records exist, note "ADR gate: no records yet" and continue.
+
 ### 3. Select the implementation mode
 
 When a `uiux` handoff exists, use its recommended mode and slice order unless the user overrides them.
@@ -90,7 +102,8 @@ When the project is JavaScript or TypeScript and `JavaScript/README.md` is insta
 
 When the change uses a large language model or another ML model and `LLM/README.md` is installed, read the skills it routes to for the component you are building (prompts, retrieval, agents and tools, fine-tuning, embeddings, inference, data pipelines, deployment) and check the change against their red flags.
 
-- Follow approved requirements and established architecture.
+- Follow approved requirements, established architecture, and the accepted ADRs the gate routed to.
+- When the change needs an architectural decision no ADR covers (a new dependency, datastore, integration style, layer or module boundary, security model, or deployment choice), stop before building on it: recommend an option, confirm it with the user, and run `adr` in record mode so the decision gets its own ADR and a gate entry in the same change.
 - Reuse existing abstractions where appropriate.
 - Preserve compatibility and existing behavior unless the task requires a change.
 - Implement specified validation, error handling, permissions, and integration behavior.
@@ -130,6 +143,7 @@ Provide a concise report containing:
 - **DDD:** model elements and `DM` invariants implemented, glossary terms added, model changes agreed with the user, or "not applicable".
 - **BDD:** scenarios passing, failing, or held back, with the command and result, or "not applicable".
 - **UI/UX:** UX decision IDs implemented and how each was verified, deviations agreed with the user, or "not applicable".
+- **ADRs:** ADRs consulted through the gate, ADRs written or superseded (with status), or "no architectural decisions".
 - **Tests and validation:** commands actually run and observed results; distinguish passed, failed, skipped, and not run.
 - **Review:** material findings fixed, accepted, or still open.
 - **Remaining:** blockers, unverified requirements, known failures, and limitations.
@@ -144,4 +158,4 @@ Never delete a failing test, weaken an assertion, mock away the behavior under t
 
 ## Completion criteria
 
-The task is complete only when scoped behavior is implemented, relevant validation has been run as appropriate, the complete diff has been reviewed, and unresolved requirements or risks are reported honestly.
+The task is complete only when scoped behavior is implemented, every architectural decision it made has an ADR routed from the gate, relevant validation has been run as appropriate, the complete diff has been reviewed, and unresolved requirements or risks are reported honestly.

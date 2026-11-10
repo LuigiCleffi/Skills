@@ -32,12 +32,17 @@ Consult the relevant files when planning features, defining requirements, changi
 - `actions/ddd.md` — domain model and ubiquitous language from specs, before scenarios, screens, and code.
 - `actions/bdd.md` — examples and executable scenarios from specs, the outer loop for dev and tdd.
 - `actions/uiux.md` — UI/UX decisions and design handoff from specs to dev and tdd.
+- `actions/adr.md` — architecture decision records: one ADR per architectural decision, and the ADR gate (`docs/adr/README.md`) that routes a task to the ADRs that govern it.
 
 Follow the applicable workflow for the task. Consult multiple workflows when necessary.
 
 ### Workflow Order
 
 For a feature, follow the stages in this order: `ProductDefinition/plan.md`, then `spec-definition.md`, then `spec-checklist.md`, then `actions/strategy.md` when the change is customer-facing or the product is a marketing tool, then `actions/ddd.md` when the change touches domain concepts or rules, then `actions/bdd.md` when the change has business behavior to illustrate, then `actions/uiux.md` when the change has a user-facing surface, then `actions/dev.md` (scenarios as the outer loop, `actions/tdd.md` as the inner loop), then `actions/review.md`, then `actions/code-review.md` from a fresh session on the committed diff. Apply the other instruction sources where the task needs them.
+
+### Architecture Decisions
+
+`actions/adr.md` is not a single stage; it runs alongside every stage that designs, builds, or reviews structure. Before designing or implementing, pass the ADR gate: open `docs/adr/README.md`, state what the task is about to decide or touch, and read only the ADRs it routes to. Accepted ADRs are binding. Every new architectural decision gets its own ADR file and a gate entry in the same change.
 
 ### UI/UX Design
 
