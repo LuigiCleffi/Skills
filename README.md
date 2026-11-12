@@ -313,11 +313,13 @@ Five ceremony playbooks (Backlog Refinement, Sprint Planning, Daily Scrum, Sprin
 
 The team stops for the user at four gates: the backlog and Sprint Goal, every new ADR, the Sprint Review, and every commit or merge.
 
-Selecting this group also installs the workflows it routes to: product definition, ADR, DDD, BDD, UI/UX, development, TDD, review, and code review. Clean Code, JavaScript, LLM, DBA, data-intensive systems, DevOps, and marketing are used when installed.
+Every time the team hands control back to the user, it ends with the same cycle handoff (`scrum/handoff.md`): what was implemented in this cycle, what is next and who owns it, and one question, such as whether to call the PO to plan the next step or let the team move on.
+
+Selecting this group also installs the workflows it routes to: product definition, ADR, DDD, BDD, UI/UX, development, TDD, review, code review, and the pull request template. Clean Code, JavaScript, LLM, DBA, data-intensive systems, DevOps, and marketing are used when installed.
 
 **Installed files:**
 
-`scrum/` — the `README.md` entry point, `roles/` (one file per role), `ceremonies/` (one playbook per ceremony), and `board/` (the templates the PM copies to `docs/scrum/` on first use).
+`scrum/` — the `README.md` entry point, `handoff.md` (the message that ends every cycle), `roles/` (one file per role), `ceremonies/` (one playbook per ceremony), and `board/` (the templates the PM copies to `docs/scrum/` on first use).
 
 **Native agents per AI tool:** the installer looks for the tool the project uses and offers to install the six roles as that tool's own sub-agents, with the detected tools preselected. Each agent is a short wrapper that points to its role file, so the instructions live in one place.
 
@@ -328,6 +330,23 @@ Selecting this group also installs the workflows it routes to: product definitio
 | Codex | `.codex/` | `.codex/agents/scrum-<role>.toml` |
 
 An existing `CLAUDE.md` is never replaced; the installer asks you to add `@AGENTS.md` to it when it does not mention `AGENTS.md`.
+
+### 17. Pull Request Template
+
+**Purpose:** Give every pull request the same shape, so a reviewer sees what changed, why, how to try it, and what it looked like before and after.
+
+The template has five sections: **What was implemented**, **Why**, **How to test it?** (the steps a person would follow in the browser), **How it was**, and **How it is** (one screenshot per test step).
+
+The screenshots come from Playwright. The installer asks whether the project uses it:
+
+- **Yes:** the generated `AGENTS.md` tells the agent to map each test step to a Playwright step and take the before and after screenshots with it. If the project has no `playwright.config` yet, the installer prints how to add one (`npm init playwright@latest`), and the agent asks you before setting it up.
+- **No:** Playwright is not installed. The agent takes the screenshots only if its own tools can open the application in a browser; otherwise it leaves the two screenshot sections out.
+
+The Scrum team installs this group, and the Tech Lead uses it when opening the sprint's pull request.
+
+**Installed files:**
+
+`.github/pull_request_template.md`
 
 ## Workflow order
 
@@ -434,7 +453,8 @@ The repository separates its working instruction documents from the templates di
 │   ├── TDD/
 │   ├── UIUX/
 │   ├── actions/
-│   └── scrum/
+│   ├── scrum/
+│   └── .github/
 ├── package.json
 └── tsconfig.json
 ```
@@ -456,6 +476,7 @@ The repository separates its working instruction documents from the templates di
 | `templates/LLM/` | LLM and ML skills, one folder per book: `AIEngineering/`, `HandsOnLLM/`, `BuildLLMFromScratch/` and `DesigningMLSystems/`, each holding one skill per chapter. |
 | `templates/TDD/` | TDD test pattern library, one skill per chapter of Kent Beck's book. |
 | `templates/scrum/` | Scrum team: `roles/`, `ceremonies/`, and the `board/` templates copied to a project's `docs/scrum/`. |
+| `templates/.github/` | The pull request template installed into a project's `.github/`. |
 | `CleanCode_Uncle_Bob/` | Working copy of the core Clean Code standards. |
 | `ProductDefinition/` | Planning and specification documents. |
 | `actions/` | Development, review, code review, TDD, BDD, DDD, strategy, UI/UX, and ADR workflows. |

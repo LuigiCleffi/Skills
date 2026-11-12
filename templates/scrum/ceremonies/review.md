@@ -42,7 +42,7 @@ Show the user what the sprint built, working, and decide together what happens n
 ### Review the code and merge
 
 8. **[Tech Lead] Run `actions/code-review.md`** from a fresh session on the sprint branch against the main branch. Blocking findings become tasks for the next sprint, or are fixed now if the user prefers, with a new G4 for the fix.
-9. **[Tech Lead] Ask the user for G4 to merge.** Show the accepted items, the code-review result, and any reverts. Merge or open a pull request only after the user approves; never push or merge on the team's own initiative.
+9. **[Tech Lead] Ask the user for G4 to merge.** Show the accepted items, the code-review result, and any reverts. Merge or open a pull request only after the user approves; never push or merge on the team's own initiative. Write the pull request from `.github/pull_request_template.md`, following "Pull Requests" in `AGENTS.md`; the demo steps are its "How to test it?" steps.
 10. **[PM] Close the review.** Fill the sprint's Metrics and hand off to the [Retrospective](retro.md).
 
 ## Exit

@@ -27,6 +27,8 @@ Inspect progress toward the Sprint Goal and decide the next step. Short by desig
 6. **[PM] Check the Sprint Goal.** Write one line: on track or at risk, and why. If at risk, ask the Tech Lead and PO whether to cut scope; the PO decides.
 7. **[Tech Lead] Pick the next task.** The highest-ordered To Do task whose dependencies are Done. Its owner role moves it to Doing and works it following its role file.
 
+8. **[PM] Hand off.** When the team stops to return control to the user (a gate, a question, or the end of the session), end with the [cycle handoff](../handoff.md), using the finished task's ID as the cycle ID.
+
 When every item is Done, or the Tech Lead and PO agree the rest cannot finish, the PM sets the sprint to Review and starts the [Sprint Review](review.md).
 
 ## Log entry
