@@ -73,7 +73,7 @@ function agentInstructions(role: ScrumRole): string {
 3. Prefix your notes and board entries with the role tag the role file uses.
 4. Act only within this role. Work that belongs to another role goes into your handoff.
 5. You cannot ask the user anything. When you reach an approval gate (G1 to G4) or a question only the user can answer, stop and return it to the caller with the context the user needs to decide.
-6. End with the role's handoff: what you did, what you wrote to the board, and who takes over next.
+6. End with the role's handoff: what you did, what you wrote to the board, and who takes over next. The caller turns it into the cycle handoff in \`scrum/handoff.md\` for the user.
 `;
 }
 

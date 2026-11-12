@@ -152,6 +152,12 @@ const skills: Skill[] = [
     directories: ["UIUX"],
   },
   {
+    value: "pull-request",
+    name: "Pull request template",
+    description: "What was implemented, why, human test steps, and before and after screenshots taken with Playwright",
+    files: [".github/pull_request_template.md"],
+  },
+  {
     value: "scrum",
     name: "Scrum team of role agents",
     description: "PO, PM, Tech Lead, Dev, DBA, and DevOps roles, the ceremonies, and a board in docs/scrum/",
@@ -167,8 +173,16 @@ const skills: Skill[] = [
       "tdd",
       "review",
       "code-review",
+      "pull-request",
     ],
   },
+];
+
+const playwrightConfigs = [
+  "playwright.config.ts",
+  "playwright.config.js",
+  "playwright.config.mjs",
+  "playwright.config.cjs",
 ];
 
 // Delivery stages in the order an agent should follow them.
@@ -280,9 +294,10 @@ For a product request or a feature, work as the Scrum team in
 \`scrum/README.md\`: read the board in \`docs/scrum/\`, run the ceremony it
 calls for, and play one role at a time. The ceremonies decide when each
 installed workflow runs, and the user approves the backlog and Sprint
-Goal, new ADRs, the Sprint Review, and every commit or merge. For a
-question or a small fix with no product decision, use the workflows
-directly.
+Goal, new ADRs, the Sprint Review, and every commit or merge. End every
+turn that returns to the user with the cycle handoff in
+\`scrum/handoff.md\`. For a question or a small fix with no product
+decision, use the workflows directly.
 
 `;
   }
@@ -299,7 +314,35 @@ ${stages.join("\n")}
 `;
 }
 
-function generateAgentsMd(selectedSkills: Skill[]): string {
+// The screenshot rule depends on whether the user opted into Playwright.
+function generatePullRequestSection(usesPlaywright: boolean): string {
+  const screenshots = usesPlaywright
+    ? `This project uses Playwright for the browser. Map each "How to test it?"
+step to a step of a Playwright test that opens the application, run it on
+the base branch for "How it was" and on this branch for "How it is", and
+put one screenshot per step in each table. If no Playwright config is in
+the project yet, ask the user to approve setting it up
+(\`npm init playwright@latest\`) before opening the pull request.`
+    : `The user chose not to use Playwright. Do not install it. Take the "How it
+was" and "How it is" screenshots only if your own tools can open the
+application in a browser and capture it; otherwise delete those two
+sections and say so in the pull request.`;
+
+  return `## Pull Requests
+
+Write every pull request description from
+\`.github/pull_request_template.md\`. List the "How to test it?" steps as a
+person would do them in the browser.
+
+${screenshots}
+
+`;
+}
+
+function generateAgentsMd(
+  selectedSkills: Skill[],
+  usesPlaywright: boolean,
+): string {
   const sections = selectedSkills.map((skill) => {
     const links = skill.files
       .map((file) => `- \`${file}\``)
@@ -327,6 +370,10 @@ entry, following \`actions/adr.md\`.
 `
     : "";
 
+  const pullRequestSection = selectedValues.includes("pull-request")
+    ? generatePullRequestSection(usesPlaywright)
+    : "";
+
   return `# AGENTS.md
 
 ## Purpose
@@ -341,7 +388,7 @@ Use them to guide implementation, code reviews, testing, and planning.
 
 ${sections.join("\n\n")}
 
-${workflowSection}${adrSection}## Working Rules
+${workflowSection}${adrSection}${pullRequestSection}## Working Rules
 
 1. Understand the existing codebase and architecture before making changes.
 2. Read the relevant instruction files before starting a task.
@@ -508,10 +555,16 @@ async function main(): Promise<void> {
     return;
   }
 
+  const usesPlaywright = selectedSkills.some(
+    (skill) => skill.value === "pull-request",
+  )
+    ? await choosePlaywright()
+    : false;
+
   // AGENTS.md is always generated to provide an entry point to the
   // instruction files selected by the developer.
   const generatedFiles = new Map([
-    ["AGENTS.md", generateAgentsMd(selectedSkills)],
+    ["AGENTS.md", generateAgentsMd(selectedSkills, usesPlaywright)],
   ]);
 
   if (selectedSkills.some((skill) => skill.value === "scrum")) {
@@ -542,6 +595,36 @@ async function main(): Promise<void> {
   }
 
   await installFiles(filesToInstall, generatedFiles);
+}
+
+// Pull request screenshots come from Playwright. The user opts in; when the
+// project has no Playwright config yet, they are told how to add it.
+async function choosePlaywright(): Promise<boolean> {
+  const configChecks = playwrightConfigs.map((file) =>
+    exists(path.join(projectDirectory, file)),
+  );
+  const configured = (await Promise.all(configChecks)).some(Boolean);
+
+  const usesPlaywright = await confirm({
+    message: configured
+      ? "Playwright is configured. Use it for pull request test steps and screenshots?"
+      : "Use Playwright for pull request test steps and screenshots? (it is not configured yet)",
+    default: true,
+  });
+
+  if (usesPlaywright && !configured) {
+    console.log(
+      "\nConfigure Playwright in this project before the first pull request:\n\n  npm init playwright@latest\n\nThen set use.baseURL (and webServer) in playwright.config to open your application.",
+    );
+  }
+
+  if (!usesPlaywright) {
+    console.log(
+      "\nPull requests will skip the before and after screenshots, unless the AI tool can take them without Playwright.",
+    );
+  }
+
+  return usesPlaywright;
 }
 
 // Asks which AI tools get native Scrum role agents, preselecting the tools

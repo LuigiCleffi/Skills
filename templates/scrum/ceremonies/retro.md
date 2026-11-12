@@ -26,7 +26,8 @@ Improve how the team works. The retrospective looks at the process, the tools, t
    - A concrete change: "the DBA reviews migrations before Dev starts the task that depends on them", not "communicate better".
    - An owner role.
    - Where it goes: `docs/scrum/agreements.md` for a way of working; the backlog, through the PO, for work such as a missing test script or pipeline step; `docs/scrum/definition-of-ready.md` or `definition-of-done.md` for a check that was missing.
-5. **[PM] Record and close.** Write the retrospective section of the sprint file, update the agreements, and set the sprint to Closed. Tell the user in two or three lines what the sprint delivered and what the team will change.
+5. **[PM] Record and close.** Write the retrospective section of the sprint file, update the agreements, and set the sprint to Closed.
+6. **[PM] Hand off.** Tell the user with the [cycle handoff](../handoff.md), cycle `NN.Retro`: what the sprint delivered, what the team will change, and the next ceremony as step 1.
 
 ## Exit
 

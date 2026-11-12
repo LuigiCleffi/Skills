@@ -22,6 +22,7 @@ Keep the team delivering. The PM makes the work visible on the board, runs the c
 |---|---|
 | The rules of the team, gates, and board | `scrum/README.md` |
 | Board templates | `scrum/board/` |
+| The message that ends every cycle | `scrum/handoff.md` |
 
 ## Works in
 
@@ -48,4 +49,4 @@ An impediment is anything that stops a task and that its owner cannot remove alo
 
 - **To the PO:** time to refine or plan, and any product impediment.
 - **To the Tech Lead:** Ready items to break into tasks, and any technical impediment.
-- **To the user:** a short sprint status when a gate is pending or the sprint closes.
+- **To the user:** the [cycle handoff](../handoff.md) every time the team returns control: what was implemented, what is next, and one question. A pending gate is that question.
