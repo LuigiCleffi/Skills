@@ -76,6 +76,10 @@ Preserve unrelated work. Run baseline checks when practical if existing failures
 
 Pass the ADR gate before choosing an approach: run `adr` in consult mode with what the task is about to decide or touch, and follow the accepted ADRs it routes to. When an ADR blocks the task, stop on that item and raise it with the user instead of working around it. When no ADR records exist, note "ADR gate: no records yet" and continue.
 
+When `knowledge` is installed, also pass the knowledge gate: run it in consult mode with the business subject of the task, and implement the confirmed rules it routes to. A rule you find in the code or learn from the user during the task is captured through `knowledge`, and every rule you implement gets the code path in its *Where it is enforced*.
+
+When `harness` is installed and the task changes guarded code, work inside its active run: the run records which stages are settled, and `harness/gate.mjs` blocks code edits until they are.
+
 ### 3. Select the implementation mode
 
 When a `uiux` handoff exists, use its recommended mode and slice order unless the user overrides them.
@@ -144,6 +148,7 @@ Provide a concise report containing:
 - **BDD:** scenarios passing, failing, or held back, with the command and result, or "not applicable".
 - **UI/UX:** UX decision IDs implemented and how each was verified, deviations agreed with the user, or "not applicable".
 - **ADRs:** ADRs consulted through the gate, ADRs written or superseded (with status), or "no architectural decisions".
+- **Business rules:** `BR` rules consulted and implemented, rules captured or proposed during the task, or "Knowledge gate: no matching records".
 - **Tests and validation:** commands actually run and observed results; distinguish passed, failed, skipped, and not run.
 - **Review:** material findings fixed, accepted, or still open.
 - **Remaining:** blockers, unverified requirements, known failures, and limitations.

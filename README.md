@@ -348,19 +348,83 @@ The Scrum team installs this group, and the Tech Lead uses it when opening the s
 
 `.github/pull_request_template.md`
 
+### 18. Business Knowledge Base
+
+**Purpose:** Keep the business's memory the way ADRs keep the architecture's, so a rule learned once is followed everywhere instead of being rediscovered or broken in the next session.
+
+`actions/knowledge.md` keeps `docs/knowledge/`: the ubiquitous language glossary, one file per business rule (`rules/BR-NNNN-*.md`) with its statement, examples, source, status, and where the code enforces it, and the research notes behind them. Only a decider moves a rule to **Confirmed**; rules harvested from code or found in research stay **Proposed** until the user confirms them.
+
+`docs/knowledge/README.md` is the **knowledge gate**. It routes a business subject ("refunds", "customer tiers"), with keywords and paths, to the rules and notes that govern it. `spec-definition`, `ddd`, `bdd`, `dev`, `review`, and `code-review` consult it, and capture every rule they learn. **Harvest mode** reads one module of the existing code at a time for the rules it already enforces, and asks the user to confirm them: the project teaches the knowledge base.
+
+The knowledge base is plain files in git, found through a routing table and `grep`, so every piece of context an agent uses can be read and reviewed. No vector database or embeddings are involved.
+
+**Installed file:** `actions/knowledge.md`. The project's `docs/knowledge/` folder is created the first time something is captured.
+
+### 19. Domain Research
+
+**Purpose:** Bring outside knowledge (laws, regulations, standards, industry practice, competitor behavior) into a feature before it is specified, with a source for every claim.
+
+`actions/research.md` runs after the plan and before `spec-definition` when the domain is unfamiliar, regulated, or rule-heavy. It frames the questions in business terms, searches online without revealing confidential project details, weighs sources by tier (primary law and standards first, forums never alone), and writes `docs/knowledge/research/RS-NNNN-*.md` with cited findings, conflicts, proposed rules, and the questions the user must answer. A finding becomes a requirement only after the user confirms it.
+
+Selecting this group also installs the business knowledge base.
+
+**Installed file:** `actions/research.md`.
+
+### 20. Spec-Driven Harness
+
+**Purpose:** Run every change through the whole workflow in order and enforce it, so an agent cannot skip from the request straight to the code.
+
+`actions/harness.md` classifies the request as a feature, fix, or chore, opens a run in `docs/harness/`, and runs the stages the mode needs: plan, research, spec, checklist, strategy, DDD, BDD, UI/UX, the knowledge and ADR gates, then dev with TDD, review, and code review. Each stage is recorded as done with the record it produced, or skipped with a reason. The run record keeps the evidence and the user's approvals.
+
+`harness/gate.mjs` enforces the order. It reads `docs/harness/active.json` and blocks changes to guarded paths (production code and tests, set in `harness/config.json`) until every pre-code stage of the run's mode is settled:
+
+- **Claude Code:** the installer offers to add it as a `PreToolUse` hook in `.claude/settings.json`, merged with your existing settings, so blocked edits are refused with the reason shown to the agent.
+- **Any tool, git, or CI:** `node harness/gate.mjs check` fails when staged files are guarded and the run is not ready; `node harness/gate.mjs status` shows what is pending.
+
+The gate prevents skipping stages by accident. It is not a security boundary.
+
+Selecting this group also installs product definition, domain research, the knowledge base, ADR, development, TDD, and review. With the Scrum team installed, Sprint Planning opens one run per backlog item.
+
+**Installed files:** `actions/harness.md`, `harness/gate.mjs`, `harness/config.json`.
+
+## Optional MCP server
+
+At the end of installation, the installer asks whether to also install the **Skills Code Kit MCP server** (default: no). It is not a separate project to maintain: the server ships inside this package and runs with `npx -y skills-code-kit@<version> mcp`, pinned to the version you installed, so it always matches the installed templates. The installer only registers it with the AI tools you pick, preselecting the ones it detects, and merges into each tool's existing configuration:
+
+| Tool | Configuration written |
+|---|---|
+| Claude Code | `.mcp.json` |
+| Cursor | `.cursor/mcp.json` (passes `--project ${workspaceFolder}`) |
+| OpenCode | `opencode.json` (an `opencode.jsonc` is never rewritten; you get the entry to add) |
+| Codex | `.codex/config.toml` (read in trusted projects) |
+
+What any MCP client then gets:
+
+- **Tools:** `knowledge_gate` and `adr_gate` (state what the task is about and the paths it touches; get back the matching routing rows and the records they point to), `capture_rule` (writes a `BR-NNNN` rule and its gate rows in one step, and refuses a Confirmed rule without a decider), and `harness_status`, `harness_open_run`, `harness_set_stage`, `harness_close_run` (refuses `done` when the stage's record does not exist, `skipped` without a reason, and closing a run with unsettled stages). The harness tools use the project's own `harness/gate.mjs`, so they and the hook never disagree.
+- **Prompts:** one per installed workflow in `actions/` (`harness`, `research`, `ddd`, `dev`, and the rest), so a client can start any workflow by name.
+- **Resources:** `AGENTS.md`, the knowledge and ADR gates, and the glossary.
+
+The server reads the project from its working directory, or from `--project <dir>` or `SKILLS_CODE_KIT_PROJECT` when a client starts it elsewhere.
+
 ## Workflow order
 
 When the workflow groups are installed together, a feature moves through them in this order, and the generated `AGENTS.md` lists the installed stages:
 
-1. Product definition: `plan.md`, then `spec-definition.md`, then `spec-checklist.md`.
-2. Strategy review: `actions/strategy.md`, when the change is customer-facing or the product is a marketing tool.
-3. Domain model: `actions/ddd.md`, when the change touches domain concepts or rules.
-4. Examples and scenarios: `actions/bdd.md`, when the change has business behavior to illustrate.
-5. UI/UX decisions: `actions/uiux.md`, when the change has a user-facing surface.
-6. Implementation: `actions/dev.md`, with BDD scenarios as the outer loop and `actions/tdd.md` as the inner loop, or in direct mode, as `uiux` recommends.
-7. Review: `actions/review.md`, then `actions/code-review.md` on the committed diff from a fresh session.
+1. Product plan: `plan.md`.
+2. Domain research: `actions/research.md`, when the domain is unfamiliar, regulated, or rule-heavy.
+3. Specification: `spec-definition.md`, then `spec-checklist.md`.
+4. Strategy review: `actions/strategy.md`, when the change is customer-facing or the product is a marketing tool.
+5. Domain model: `actions/ddd.md`, when the change touches domain concepts or rules.
+6. Examples and scenarios: `actions/bdd.md`, when the change has business behavior to illustrate.
+7. UI/UX decisions: `actions/uiux.md`, when the change has a user-facing surface.
+8. Implementation: `actions/dev.md`, with BDD scenarios as the outer loop and `actions/tdd.md` as the inner loop, or in direct mode, as `uiux` recommends.
+9. Review: `actions/review.md`, then `actions/code-review.md` on the committed diff from a fresh session.
 
 Architecture decision records run alongside every stage: `ddd`, `uiux`, and `dev` pass the ADR gate (`docs/adr/README.md`) before deciding and record each new architectural decision through `actions/adr.md`, and both reviews check the diff against the ADRs the gate routes to.
+
+The business knowledge base runs alongside them the same way: every stage that specifies, models, builds, or reviews behavior passes the knowledge gate (`docs/knowledge/README.md`) and captures each rule it learns through `actions/knowledge.md`.
+
+With the harness installed, `actions/harness.md` runs these stages for you, records each one in `docs/harness/`, and `harness/gate.mjs` blocks code edits until the stages before implementation are settled.
 
 Clean Code, JavaScript, LLM, database, data-intensive system, DevOps, and marketing skills apply wherever the task needs them.
 
@@ -463,6 +527,9 @@ The repository separates its working instruction documents from the templates di
 |---|---|
 | `bin/cli.ts` | TypeScript source code for the installer. |
 | `bin/agents.ts` | Detects the project's AI tool and generates the Scrum role agents in its native format. |
+| `bin/mcp.ts` | The optional MCP server (`skills-code-kit mcp`): gate, rule, and harness tools, workflow prompts, and gate resources. |
+| `bin/gates.ts`, `bin/rules.ts`, `bin/harnessRuns.ts`, `bin/markdown.ts` | What the MCP tools do: consult the gates, capture rules, and run the harness, over the Markdown records. |
+| `bin/mcpConfig.ts` | Registers the MCP server in each AI tool's configuration. |
 | `dist/cli.js` | Compiled executable invoked by npm. |
 | `templates/` | Instruction files distributed to users. |
 | `templates/DBA/` | Database skills, one folder per engine. `Oracle/` and `PostgreSQL/` each hold one skill per chapter of their book. |
@@ -477,9 +544,10 @@ The repository separates its working instruction documents from the templates di
 | `templates/TDD/` | TDD test pattern library, one skill per chapter of Kent Beck's book. |
 | `templates/scrum/` | Scrum team: `roles/`, `ceremonies/`, and the `board/` templates copied to a project's `docs/scrum/`. |
 | `templates/.github/` | The pull request template installed into a project's `.github/`. |
+| `templates/harness/` | The harness gate script (`gate.mjs`) and its default `config.json`, installed to a project's `harness/`. |
 | `CleanCode_Uncle_Bob/` | Working copy of the core Clean Code standards. |
 | `ProductDefinition/` | Planning and specification documents. |
-| `actions/` | Development, review, code review, TDD, BDD, DDD, strategy, UI/UX, and ADR workflows. |
+| `actions/` | Development, review, code review, TDD, BDD, DDD, strategy, UI/UX, ADR, knowledge base, research, and harness workflows. |
 | `AGENTS.md` | Repository-level entry point for AI coding instructions. |
 
 Keep the distributed templates synchronized with their corresponding working copies whenever you update an instruction.

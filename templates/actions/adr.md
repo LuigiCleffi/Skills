@@ -180,7 +180,7 @@ When the code already embodies an undocumented architectural decision that the c
 
 - One decision per ADR. Split a record that decides two independent things.
 - Accepted ADRs are immutable apart from their status line. Change a decision by superseding it.
-- Never record a product decision, a business rule, or a guess about domain knowledge as an ADR.
+- Never record a product decision, a business rule, or a guess about domain knowledge as an ADR. Business rules belong in the knowledge base (`actions/knowledge.md`).
 - Never mark an ADR **Accepted** without a decider's confirmation.
 - Never leave an ADR out of the gate, or a gate row pointing to a missing or superseded ADR.
 - Do not write ADRs for decisions that are not architectural; noise in the gate makes agents skip it.

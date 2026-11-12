@@ -33,12 +33,15 @@ Consult the relevant files when planning features, defining requirements, changi
 - `actions/bdd.md` — examples and executable scenarios from specs, the outer loop for dev and tdd.
 - `actions/uiux.md` — UI/UX decisions and design handoff from specs to dev and tdd.
 - `actions/adr.md` — architecture decision records: one ADR per architectural decision, and the ADR gate (`docs/adr/README.md`) that routes a task to the ADRs that govern it.
+- `actions/knowledge.md` — business knowledge base: glossary, one file per business rule, and research notes in `docs/knowledge/`, behind the knowledge gate (`docs/knowledge/README.md`).
+- `actions/research.md` — cited domain research after the plan and before the spec, proposing rules for the user to confirm.
+- `actions/harness.md` — runs the stages below in order with a run record in `docs/harness/`, enforced by `harness/gate.mjs`.
 
 Follow the applicable workflow for the task. Consult multiple workflows when necessary.
 
 ### Workflow Order
 
-For a feature, follow the stages in this order: `ProductDefinition/plan.md`, then `spec-definition.md`, then `spec-checklist.md`, then `actions/strategy.md` when the change is customer-facing or the product is a marketing tool, then `actions/ddd.md` when the change touches domain concepts or rules, then `actions/bdd.md` when the change has business behavior to illustrate, then `actions/uiux.md` when the change has a user-facing surface, then `actions/dev.md` (scenarios as the outer loop, `actions/tdd.md` as the inner loop), then `actions/review.md`, then `actions/code-review.md` from a fresh session on the committed diff. Apply the other instruction sources where the task needs them.
+For a feature, follow the stages in this order: `ProductDefinition/plan.md`, then `actions/research.md` when the domain is unfamiliar, regulated, or rule-heavy, then `spec-definition.md`, then `spec-checklist.md`, then `actions/strategy.md` when the change is customer-facing or the product is a marketing tool, then `actions/ddd.md` when the change touches domain concepts or rules, then `actions/bdd.md` when the change has business behavior to illustrate, then `actions/uiux.md` when the change has a user-facing surface, then `actions/dev.md` (scenarios as the outer loop, `actions/tdd.md` as the inner loop), then `actions/review.md`, then `actions/code-review.md` from a fresh session on the committed diff. Apply the other instruction sources where the task needs them.
 
 ### Architecture Decisions
 

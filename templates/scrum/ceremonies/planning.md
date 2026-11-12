@@ -29,7 +29,8 @@ If fewer items are Ready than the sprint needs, run [Backlog Refinement](refinem
 ### How: design and tasks
 
 3. **[Tech Lead] Design each item.**
-   - Pass the ADR gate with what the item is about to decide or touch.
+   - Pass the ADR gate with what the item is about to decide or touch, and the knowledge gate (`actions/knowledge.md`) with its business subject, when installed.
+   - When `actions/harness.md` is installed, open one harness run for the item and record each design step below as its stage, so the gate script lets its tasks change code only once the item is designed.
    - New or changed domain concepts or rules: `actions/ddd.md`.
    - A user-facing surface: `actions/uiux.md`.
    - A new architectural decision: propose it with `actions/adr.md` and ask the user for **G2**. Tasks that depend on it stay To Do until it is approved.

@@ -147,6 +147,8 @@ For bugs, distinguish the observed behavior from the suspected root cause. Do no
 
 If project files or repository context are available, inspect the relevant issue, documentation, tests, and existing behavior when doing so is useful and authorized. Use this evidence to understand the existing contract, not to turn the specification into an implementation plan.
 
+When the knowledge gate (`docs/knowledge/README.md`) exists, pass it for the feature's business subject: confirmed rules are existing constraints the spec must respect, and proposed rules are questions to ask in Phase 3. When a `research` note exists for the feature, its *Questions for the user* join the clarification conversation; a research finding becomes a requirement only after the user confirms it. Every rule the user confirms while specifying is captured through `knowledge`.
+
 If the user has supplied enough information, proceed without asking redundant questions.
 
 ### Phase 2: Identify ambiguity and risk
@@ -460,7 +462,7 @@ Use `[NEEDS CLARIFICATION: question]` for material unresolved decisions.
 
 ## 5. Domain Rules and Invariants
 
-Describe the business rules, state constraints, and conditions that must remain true throughout the relevant operations.
+Describe the business rules, state constraints, and conditions that must remain true throughout the relevant operations. Cite each rule kept in the knowledge base by its `BR` ID instead of restating it.
 
 Omit this section's detailed rules if the feature has none beyond those already defined in the functional requirements.
 

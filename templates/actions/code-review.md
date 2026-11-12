@@ -54,7 +54,7 @@ Look in this order and stop at the first that yields a spec:
 
 1. **Issue references in the commit messages** (`#123`, `Closes #45`, a GitLab `!67`). Fetch them with the tracker the project uses (`gh issue view`, `glab`, or a connected tracker tool). If the tracker is not reachable, record the references and continue down the list.
 2. **A path the user passed in.**
-3. **The product records for the feature**, matched by branch or feature name: `SpecifyRequirements.md` and its `spec-checklist` result, plus the records written next to it when they exist — `DomainModel.md` and the glossary from `ddd`, feature files from `bdd`, `UIUXDecisions.md` from `uiux`, and `StrategyBrief.md` from `strategy`. Also check `docs/`, `specs/`, and `.scratch/`.
+3. **The product records for the feature**, matched by branch or feature name: `SpecifyRequirements.md` and its `spec-checklist` result, plus the records written next to it when they exist — `DomainModel.md` and the glossary from `ddd`, feature files from `bdd`, `UIUXDecisions.md` from `uiux`, and `StrategyBrief.md` from `strategy`, and the confirmed business rules the knowledge gate (`docs/knowledge/README.md`) routes the changed subject and paths to. Also check `docs/`, `specs/`, `.scratch/`, and the harness run record in `docs/harness/runs/` that links them.
 4. **Ask the user.**
 
 If no spec exists, skip the Spec sub-agent. The Spec block then says `No spec available` and lists where you looked. Never infer requirements from the code and review the code against them.

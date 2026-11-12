@@ -17,6 +17,7 @@ import {
   detectAgentTools,
   generateAgentFiles,
 } from "./agents.js";
+import { detectMcpClients, mcpClients, registerMcpServer } from "./mcpConfig.js";
 
 type Skill = {
   value: string;
@@ -70,6 +71,26 @@ const skills: Skill[] = [
     name: "Architecture decision records",
     description: "One ADR per architectural decision, plus the gate that routes each task to the ADRs that govern it",
     files: ["actions/adr.md"],
+  },
+  {
+    value: "knowledge",
+    name: "Business knowledge base",
+    description: "Glossary, one file per business rule, and research notes in docs/knowledge/, behind a gate every stage consults",
+    files: ["actions/knowledge.md"],
+  },
+  {
+    value: "research",
+    name: "Domain research",
+    description: "Cited online research into the domain's laws, standards, and practice before the spec, proposing rules for the user to confirm",
+    files: ["actions/research.md"],
+    requires: ["knowledge"],
+  },
+  {
+    value: "harness",
+    name: "Spec-driven harness",
+    description: "Runs every stage in order with a run record in docs/harness/, and a gate script that blocks code edits until the pre-code stages are settled",
+    files: ["actions/harness.md", "harness/gate.mjs", "harness/config.json"],
+    requires: ["product", "research", "knowledge", "adr", "dev", "tdd", "review"],
   },
   {
     value: "tdd",
@@ -187,9 +208,14 @@ const playwrightConfigs = [
 
 // Delivery stages in the order an agent should follow them.
 const workflowStages: { skill: string; step: string }[] = [
+  { skill: "product", step: "`ProductDefinition/plan.md` — the product plan" },
+  {
+    skill: "research",
+    step: "`actions/research.md` — cited domain research, when the domain is unfamiliar, regulated, or rule-heavy",
+  },
   {
     skill: "product",
-    step: "`ProductDefinition/plan.md`, then `ProductDefinition/specs/spec-definition.md`, then `ProductDefinition/specs/spec-checklist.md`",
+    step: "`ProductDefinition/specs/spec-definition.md`, then `ProductDefinition/specs/spec-checklist.md`",
   },
   {
     skill: "marketing",
@@ -206,6 +232,10 @@ const workflowStages: { skill: string; step: string }[] = [
   {
     skill: "uiux",
     step: "`actions/uiux.md` — UI/UX decisions, when the change has a user-facing surface",
+  },
+  {
+    skill: "knowledge",
+    step: "`actions/knowledge.md` — pass the knowledge gate before specifying, modeling, implementing, or reviewing, and capture every business rule learned",
   },
   {
     skill: "adr",
@@ -374,6 +404,32 @@ entry, following \`actions/adr.md\`.
     ? generatePullRequestSection(usesPlaywright)
     : "";
 
+  const knowledgeSection = selectedValues.includes("knowledge")
+    ? `## Business Knowledge
+
+Before specifying, modeling, implementing, or reviewing behavior, open the
+knowledge gate, \`docs/knowledge/README.md\`. State the business subject of
+the task, then read only the rules and research notes the gate routes it
+to, and the glossary terms it uses. Confirmed rules are binding. Capture
+every rule, term, and domain fact learned, following
+\`actions/knowledge.md\`.
+
+`
+    : "";
+
+  const harnessSection = selectedValues.includes("harness")
+    ? `## Harness
+
+For any change to production code or tests, follow \`actions/harness.md\`:
+classify the request (feature, fix, or chore), open a run in
+\`docs/harness/\`, and settle every pre-code stage of its mode before
+writing code. \`harness/gate.mjs\` blocks edits to guarded paths until the
+run is ready; \`node harness/gate.mjs status\` shows what is pending. Never
+edit \`docs/harness/active.json\` to get past the gate.
+
+`
+    : "";
+
   return `# AGENTS.md
 
 ## Purpose
@@ -388,7 +444,7 @@ Use them to guide implementation, code reviews, testing, and planning.
 
 ${sections.join("\n\n")}
 
-${workflowSection}${adrSection}${pullRequestSection}## Working Rules
+${workflowSection}${harnessSection}${knowledgeSection}${adrSection}${pullRequestSection}## Working Rules
 
 1. Understand the existing codebase and architecture before making changes.
 2. Read the relevant instruction files before starting a task.
@@ -595,6 +651,109 @@ async function main(): Promise<void> {
   }
 
   await installFiles(filesToInstall, generatedFiles);
+
+  if (selectedSkills.some((skill) => skill.value === "harness")) {
+    await offerHarnessHook();
+  }
+
+  await offerMcpServer();
+}
+
+async function packageVersion(): Promise<string> {
+  const manifest = JSON.parse(
+    await readFile(path.join(packageDirectory, "package.json"), "utf8"),
+  ) as { version: string };
+  return manifest.version;
+}
+
+// Optional: registers the kit's MCP server with the AI tools the user picks.
+async function offerMcpServer(): Promise<void> {
+  const install = await confirm({
+    message:
+      "Also install the Skills Code Kit MCP server? It exposes the knowledge and ADR gates, rule capture, and harness runs as tools, and the installed workflows as prompts, to any MCP client.",
+    default: false,
+  });
+
+  if (!install) return;
+
+  const detected = await detectMcpClients(projectDirectory);
+  const selectedValues = await checkbox({
+    message: "Register the MCP server with:",
+    choices: mcpClients.map((client) => ({
+      name: client.name,
+      value: client.value,
+      checked: detected.includes(client),
+      description: `Writes ${client.configFile}`,
+    })),
+  });
+
+  const clients = mcpClients.filter((client) => selectedValues.includes(client.value));
+  if (clients.length === 0) return;
+
+  console.log("\nRegistering the MCP server:");
+  await registerMcpServer(projectDirectory, clients, await packageVersion());
+  console.log("\nRestart your AI tool to load it. Codex reads .codex/config.toml only in trusted projects.\n");
+}
+
+const harnessHookCommand = 'node "$CLAUDE_PROJECT_DIR"/harness/gate.mjs';
+
+type HookEntry = { matcher?: string; hooks?: { type?: string; command?: string }[] };
+type ClaudeSettings = { hooks?: Record<string, HookEntry[]> } & Record<string, unknown>;
+
+// Adds the harness gate as a Claude Code PreToolUse hook, merged into any
+// existing .claude/settings.json without touching its other settings.
+async function offerHarnessHook(): Promise<void> {
+  const enforce = await confirm({
+    message:
+      "Enforce the harness in Claude Code? Adds a PreToolUse hook to .claude/settings.json that blocks code edits until the run is ready.",
+    default: true,
+  });
+
+  if (!enforce) {
+    console.log(
+      "\nSkipped the hook. Run `node harness/gate.mjs check` from a git pre-commit hook or CI to enforce the harness instead.\n",
+    );
+    return;
+  }
+
+  const settingsPath = path.join(projectDirectory, ".claude", "settings.json");
+  let settings: ClaudeSettings = {};
+
+  if (await exists(settingsPath)) {
+    try {
+      settings = JSON.parse(await readFile(settingsPath, "utf8")) as ClaudeSettings;
+    } catch {
+      console.log(
+        `\n.claude/settings.json is not valid JSON, so it was left unchanged. Add this PreToolUse hook yourself: ${harnessHookCommand}\n`,
+      );
+      return;
+    }
+  }
+
+  const preToolUse = settings.hooks?.PreToolUse ?? [];
+  const installed = preToolUse.some((entry) =>
+    entry.hooks?.some((hook) => hook.command === harnessHookCommand),
+  );
+
+  if (installed) {
+    console.log("\nThe harness hook is already in .claude/settings.json.\n");
+    return;
+  }
+
+  settings.hooks = {
+    ...settings.hooks,
+    PreToolUse: [
+      ...preToolUse,
+      {
+        matcher: "Edit|Write|MultiEdit|NotebookEdit",
+        hooks: [{ type: "command", command: harnessHookCommand }],
+      },
+    ],
+  };
+
+  await mkdir(path.dirname(settingsPath), { recursive: true });
+  await writeFile(settingsPath, `${JSON.stringify(settings, null, 2)}\n`, "utf8");
+  console.log("\n✓ Added the harness gate hook to .claude/settings.json\n");
 }
 
 // Pull request screenshots come from Playwright. The user opts in; when the
@@ -682,7 +841,21 @@ async function generateScrumAgentFiles(): Promise<
   return files;
 }
 
-main().catch((error: unknown) => {
+// `skills-code-kit mcp` serves the MCP server over stdio instead of
+// installing; stdout then belongs to the protocol, so nothing else prints.
+async function run(): Promise<void> {
+  const [command, ...args] = process.argv.slice(2);
+
+  if (command === "mcp") {
+    const { startMcpServer } = await import("./mcp.js");
+    await startMcpServer(args, await packageVersion());
+    return;
+  }
+
+  await main();
+}
+
+run().catch((error: unknown) => {
   if (
     typeof error === "object" &&
     error !== null &&

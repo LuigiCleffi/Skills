@@ -42,6 +42,8 @@ Do not copy another skill's full workflow into this skill. Invoke it and use its
 - Existing feature files, step definitions, glue code, the scenario runner command, and its reports.
 - The project's domain vocabulary: the `ddd` glossary and `DomainModel.md` when they exist, otherwise entity names and the words users and the spec use. Write scenarios in those exact terms; when a scenario needs a term or rule the glossary lacks, send it back to `ddd` rather than coining one.
 
+- The business rules the knowledge gate (`docs/knowledge/README.md`) routes to, when `knowledge` is installed. Use each confirmed rule's examples as the first scenario candidates, and link the scenarios back from the rule's *Where it is enforced*.
+
 Never invent a rule to complete an example. A question that changes the expected outcome is a product question: send it back to `spec-definition` and leave that example out until it is answered.
 
 ## Reference library
