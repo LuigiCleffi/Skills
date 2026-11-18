@@ -9,7 +9,7 @@
     "prepublishOnly": "npm run build",
     "release": "bash scripts/publish.sh",
     "check:frontmatter": "node scripts/check-frontmatter.mjs",
-    "test": "npm run build && node --test tests/",
+    "test": "npm run build && node --test 'tests/*.test.mjs'",
     "eval:routing": "node scripts/routing-eval.mjs"
   },
   "repository": {
