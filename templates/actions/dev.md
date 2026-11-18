@@ -80,6 +80,22 @@ When `knowledge` is installed, also pass the knowledge gate: run it in consult m
 
 When `harness` is installed and the task changes guarded code, work inside its active run: the run records which stages are settled, and `harness/gate.mjs` blocks code edits until they are.
 
+### Plan the tasks, when the change is risky
+
+When the change hits a harness trigger (schema, permission, public contract, concurrency, new entity, cross module), or touches more than a handful of files without one, write the tasks before code. With the harness, this is the `tasks` stage and the file is its record: `docs/harness/tasks/<run slug>.md`.
+
+One task per object that changes, in the order they can be done:
+
+```markdown
+### TASK-01 Add the refund window to orders
+**Files:** `db/migrations/20261118_refund_window.sql`, `src/orders/order.ts`
+**Change:** add `refund_window_days` (default 30); `Order.canRefund(today)` uses it (BR-0004)
+**Depends:** none
+**Verify:** `npm test -- orders/order.test.ts`
+```
+
+Every task names its files, what changes and why (the requirement, rule, or decision it serves), and the command that proves it is done. A task without a command to prove it is not ready; find the check first. The task points to the spec, model, and ADRs; it does not repeat them. Then implement one task at a time and run its **Verify** before the next.
+
 ### 3. Select the implementation mode
 
 When a `uiux` handoff exists, use its recommended mode and slice order unless the user overrides them.
@@ -126,6 +142,8 @@ Run the narrowest relevant checks first, then broader checks as warranted:
 Investigate failures instead of rerunning them blindly. Distinguish implementation defects, test defects, pre-existing failures, and environment problems. Never suppress failures or weaken meaningful assertions merely to get a green run.
 
 ### 6. Review incrementally and at completion
+
+After the final review, when `actions/qa.md` is installed, hand the change to `qa` for behavior the user or another system will notice. A scenario it reports as failed comes back here: fix it, rerun its check, and ask `qa` to rerun.
 
 Invoke `review` after a coherent behavior or meaningful implementation slice has passed its relevant tests, especially for security-sensitive or architecturally significant changes. Keep each incremental review scoped to the test, production diff, and relevant context; do not trigger a full-project review after every individual test.
 

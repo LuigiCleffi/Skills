@@ -119,7 +119,7 @@ It also installs a test pattern library: one skill per chapter of Kent Beck's *T
 
 - `actions/tdd.md`
 - `TDD/` — the `README.md` entry point plus one skill folder per chapter, grouped into `MoneyExample/`, `XUnitExample/` and `Patterns/`.
-- `docs/qa/edge-cases.md` — the project's edge-case battery (also installed with BDD).
+- `docs/qa/edge-cases.md` — the project's edge-case battery (also installed with BDD and QA).
 
 The battery lists the cases the project's tests must cover whenever they apply: empty and oversized input, time zones, rounding, double submit, another tenant's ID, a 390 px screen, and so on. It starts with common defect classes marked `seed`; every escaped defect adds a row in the change that fixes it. `tdd` adds the matching rows to its test list, `bdd` turns the user-visible ones into scenarios, and `review` reports an applicable row without a test.
 
@@ -174,6 +174,8 @@ This group includes planning and specification documents to help define:
 - Acceptance criteria.
 - Specification completeness and readiness.
 - The relationship between product expectations and implementation work.
+
+The specification step splits before it writes: a request that names an area, has several operations or roles, or needs "and" in its title is cut into vertical slices, and only the first is specified. It asks in rounds of up to four questions, each with a recommended answer, and turns what nobody can answer into an open question with an owner.
 
 **Installed files:**
 
@@ -392,9 +394,11 @@ Selecting this group also installs the business knowledge base.
 
 Why warn by default: a hook that blocks needs irreversible damage on the other side. Skipping a stage is recoverable, and a gate that blocks recoverable mistakes gets switched off by the first person it stops twice. Blocking is for the damage that does not come back, which is what the guards group does. The gate is not a security boundary.
 
+**Risky changes become tasks; finished ones get QA.** With a trigger, the run adds a `tasks` stage before code: one task per object that changes, each with its files, its change, and the command that proves it, checked by the gate. After review, `qa` runs every acceptance criterion and applicable edge case for real and records the evidence; the gate accepts only a report whose verdict is PASS. A spec with more than three user stories is refused: split it.
+
 **Escaped defects teach the battery.** A fix run opened for a defect that reached a user or QA records what shipped it, and closes only once `docs/qa/edge-cases.md` has the case that would have caught it. `node harness/gate.mjs escapes` counts them per month. `node harness/gate.mjs status` also reads git, so code changed while the run was not ready shows up even if `active.json` says otherwise.
 
-Selecting this group also installs product definition, domain research, the knowledge base, ADR, development, TDD, and review. With the Scrum team installed, Sprint Planning opens one run per backlog item.
+Selecting this group also installs product definition, domain research, the knowledge base, ADR, development, TDD, review, and QA. With the Scrum team installed, Sprint Planning opens one run per backlog item.
 
 **Installed files:** `actions/harness.md`, `harness/gate.mjs`, `harness/config.json`.
 
@@ -408,11 +412,27 @@ Selecting this group also installs product definition, domain research, the know
 - **Protected paths:** writing the folders your tools must own, such as migrations or generated code (`"protectedPaths": ["prisma/migrations/**"]`), by tool, redirect, copy, or in-place edit. Reading them is fine.
 - **Destructive commands:** `rm -rf` on the root, home, or working folder, `git reset --hard`, `git clean -f`, a force push to main or master, piping a download into a shell, `chmod 777`, and `--no-verify` when the project has git hooks.
 - **Protected branches:** commits and pushes on the branches you list in `"protectedBranches"` (empty by default).
-- **Production cloud:** a `gcloud`, `aws`, `az`, `kubectl`, `helm`, or `terraform` command that changes something, when its arguments or environment name production by one of your `"production.markers"` (`--project=acme-prod`, `--profile prod`, `-var-file=production.tfvars`). Reading production (list, describe, get, logs, plan) passes, and a verb the guard does not know counts as a change. Set `"unknownIsProduction": true` to also refuse changes whose target is not named. Empty by default.
+- **Production cloud:** a `gcloud`, `aws`, `az`, `kubectl`, `helm`, or `terraform` command that changes something, when its arguments or environment name production by one of your `"production.markers"` (`--project=acme-prod`, `--profile prod`, `-var-file=production.tfvars`). Reading production (list, describe, get, logs, plan) passes, and a verb the guard does not know counts as a change. Set `"requireNonProduction": true` with `"nonProductionMarkers"` (`staging`, `dev`) to go further: a change passes only when the command proves its target is not production, because a command that names no target goes wherever the CLI's current project or context points. Empty by default.
 
 It parses the command text, so it catches accidents, not an adversary; a heredoc body is treated as data, and a payload it cannot read is let through.
 
 **Installed files:** `guards/guard.mjs`, `guards/config.json`.
+
+### 22. QA That Runs and Proves
+
+**Purpose:** Try to break a finished change before a person does, and keep the evidence.
+
+`actions/qa.md` writes one scenario per acceptance criterion (from the spec, the feature files, or the UI acceptance checks) plus one per applicable row of the edge-case battery, then runs each for real: an existing test, a Playwright or browser run with a screenshot, an API call, or, only when nothing else can run, exact manual steps for a person. The report in `docs/qa/reports/` gives each scenario its result and evidence and an overall verdict; a failure goes back to `dev`. It never edits code or tests to make a scenario pass. A QA person can run it on a branch to get the scenarios to check by hand.
+
+**Installed files:** `actions/qa.md`, `docs/qa/edge-cases.md`.
+
+### 23. Worktree Slots for Parallel Sessions
+
+**Purpose:** Let several agent sessions run the app at the same time, each in its own git worktree, without fighting over ports or sharing a database.
+
+`node tools/worktree-slot.mjs`, run inside a worktree, gives it a slot that stays the same while it exists (the main checkout is 0; a new worktree takes the lowest free number) and writes `.worktree-slot.env` with its ports (base + slot × step) and names such as `DATABASE_NAME=app_wt2`, from `tools/worktree.json`. `--print` shows the values, `--list` the slots of every worktree. It creates no database and starts nothing; the generated `AGENTS.md` tells agents to use the file.
+
+**Installed files:** `tools/worktree-slot.mjs`, `tools/worktree.json`.
 
 ## Optional MCP server
 
@@ -578,7 +598,8 @@ The repository separates its working instruction documents from the templates di
 | `templates/.github/` | The pull request template installed into a project's `.github/`. |
 | `templates/harness/` | The harness gate script (`gate.mjs`) and its default `config.json`, installed to a project's `harness/`. |
 | `templates/guards/` | The guards hook (`guard.mjs`) and its default `config.json`, installed to a project's `guards/`. |
-| `templates/tools/` | `review-context.mjs`, which lists the project rules a diff reaches; installed with the review groups. |
+| `templates/tools/` | `review-context.mjs`, which lists the project rules a diff reaches (installed with the review groups), and `worktree-slot.mjs` with its `worktree.json` (the worktrees group). |
+| `templates/docs/qa/` | The edge-case battery, installed with TDD, BDD, and QA. |
 | `tests/` | `node --test` suites for the installed scripts and the compiled installer modules. |
 | `evals/routing/` | The routing eval's corpus and baseline, run by `scripts/routing-eval.mjs`. |
 | `CleanCode_Uncle_Bob/` | Working copy of the core Clean Code standards. |

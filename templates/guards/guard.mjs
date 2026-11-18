@@ -271,29 +271,36 @@ function hasMarker(words, markers) {
 
 // Returns why a cloud command would change production, or null. The command
 // names its target in its arguments or environment (a project, account,
-// context, or var file); a marker in them ("prod") makes it production.
+// context, or var file). A production marker in them ("prod") refuses it.
+// With requireNonProduction, a change passes only when a non-production
+// marker ("staging") names the target: a target the command does not name
+// could be production, since the CLI's current project or context decides.
 function productionReason(config, segment, name, args) {
   const settings = config.production ?? {};
-  const markers = (settings.markers ?? []).map((marker) => marker.toLowerCase());
+  const lower = (list) => (list ?? []).map((marker) => marker.toLowerCase());
+  const markers = lower(settings.markers);
+  const safe = lower(settings.nonProductionMarkers);
   const reads = cloudReadVerbs[name];
-  if (!reads || markers.length === 0) return null;
+  if (!reads || (markers.length === 0 && !settings.requireNonProduction)) return null;
 
   const verbs = args.filter((arg) => !arg.startsWith("-"));
   // aws and az take a service first (aws s3 cp), gcloud a group or two
   // (gcloud run services delete): the verb is the first word that is one.
   const isRead =
     verbs.length === 0 ||
-    verbs.some((verb) => reads.test(verb)) &&
+    (verbs.some((verb) => reads.test(verb)) &&
       !(name === "terraform" && verbs[0] === "state" && terraformStateWrites.test(verbs[1] ?? "")) &&
-      !(name === "terraform" && verbs[0] === "init" && args.some((arg) => /^-(migrate-state|reconfigure)/.test(arg)));
+      !(name === "terraform" && verbs[0] === "init" && args.some((arg) => /^-(migrate-state|reconfigure)/.test(arg))));
   if (isRead) return null;
 
   const env = segment.filter((item) => typeof item === "string" && /^[A-Za-z_][A-Za-z0-9_]*=/.test(item));
-  if (hasMarker([...args, ...env], markers)) {
-    return `${name} ${verbs.slice(0, 3).join(" ")} changes production (guards/config.json "production"); production changes go through the deploy pipeline or the user`;
+  const words = [...args, ...env];
+  const action = `${name} ${verbs.slice(0, 3).join(" ")}`;
+  if (hasMarker(words, markers)) {
+    return `${action} changes production (guards/config.json "production"); production changes go through the deploy pipeline or the user`;
   }
-  if (settings.unknownIsProduction) {
-    return `${name} ${verbs.slice(0, 3).join(" ")} changes an environment the command does not name; name a non-production target explicitly or ask the user`;
+  if (settings.requireNonProduction && !hasMarker(words, safe)) {
+    return `${action} changes a target the command does not prove is non-production; name it explicitly (${safe.join(", ") || "set nonProductionMarkers"}) or ask the user`;
   }
   return null;
 }

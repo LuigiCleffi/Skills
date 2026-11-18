@@ -33,7 +33,7 @@ type RunState = {
 
 export type StageStatus = "pending" | "done" | "skipped" | "n/a";
 
-const postCodeStages = ["dev", "review", "code-review"];
+const postCodeStages = ["dev", "review", "qa", "code-review"];
 
 async function loadGate(projectDirectory: string): Promise<Gate> {
   const gateFile = path.join(projectDirectory, "harness", "gate.mjs");
@@ -72,7 +72,8 @@ function triggerLine(config: HarnessConfig, triggers: string[]): string {
 }
 
 function stagesFor(mode: string, preCode: string[]): string[] {
-  const post = mode === "chore" ? postCodeStages.filter((stage) => stage !== "code-review") : postCodeStages;
+  // A chore changes no behavior: nothing for qa to prove, no spec for code-review's Spec axis.
+  const post = mode === "chore" ? postCodeStages.filter((stage) => stage !== "code-review" && stage !== "qa") : postCodeStages;
   return [...preCode, ...post];
 }
 

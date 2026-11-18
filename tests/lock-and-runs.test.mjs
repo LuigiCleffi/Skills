@@ -83,8 +83,10 @@ describe("harness runs", () => {
       "ddd",
       "knowledge-gate",
       "adr-gate",
+      "tasks",
       "dev",
       "review",
+      "qa",
       "code-review",
     ]);
     const record = read(project, state.run);
@@ -130,5 +132,22 @@ describe("escaped defect runs", () => {
       openRun(makeProject(["harness"]), { request: "x", mode: "feature", reason: "y", slug: "z", escapedFrom: "PR #1" }),
       /Only a fix run/,
     );
+  });
+});
+
+describe("post-code stages", () => {
+  const read = (project, file) => readFileSync(path.join(project, file), "utf8");
+  it("puts qa between review and code-review, and leaves it out of a chore", async () => {
+    const feature = makeProject(["harness"]);
+    await openRun(feature, { request: "x", mode: "feature", reason: "y", slug: "f" });
+    assert.deepEqual(Object.keys(JSON.parse(read(feature, "docs/harness/active.json")).stages).slice(-4), [
+      "dev",
+      "review",
+      "qa",
+      "code-review",
+    ]);
+    const chore = makeProject(["harness"]);
+    await openRun(chore, { request: "x", mode: "chore", reason: "y", slug: "c" });
+    assert.deepEqual(Object.keys(JSON.parse(read(chore, "docs/harness/active.json")).stages), ["adr-gate", "dev", "review"]);
   });
 });
