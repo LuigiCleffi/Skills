@@ -7,19 +7,25 @@ import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-type HarnessConfig = { modes?: Record<string, string[]>; state?: string };
+type HarnessConfig = {
+  modes?: Record<string, unknown>;
+  state?: string;
+  triggers?: Record<string, { description?: string; paths?: string[] }>;
+};
 type RunEvaluation = { ready: boolean; summary: string; problems: string[] };
 
 type Gate = {
   loadConfig: () => HarnessConfig;
   statePath: (config: HarnessConfig) => string;
-  stageProblem: (stage: string, value: unknown, record?: string) => string | null;
-  evaluateRun: (config: HarnessConfig) => RunEvaluation;
+  stageProblem: (stage: string, value: unknown, record?: string, config?: HarnessConfig) => string | null;
+  requiredStages?: (config: HarnessConfig, mode: string, triggers?: string[]) => string[] | null;
+  evaluateRun: (config: HarnessConfig, touched?: string[]) => RunEvaluation;
 };
 
 type RunState = {
   run: string;
   mode: string;
+  triggers?: string[];
   stages: Record<string, string>;
   records: Record<string, string>;
 };
@@ -48,6 +54,22 @@ async function writeState(gate: Gate, config: HarnessConfig, state: RunState): P
   await writeFile(gate.statePath(config), `${JSON.stringify(state, null, 2)}\n`, "utf8");
 }
 
+// Pre-code stages from the gate; older gates only know a list per mode.
+function preCodeStages(gate: Gate, config: HarnessConfig, mode: string, triggers: string[]): string[] | null {
+  if (gate.requiredStages) return gate.requiredStages(config, mode, triggers);
+  const stages = config.modes?.[mode];
+  return Array.isArray(stages) ? (stages as string[]) : null;
+}
+
+function unknownTriggers(config: HarnessConfig, triggers: string[]): string[] {
+  return triggers.filter((trigger) => !(trigger in (config.triggers ?? {})));
+}
+
+function triggerLine(config: HarnessConfig, triggers: string[]): string {
+  if (triggers.length === 0) return "none";
+  return triggers.map((trigger) => `${trigger} (${config.triggers?.[trigger]?.description ?? trigger})`).join("; ");
+}
+
 function stagesFor(mode: string, preCode: string[]): string[] {
   const post = mode === "chore" ? postCodeStages.filter((stage) => stage !== "code-review") : postCodeStages;
   return [...preCode, ...post];
@@ -70,13 +92,21 @@ export async function harnessStatus(projectDirectory: string): Promise<string> {
 
 export async function openRun(
   projectDirectory: string,
-  input: { request: string; mode: string; reason: string; slug: string },
+  input: { request: string; mode: string; reason: string; slug: string; triggers?: string[] },
 ): Promise<string> {
   const gate = await loadGate(projectDirectory);
   const config = gate.loadConfig();
-  const preCode = config.modes?.[input.mode];
+  const triggers = [...new Set(input.triggers ?? [])];
+  const unknown = unknownTriggers(config, triggers);
 
-  if (!Array.isArray(preCode)) {
+  if (unknown.length > 0) {
+    throw new Error(
+      `Unknown trigger(s): ${unknown.join(", ")}. Defined in harness/config.json: ${Object.keys(config.triggers ?? {}).join(", ") || "none"}.`,
+    );
+  }
+
+  const preCode = preCodeStages(gate, config, input.mode, triggers);
+  if (!preCode) {
     throw new Error(`Mode "${input.mode}" is not defined in harness/config.json.`);
   }
   if (existsSync(gate.statePath(config))) {
@@ -91,6 +121,7 @@ export async function openRun(
   const record = `# Run: ${input.request}
 
 **Mode:** ${mode} — ${input.reason}
+**Triggers:** ${triggerLine(config, triggers)}
 **Opened:** ${today()}   **Closed:**
 **Status:** Open
 
@@ -108,11 +139,12 @@ ${stages.map((stage) => stageRow(stage, "pending")).join("\n")}
   await writeState(gate, config, {
     run: runFile,
     mode: input.mode,
+    triggers,
     stages: Object.fromEntries(stages.map((stage) => [stage, "pending"])),
     records: {},
   });
 
-  return `Opened ${runFile} in mode ${input.mode} with stages: ${stages.join(", ")}.`;
+  return `Opened ${runFile} in mode ${input.mode} with triggers: ${triggers.join(", ") || "none"}; stages: ${stages.join(", ")}.`;
 }
 
 async function updateRunRecord(
@@ -140,7 +172,7 @@ export async function setStage(
   const reason = input.reason?.trim() ?? "";
   const value =
     input.status === "skipped" || input.status === "n/a" ? `${input.status}: ${reason}` : input.status;
-  const problem = gate.stageProblem(input.stage, value, input.record);
+  const problem = gate.stageProblem(input.stage, value, input.record, config);
   if (input.status !== "pending" && problem !== null) throw new Error(problem);
 
   state.stages[input.stage] = value;
@@ -156,6 +188,46 @@ export async function setStage(
   return `${input.stage}: ${value}\n\n${await harnessStatus(projectDirectory)}`;
 }
 
+// Declares triggers the run hits, found while working. Their stages join the
+// run as pending, and guarded code waits for them again.
+export async function declareTriggers(
+  projectDirectory: string,
+  input: { triggers: string[]; evidence: string },
+): Promise<string> {
+  const gate = await loadGate(projectDirectory);
+  const config = gate.loadConfig();
+  const state = await readState(gate, config);
+  const unknown = unknownTriggers(config, input.triggers);
+
+  if (unknown.length > 0) {
+    throw new Error(`Unknown trigger(s): ${unknown.join(", ")}.`);
+  }
+
+  const triggers = [...new Set([...(state.triggers ?? []), ...input.triggers])];
+  const preCode = preCodeStages(gate, config, state.mode, triggers) ?? [];
+  const added = preCode.filter((stage) => !(stage in state.stages));
+  const ordered = stagesFor(state.mode, preCode);
+
+  state.triggers = triggers;
+  state.stages = Object.fromEntries(ordered.map((stage) => [stage, state.stages[stage] ?? "pending"]));
+  await writeState(gate, config, state);
+
+  await updateRunRecord(projectDirectory, state.run, (document) => {
+    let next = document.replace(/^\*\*Triggers:\*\*.*$/m, `**Triggers:** ${triggerLine(config, triggers)}`);
+    if (!/^\*\*Triggers:\*\*/m.test(next)) {
+      next = next.replace(/^(\*\*Mode:\*\*.*)$/m, `$1\n**Triggers:** ${triggerLine(config, triggers)}`);
+    }
+    // New pre-code stages go just before the first post-code stage.
+    const rows = added.map((stage) => stageRow(stage, "pending")).join("\n");
+    if (rows !== "") next = next.replace(/^\| dev \|/m, `${rows}\n| dev |`);
+    // The evidence goes in the result, where the run's other findings are.
+    return next.replace(/## Result\n?/, `## Result\nTriggers declared ${today()} (${input.triggers.join(", ")}): ${input.evidence}\n`);
+  });
+
+  const addedNote = added.length > 0 ? `Added pending stages: ${added.join(", ")}.` : "No stages added.";
+  return `Triggers: ${triggers.join(", ")}. ${addedNote}\n\n${await harnessStatus(projectDirectory)}`;
+}
+
 export async function closeRun(
   projectDirectory: string,
   input: { status: "Closed" | "Abandoned"; result: string },
@@ -166,7 +238,7 @@ export async function closeRun(
 
   if (input.status === "Closed") {
     const unsettled = Object.entries(state.stages)
-      .map(([stage, value]) => gate.stageProblem(stage, value, state.records[stage]))
+      .map(([stage, value]) => gate.stageProblem(stage, value, state.records[stage], config))
       .filter((problem): problem is string => problem !== null);
     if (unsettled.length > 0) {
       throw new Error(`The run cannot close yet:\n${unsettled.map((p) => `  - ${p}`).join("\n")}`);

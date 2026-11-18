@@ -77,15 +77,17 @@ The review workflow focuses on:
 - Missing or inadequate tests.
 - Maintainability and consistency with the existing architecture.
 
-**Installed file:**
+**Installed files:**
 
-`actions/review.md`
+`actions/review.md`, `tools/review-context.mjs`
+
+Both reviews start from the project rules the diff reaches. Rules live once, as rows of the "Project Rules" table in an `AGENTS.md` (`| ID | Rule | Applies to | Enforced by | Checkable | Why |`), and a rule in `api/AGENTS.md` applies only under `api/`. `node tools/review-context.mjs <fixed-point>` (or `--worktree`) lists the rules the changed files fall under, separating the ones a linter, test, or hook already enforces, so the reviewer reads those rules instead of every convention file and cites them by ID.
 
 `actions/code-review.md` is a separate, standalone review of the committed diff between `HEAD` and a fixed point you name (a commit, branch, tag, `main`, `HEAD~5`). It runs two axes in separate sub-agents. Standards checks the code against the repository's own documented conventions first, then against the installed knowledge base: the Clean Code heuristic catalog as the smell baseline, plus the JavaScript, LLM, TDD, BDD, DDD, DBA, DataSystems, DevOps, and UI/UX skills that match what the diff touches. Spec checks it against the originating issue or `SpecifyRequirements.md` and its companion records (`DomainModel.md`, feature files, `UIUXDecisions.md`, `StrategyBrief.md`). Every finding cites a rule, a heuristic code, or a spec line. The report keeps the two axes apart and never gives one blended verdict. Run it from a fresh session, not the one that wrote the code.
 
-**Installed file:**
+**Installed files:**
 
-`actions/code-review.md`
+`actions/code-review.md`, `tools/review-context.mjs`
 
 ### 4. Architecture Decision Records (ADR)
 
@@ -372,20 +374,39 @@ Selecting this group also installs the business knowledge base.
 
 ### 20. Spec-Driven Harness
 
-**Purpose:** Run every change through the whole workflow in order and enforce it, so an agent cannot skip from the request straight to the code.
+**Purpose:** Run every change through the workflow in order, as deep as its risk calls for, and keep the evidence, so an agent does not skip from the request straight to the code.
 
-`actions/harness.md` classifies the request as a feature, fix, or chore, opens a run in `docs/harness/`, and runs the stages the mode needs: plan, research, spec, checklist, strategy, DDD, BDD, UI/UX, the knowledge and ADR gates, then dev with TDD, review, and code review. Each stage is recorded as done with the record it produced, or skipped with a reason. The run record keeps the evidence and the user's approvals.
+`actions/harness.md` classifies the request as a feature, fix, or chore, opens a run in `docs/harness/`, and runs the stages the run needs: plan, research, spec, checklist, strategy, DDD, BDD, UI/UX, the knowledge and ADR gates, then dev with TDD, review, and code review. Each stage is recorded as done with the record it produced, or skipped with a reason. The run record keeps the evidence and the user's approvals.
 
-`harness/gate.mjs` enforces the order. It reads `docs/harness/active.json` and blocks changes to guarded paths (production code and tests, set in `harness/config.json`) until every pre-code stage of the run's mode is settled:
+**Depth follows risk.** The run also declares the triggers the change hits: `schema`, `permission`, `public-contract`, `concurrency`, `new-entity`, `cross-module`. With none, the run stays light; with one, the mode's deeper stages join it (the domain model for a feature; the spec and the domain model for a fix whose cause is in the design). Triggers with paths are also detected: editing a migration in a run that did not declare `schema` is reported.
 
-- **Claude Code:** the installer offers to add it as a `PreToolUse` hook in `.claude/settings.json`, merged with your existing settings, so blocked edits are refused with the reason shown to the agent.
-- **Any tool, git, or CI:** `node harness/gate.mjs check` fails when staged files are guarded and the run is not ready; `node harness/gate.mjs status` shows what is pending.
+**Records are checked, not just present.** A stage counts as done only when its record passes the checks in `harness/config.json`: required headings, "Open Questions: None.", no leftover placeholders or `[NEEDS CLARIFICATION]` markers, and a word budget, because the agent reads every record before writing code. `node harness/gate.mjs validate <stage> <record>` runs them.
 
-The gate prevents skipping stages by accident. It is not a security boundary.
+`harness/gate.mjs` reads `docs/harness/active.json` and checks changes to guarded paths (production code and tests, set in `harness/config.json`) against the run:
+
+- **Claude Code:** the installer offers a `PreToolUse` hook in `.claude/settings.json`, merged with your existing settings. By default it **warns**: the agent and you see what is pending, once per session, and the edit goes through. Choose **block** to refuse the edit instead.
+- **Any tool, git, or CI:** `node harness/gate.mjs check` reports guarded files changed before the run is ready, and fails only in block mode; `node harness/gate.mjs status` shows what is pending.
+
+Why warn by default: a hook that blocks needs irreversible damage on the other side. Skipping a stage is recoverable, and a gate that blocks recoverable mistakes gets switched off by the first person it stops twice. Blocking is for the damage that does not come back, which is what the guards group does. The gate is not a security boundary.
 
 Selecting this group also installs product definition, domain research, the knowledge base, ADR, development, TDD, and review. With the Scrum team installed, Sprint Planning opens one run per backlog item.
 
 **Installed files:** `actions/harness.md`, `harness/gate.mjs`, `harness/config.json`.
+
+### 21. Guards Against Irreversible Damage
+
+**Purpose:** Refuse the few things an agent can do that cannot be undone, and nothing else.
+
+`guards/guard.mjs` runs as a Claude Code `PreToolUse` hook on `Bash`, `Read`, `Edit`, and `Write`, configured in `guards/config.json`:
+
+- **Secrets:** reading, copying, or sending `.env` files, keys, and credential files, by tool or in the shell (`cat .env`, `curl -d @.env`), and dumping the environment. `.env.example` and its kin stay readable.
+- **Protected paths:** writing the folders your tools must own, such as migrations or generated code (`"protectedPaths": ["prisma/migrations/**"]`), by tool, redirect, copy, or in-place edit. Reading them is fine.
+- **Destructive commands:** `rm -rf` on the root, home, or working folder, `git reset --hard`, `git clean -f`, a force push to main or master, piping a download into a shell, `chmod 777`, and `--no-verify` when the project has git hooks.
+- **Protected branches:** commits and pushes on the branches you list in `"protectedBranches"` (empty by default).
+
+It parses the command text, so it catches accidents, not an adversary; a heredoc body is treated as data, and a payload it cannot read is let through.
+
+**Installed files:** `guards/guard.mjs`, `guards/config.json`.
 
 ## Optional MCP server
 
@@ -400,7 +421,7 @@ At the end of installation, the installer asks whether to also install the **Ski
 
 What any MCP client then gets:
 
-- **Tools:** `knowledge_gate` and `adr_gate` (state what the task is about and the paths it touches; get back the matching routing rows and the records they point to), `capture_rule` (writes a `BR-NNNN` rule and its gate rows in one step, and refuses a Confirmed rule without a decider), and `harness_status`, `harness_open_run`, `harness_set_stage`, `harness_close_run` (refuses `done` when the stage's record does not exist, `skipped` without a reason, and closing a run with unsettled stages). The harness tools use the project's own `harness/gate.mjs`, so they and the hook never disagree.
+- **Tools:** `knowledge_gate` and `adr_gate` (state what the task is about and the paths it touches; get back the matching routing rows and the records they point to), `capture_rule` (writes a `BR-NNNN` rule and its gate rows in one step, and refuses a Confirmed rule without a decider), and `harness_status`, `harness_open_run` (with the run's triggers), `harness_declare_triggers` (adds a trigger found later, and its stages), `harness_set_stage`, `harness_close_run` (refuses `done` when the stage's record is missing or fails its checks, `skipped` without a reason, and closing a run with unsettled stages). The harness tools use the project's own `harness/gate.mjs`, so they and the hook never disagree.
 - **Prompts:** one per installed workflow in `actions/` (`harness`, `research`, `ddd`, `dev`, and the rest), so a client can start any workflow by name.
 - **Resources:** `AGENTS.md`, the knowledge and ADR gates, and the glossary.
 
@@ -424,7 +445,7 @@ Architecture decision records run alongside every stage: `ddd`, `uiux`, and `dev
 
 The business knowledge base runs alongside them the same way: every stage that specifies, models, builds, or reviews behavior passes the knowledge gate (`docs/knowledge/README.md`) and captures each rule it learns through `actions/knowledge.md`.
 
-With the harness installed, `actions/harness.md` runs these stages for you, records each one in `docs/harness/`, and `harness/gate.mjs` blocks code edits until the stages before implementation are settled.
+With the harness installed, `actions/harness.md` runs these stages for you, records each one in `docs/harness/`, and `harness/gate.mjs` flags code edits (or blocks them, if you chose that) until the stages before implementation are settled.
 
 Clean Code, JavaScript, LLM, database, data-intensive system, DevOps, and marketing skills apply wherever the task needs them.
 
@@ -454,19 +475,17 @@ It identifies the relevant instruction files and establishes working expectation
 - Run relevant tests and checks when possible.
 - Report completed changes and verification results honestly.
 
-The generated file references the instruction groups selected during installation.
+The generated file references the instruction groups selected during installation, and starts an empty **Project Rules** table: each rule the project enforces, written once with an ID, the globs it applies to, what enforces it (lint, test, hook, or review), whether a tool could check it, and why. Docs link to the ID instead of restating the rule, and reviews cite it.
 
 AI tools vary in how they discover and interpret instruction files. Check your tool's documentation if additional configuration is required.
 
 ## Existing files and conflicts
 
-The installer checks for existing destination files before writing.
+The installer records the sha256 of every file it writes in `.skills-code-kit/lock.json`. On the next run it uses the lock to sort existing files:
 
-If conflicts are found, it asks whether you want to overwrite the listed files.
-
-- **Confirm overwrite:** Existing files in the conflict list may be replaced.
-- **Decline overwrite:** Existing files are skipped to protect your current content.
-- **Manual merge:** Skipped files are not merged automatically; review and combine the content yourself when needed.
+- **Unchanged since the last install:** updated without asking.
+- **Already identical to the new version:** left alone.
+- **Changed by someone, or installed before the lock existed:** listed, and you choose whether to overwrite them. Declined files are skipped; merge them yourself if needed.
 
 **Important:** If your project already contains a custom `AGENTS.md`, review the conflict list carefully before approving an overwrite.
 
@@ -478,7 +497,13 @@ To run the latest published version:
 npx skills-code-kit@latest
 ```
 
-The installer may encounter files from a previous installation. Review its conflict prompts before proceeding so you do not accidentally replace project-specific instructions.
+To see what changed since the last install, without installing anything:
+
+```bash
+npx skills-code-kit verify
+```
+
+It lists installed files that were edited or deleted (and exits with an error when there are any, for CI), and files whose template is newer in the version you ran.
 
 ## Repository structure
 
@@ -530,6 +555,7 @@ The repository separates its working instruction documents from the templates di
 | `bin/mcp.ts` | The optional MCP server (`skills-code-kit mcp`): gate, rule, and harness tools, workflow prompts, and gate resources. |
 | `bin/gates.ts`, `bin/rules.ts`, `bin/harnessRuns.ts`, `bin/markdown.ts` | What the MCP tools do: consult the gates, capture rules, and run the harness, over the Markdown records. |
 | `bin/mcpConfig.ts` | Registers the MCP server in each AI tool's configuration. |
+| `bin/lock.ts` | The install lock (`.skills-code-kit/lock.json`) and `skills-code-kit verify`. |
 | `dist/cli.js` | Compiled executable invoked by npm. |
 | `templates/` | Instruction files distributed to users. |
 | `templates/DBA/` | Database skills, one folder per engine. `Oracle/` and `PostgreSQL/` each hold one skill per chapter of their book. |
@@ -545,6 +571,10 @@ The repository separates its working instruction documents from the templates di
 | `templates/scrum/` | Scrum team: `roles/`, `ceremonies/`, and the `board/` templates copied to a project's `docs/scrum/`. |
 | `templates/.github/` | The pull request template installed into a project's `.github/`. |
 | `templates/harness/` | The harness gate script (`gate.mjs`) and its default `config.json`, installed to a project's `harness/`. |
+| `templates/guards/` | The guards hook (`guard.mjs`) and its default `config.json`, installed to a project's `guards/`. |
+| `templates/tools/` | `review-context.mjs`, which lists the project rules a diff reaches; installed with the review groups. |
+| `tests/` | `node --test` suites for the installed scripts and the compiled installer modules. |
+| `evals/routing/` | The routing eval's corpus and baseline, run by `scripts/routing-eval.mjs`. |
 | `CleanCode_Uncle_Bob/` | Working copy of the core Clean Code standards. |
 | `ProductDefinition/` | Planning and specification documents. |
 | `actions/` | Development, review, code review, TDD, BDD, DDD, strategy, UI/UX, ADR, knowledge base, research, and harness workflows. |
@@ -569,7 +599,16 @@ npm run release -- minor
 npm run release -- --dry-run
 ```
 
-Run `npm run check:frontmatter` to validate skill frontmatter on its own. A `description` that contains `: ` must be quoted, or GitHub and agent tools reject the whole file.
+Run `npm test` to build and run the tests in `tests/` (the harness gate, the guards, the review context, the install lock, and harness runs); the release script runs them too. Run `npm run check:frontmatter` to validate skill frontmatter on its own. A `description` that contains `: ` must be quoted, or GitHub and agent tools reject the whole file.
+
+Workflows are routed by their `description`, so a new workflow or a reworded description can steal requests from another one. When you change one, run the routing eval:
+
+```bash
+npm run eval:routing                       # compares with evals/routing/baseline.json
+npm run eval:routing -- --write-baseline   # after a change you accept
+```
+
+It asks the Claude Code CLI (`claude -p`, one short request per case) to route each request in `evals/routing/corpus.json` using only the descriptions, and fails below 0.90 accuracy, below 0.80 on the cases that have a workflow, on any request sent to the wrong workflow, or on a drop of more than 0.05 from the baseline. Add a case for every routing mistake you see in real use. The eval has no baseline yet: the first `--write-baseline` run sets it.
 
 Use a patch version for fixes, a minor version for backward-compatible features, and a major version for breaking changes. The script does not commit; commit and tag the version change after publishing.
 

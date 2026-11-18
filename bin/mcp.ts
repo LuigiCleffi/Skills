@@ -8,7 +8,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { consultGate, gateFiles } from "./gates.js";
-import { closeRun, harnessStatus, openRun, setStage } from "./harnessRuns.js";
+import { closeRun, declareTriggers, harnessStatus, openRun, setStage } from "./harnessRuns.js";
 import { captureRule } from "./rules.js";
 
 type ToolResult = { content: { type: "text"; text: string }[]; isError?: boolean };
@@ -121,12 +121,16 @@ function registerHarnessTools(server: McpServer, project: string): void {
     {
       title: "Open a harness run",
       description:
-        "Open a run for a request that will change guarded code, following actions/harness.md. Creates docs/harness/runs/<date>-<slug>.md and docs/harness/active.json with every stage of the mode pending.",
+        "Open a run for a request that will change guarded code, following actions/harness.md. Creates docs/harness/runs/<date>-<slug>.md and docs/harness/active.json with every stage of the mode pending. Declare every trigger the change hits (from harness/config.json: schema, permission, public-contract, concurrency, new-entity, cross-module by default); a trigger adds the mode's deeper stages, and none keeps the run light.",
       inputSchema: {
         request: z.string().describe("The request in one line"),
         mode: z.string().describe("feature, fix, or chore (or a mode defined in harness/config.json)"),
         reason: z.string().describe("Why this mode"),
         slug: z.string().describe("Short kebab-case name for the run file"),
+        triggers: z
+          .array(z.string())
+          .default([])
+          .describe("Triggers from harness/config.json the change hits; empty when none applies"),
       },
     },
     (input) => respond(() => openRun(project, input)),
@@ -137,7 +141,7 @@ function registerHarnessTools(server: McpServer, project: string): void {
     {
       title: "Settle a harness stage",
       description:
-        "Record a stage of the active run as done (with the record it produced), skipped or n/a (with a reason), or back to pending. Refuses done when the record file does not exist and skipped without a reason. Mark a stage done only when its workflow's completion criteria are met.",
+        "Record a stage of the active run as done (with the record it produced), skipped or n/a (with a reason), or back to pending. Refuses done when the record does not exist or fails its checks in harness/config.json \"records\" (required headings, \"Open Questions: None.\", no placeholders, word budget), and skipped without a reason. Mark a stage done only when its workflow's completion criteria are met.",
       inputSchema: {
         stage: z.string(),
         status: z.enum(["pending", "done", "skipped", "n/a"]),
@@ -146,6 +150,20 @@ function registerHarnessTools(server: McpServer, project: string): void {
       },
     },
     (input) => respond(() => setStage(project, input)),
+  );
+
+  server.registerTool(
+    "harness_declare_triggers",
+    {
+      title: "Declare harness triggers",
+      description:
+        "Declare triggers found after the run opened (a migration turned out to be needed, a second module is touched). Their deeper stages join the run as pending, so guarded code waits for them again.",
+      inputSchema: {
+        triggers: z.array(z.string()).min(1).describe("Triggers from harness/config.json"),
+        evidence: z.string().describe("What showed the trigger applies, e.g. \"needs a new column on orders\""),
+      },
+    },
+    (input) => respond(() => declareTriggers(project, input)),
   );
 
   server.registerTool(

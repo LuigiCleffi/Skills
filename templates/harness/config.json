@@ -1,5 +1,5 @@
 {
-  "enforce": true,
+  "enforce": "warn",
   "state": "docs/harness/active.json",
   "guarded": [
     "src/**",
@@ -12,20 +12,68 @@
     "tests/**"
   ],
   "unguarded": ["**/*.md", "docs/**"],
+  "triggers": {
+    "schema": {
+      "description": "changes a database schema, a migration, or persisted data",
+      "paths": ["**/migrations/**", "**/*.prisma", "**/schema.sql", "**/*.migration.*"]
+    },
+    "permission": {
+      "description": "changes who may see or do something: authentication, authorization, roles, tenants",
+      "paths": ["**/auth/**", "**/*permission*", "**/*policy*", "**/*role*"]
+    },
+    "public-contract": {
+      "description": "changes an API, event, file format, or other contract another system depends on",
+      "paths": ["**/*.proto", "**/openapi.*", "**/graphql/**"]
+    },
+    "concurrency": {
+      "description": "two requests, jobs, or users can race on the same data",
+      "paths": []
+    },
+    "new-entity": {
+      "description": "introduces a new domain entity, aggregate, or table",
+      "paths": []
+    },
+    "cross-module": {
+      "description": "changes two or more modules or bounded contexts together",
+      "paths": []
+    }
+  },
   "modes": {
-    "feature": [
-      "plan",
-      "research",
-      "spec",
-      "spec-checklist",
-      "strategy",
-      "ddd",
-      "bdd",
-      "uiux",
-      "knowledge-gate",
-      "adr-gate"
-    ],
-    "fix": ["reproduce", "knowledge-gate", "adr-gate"],
-    "chore": ["adr-gate"]
+    "feature": {
+      "stages": ["plan", "research", "spec", "spec-checklist", "strategy", "bdd", "uiux", "knowledge-gate", "adr-gate"],
+      "triggered": ["ddd"]
+    },
+    "fix": {
+      "stages": ["reproduce", "knowledge-gate", "adr-gate"],
+      "triggered": ["spec", "ddd"]
+    },
+    "chore": {
+      "stages": ["adr-gate"],
+      "triggered": []
+    }
+  },
+  "records": {
+    "plan": { "require": ["Open Questions: None."], "maxWords": 1500 },
+    "spec": {
+      "headings": ["Problem Statement", "Functional Requirements", "Edge Cases", "Success Criteria"],
+      "forbid": ["[NEEDS CLARIFICATION"],
+      "maxWords": 3000
+    },
+    "strategy": {
+      "headings": ["Diagnosis", "Target Customer", "First Release"],
+      "require": ["Open Questions: None."],
+      "maxWords": 2000
+    },
+    "ddd": {
+      "headings": ["Bounded Context", "Ubiquitous Language", "Invariants"],
+      "require": ["Open Questions: None."],
+      "maxWords": 2500
+    },
+    "bdd": { "require": ["Scenario"] },
+    "uiux": {
+      "headings": ["Screens and Components", "Accessibility", "UI Acceptance Checks"],
+      "require": ["Open Questions: None."],
+      "maxWords": 2500
+    }
   }
 }

@@ -1,20 +1,43 @@
 #!/usr/bin/env node
 //
-// Harness gate: blocks changes to guarded paths (production code and tests)
-// until the active harness run has settled every pre-code stage of its mode.
-// See actions/harness.md. No dependencies beyond Node.js 20.
+// Harness gate: checks changes to guarded paths (production code and tests)
+// against the active harness run, and checks each stage's record before it
+// counts as done. See actions/harness.md. No dependencies beyond Node.js 20.
 //
 // Usage:
-//   node harness/gate.mjs                  # Claude Code PreToolUse hook (reads JSON on stdin)
-//   node harness/gate.mjs status           # print the active run and what is pending
-//   node harness/gate.mjs check [paths...] # fail when a path is guarded and the run is not ready
-//                                          # (default paths: files staged in git)
+//   node harness/gate.mjs                     # Claude Code PreToolUse hook (reads JSON on stdin)
+//   node harness/gate.mjs status              # print the active run and what is pending
+//   node harness/gate.mjs check [paths...]    # report guarded paths changed before the run is ready
+//                                             # (default paths: files staged in git)
+//   node harness/gate.mjs validate <stage> <record>
+//                                             # check one record against harness/config.json "records"
+//
+// "enforce" in harness/config.json decides what a problem does:
+//   "warn"  (default) the hook tells the agent and the user what is pending and lets the edit through;
+//           `check` prints the problems and exits 0.
+//   "block" the hook refuses the edit; `check` exits 1.
+//   "off"   nothing runs except `status` and `validate`.
+// HARNESS_GATE=off|warn|block overrides it for one shell.
+//
+// A hook that blocks needs irreversible damage on the other side; skipping a
+// stage is recoverable, so the default is to warn. A gate that blocks a
+// recoverable mistake gets switched off by the first person it stops twice.
 //
 // The Skills Code Kit MCP server imports loadConfig, statePath, stageProblem,
-// and evaluateRun, so the readiness rules live only here.
+// requiredStages, and evaluateRun, so the readiness rules live only here.
 
+import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, realpathSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  realpathSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -23,6 +46,24 @@ const gateFile = fileURLToPath(import.meta.url);
 const gateDirectory = path.dirname(gateFile);
 // The gate is installed at <project>/harness/gate.mjs.
 export const projectDirectory = path.resolve(gateDirectory, "..");
+
+// Template placeholders that mean a record was never filled in.
+const placeholders = ["[FEATURE NAME]"];
+
+// The order stages run in; a run lists its stages in this order.
+const stageOrder = [
+  "plan",
+  "research",
+  "spec",
+  "spec-checklist",
+  "reproduce",
+  "strategy",
+  "ddd",
+  "bdd",
+  "uiux",
+  "knowledge-gate",
+  "adr-gate",
+];
 
 function readJson(file) {
   return JSON.parse(readFileSync(file, "utf8"));
@@ -34,6 +75,16 @@ export function loadConfig() {
 
 export function statePath(config) {
   return path.resolve(projectDirectory, config.state ?? "docs/harness/active.json");
+}
+
+// "warn", "block", or "off". Accepts the older true/false values.
+export function enforcement(config, environment = process.env) {
+  const override = environment.HARNESS_GATE;
+  if (override === "off" || override === "warn" || override === "block") return override;
+  const value = config.enforce;
+  if (value === false || value === "off") return "off";
+  if (value === "block" || value === true) return "block";
+  return "warn";
 }
 
 // Converts a glob with *, ** and ? into an anchored regular expression.
@@ -59,7 +110,7 @@ function globToRegExp(glob) {
   return new RegExp(`^${pattern}$`);
 }
 
-function matchesAny(relativePath, globs) {
+export function matchesAny(relativePath, globs) {
   return globs.some((glob) => globToRegExp(glob).test(relativePath));
 }
 
@@ -86,14 +137,108 @@ function projectRelative(filePath) {
   return relative.split(path.sep).join("/");
 }
 
-function isGuarded(config, filePath) {
-  const relative = projectRelative(filePath);
-  if (relative === null) return false;
+function isGuarded(config, relative) {
   return matchesAny(relative, config.guarded ?? []) && !matchesAny(relative, config.unguarded ?? []);
 }
 
+// The triggers whose paths a project-relative file matches.
+export function triggersFor(config, relative) {
+  return Object.entries(config.triggers ?? {})
+    .filter(([, trigger]) => matchesAny(relative, trigger.paths ?? []))
+    .map(([name]) => name);
+}
+
+// A mode is either a list of stages (older configs) or { stages, triggered }.
+function modeDefinition(config, mode) {
+  const definition = config.modes?.[mode];
+  if (Array.isArray(definition)) return { stages: definition, triggered: [] };
+  if (definition && Array.isArray(definition.stages)) {
+    return { stages: definition.stages, triggered: definition.triggered ?? [] };
+  }
+  return null;
+}
+
+function inStageOrder(stages) {
+  const unique = [...new Set(stages)];
+  const rank = (stage) => {
+    const index = stageOrder.indexOf(stage);
+    return index === -1 ? stageOrder.length + unique.indexOf(stage) : index;
+  };
+  return unique.sort((a, b) => rank(a) - rank(b));
+}
+
+// The pre-code stages a run needs: the mode's stages, plus its triggered
+// stages when the run declares at least one trigger. Null for an unknown mode.
+export function requiredStages(config, mode, triggers = []) {
+  const definition = modeDefinition(config, mode);
+  if (!definition) return null;
+  return inStageOrder(triggers.length > 0 ? [...definition.stages, ...definition.triggered] : definition.stages);
+}
+
+// A record is a file, or a folder of them (feature files, for one): a folder
+// is read as all its files together.
+function readRecord(file) {
+  if (!statSync(file).isDirectory()) return readFileSync(file, "utf8");
+  return readdirSync(file, { withFileTypes: true })
+    .filter((entry) => !entry.name.startsWith("."))
+    .map((entry) => readRecord(path.join(file, entry.name)))
+    .join("\n");
+}
+
+function countWords(document) {
+  return document.split(/\s+/).filter(Boolean).length;
+}
+
+function hasHeading(document, text) {
+  const wanted = text.toLowerCase();
+  return document
+    .split("\n")
+    .some((line) => /^#{1,6}\s/.test(line) && line.toLowerCase().includes(wanted));
+}
+
+// Checks a record's shape against config.records[stage]: required headings and
+// text, forbidden text, and a word budget. Returns a list of problems.
+export function recordProblems(config, stage, record) {
+  const file = path.resolve(projectDirectory, record);
+  if (!existsSync(file)) return [`its record ${record} does not exist`];
+
+  const rules = config.records?.[stage];
+  let document;
+  try {
+    document = readRecord(file);
+  } catch {
+    return rules ? [`its record ${record} cannot be read as text`] : [];
+  }
+
+  const problems = [];
+  for (const placeholder of placeholders) {
+    if (document.includes(placeholder)) problems.push(`${record} still has the placeholder ${placeholder}`);
+  }
+  if (!rules) return problems;
+
+  for (const heading of rules.headings ?? []) {
+    if (!hasHeading(document, heading)) problems.push(`${record} has no "${heading}" heading`);
+  }
+  for (const text of rules.require ?? []) {
+    if (!document.includes(text)) problems.push(`${record} does not say "${text}"`);
+  }
+  for (const text of rules.forbid ?? []) {
+    if (document.includes(text)) problems.push(`${record} still contains "${text}"`);
+  }
+  if (typeof rules.maxWords === "number") {
+    const words = countWords(document);
+    if (words > rules.maxWords) {
+      problems.push(
+        `${record} has ${words} words, over the budget of ${rules.maxWords}: split the work or cut repetition (raise "maxWords" only if the user agrees)`,
+      );
+    }
+  }
+
+  return problems;
+}
+
 // Returns why a stage is not settled, or null when it is.
-export function stageProblem(stage, value, record) {
+export function stageProblem(stage, value, record, config = loadConfig()) {
   if (typeof value !== "string" || value.trim() === "" || value === "pending") {
     return `${stage}: pending`;
   }
@@ -101,53 +246,82 @@ export function stageProblem(stage, value, record) {
     return `${stage}: "${value}" needs a reason ("skipped: <reason>")`;
   }
   if (value === "done") {
-    if (record && !existsSync(path.resolve(projectDirectory, record))) {
-      return `${stage}: done, but its record ${record} does not exist`;
+    if (config.records?.[stage] && !record) {
+      return `${stage}: done, but it names no record to check`;
     }
-    return null;
+    if (!record) return null;
+    const problems = recordProblems(config, stage, record);
+    return problems.length === 0 ? null : `${stage}: done, but ${problems.join("; ")}`;
   }
   if (/^(skipped|n\/a)\s*:/i.test(value)) return null;
   return `${stage}: unknown status "${value}" (use pending, done, skipped: <reason>, n/a: <reason>)`;
 }
 
-// Returns { ready, summary, problems } for the active run.
-export function evaluateRun(config) {
+function readState(config) {
   const activeRun = statePath(config);
+  if (!existsSync(activeRun)) return { state: null, error: null };
+  try {
+    return { state: readJson(activeRun), error: null };
+  } catch (error) {
+    return { state: null, error };
+  }
+}
 
-  if (!existsSync(activeRun)) {
+// Returns { ready, summary, problems } for the active run. With touched paths,
+// a trigger those paths hit that the run did not declare is also a problem.
+export function evaluateRun(config, touched = []) {
+  const { state, error } = readState(config);
+
+  if (error) {
+    return { ready: false, summary: `Cannot read ${config.state}.`, problems: [error.message] };
+  }
+  if (!state) {
     return { ready: false, summary: "No active harness run.", problems: ["open a run with actions/harness.md"] };
   }
 
-  let state;
-  try {
-    state = readJson(activeRun);
-  } catch (error) {
-    return { ready: false, summary: `Cannot read ${config.state}.`, problems: [error.message] };
-  }
-
-  const required = config.modes?.[state.mode];
-  if (!Array.isArray(required)) {
+  const declared = Array.isArray(state.triggers) ? state.triggers : [];
+  const required = requiredStages(config, state.mode, declared);
+  if (!required) {
     const modes = Object.keys(config.modes ?? {}).join(", ");
     return { ready: false, summary: `Run mode "${state.mode}" is not defined.`, problems: [`use one of: ${modes}`] };
   }
 
   const problems = required
-    .map((stage) => stageProblem(stage, state.stages?.[stage], state.records?.[stage]))
+    .map((stage) => stageProblem(stage, state.stages?.[stage], state.records?.[stage], config))
     .filter(Boolean);
 
+  const undeclared = [...new Set(touched.flatMap((file) => triggersFor(config, file)))].filter(
+    (trigger) => !declared.includes(trigger),
+  );
+  for (const trigger of undeclared) {
+    const description = config.triggers?.[trigger]?.description ?? trigger;
+    const extra = requiredStages(config, state.mode, [trigger]).filter((stage) => !required.includes(stage));
+    problems.push(
+      `trigger ${trigger} (${description}) is touched but the run does not declare it` +
+        (extra.length > 0 ? `; declaring it adds: ${extra.join(", ")}` : ""),
+    );
+  }
+
+  const triggerNote = declared.length > 0 ? `, triggers ${declared.join(", ")}` : "";
   return {
     ready: problems.length === 0,
-    summary: `Run ${state.run ?? "(no run record)"} — mode ${state.mode}.`,
+    summary: `Run ${state.run ?? "(no run record)"} — mode ${state.mode}${triggerNote}.`,
     problems,
   };
 }
 
-function blockMessage(files, run) {
+function problemMessage(files, run, level) {
+  const lead =
+    level === "block"
+      ? `Harness gate: ${files.join(", ")} is guarded code, and the run is not ready.`
+      : `Harness gate (warning): ${files.join(", ")} is guarded code, and the run is not ready.`;
   return [
-    `Harness gate: ${files.join(", ")} is guarded code, and the run is not ready.`,
+    lead,
     run.summary,
     ...run.problems.map((problem) => `  - ${problem}`),
-    "Settle the pre-code stages by following actions/harness.md, then retry.",
+    level === "block"
+      ? "Settle the pre-code stages by following actions/harness.md, then retry."
+      : "Settle these by following actions/harness.md before going further, or tell the user why this edit cannot wait.",
     "Do not edit docs/harness/active.json to get past the gate; ask the user if the gate is wrong.",
   ].join("\n");
 }
@@ -168,7 +342,22 @@ function stagedFiles() {
   return output.split("\n").filter(Boolean);
 }
 
-function runHook(config) {
+// A warning is shown once per session for the same set of problems, so the
+// agent is told without repeating the same lines on every edit.
+function firstTimeInSession(sessionId, message) {
+  if (typeof sessionId !== "string" || sessionId === "") return true;
+  const key = createHash("sha256").update(`${sessionId}\n${message}`).digest("hex").slice(0, 24);
+  const directory = path.join(os.tmpdir(), "skills-code-kit-gate");
+  try {
+    mkdirSync(directory, { recursive: true });
+    writeFileSync(path.join(directory, key), "", { flag: "wx" });
+    return true;
+  } catch (error) {
+    return error?.code !== "EEXIST";
+  }
+}
+
+function runHook(config, level) {
   let input;
   try {
     input = JSON.parse(readStdin() || "{}");
@@ -177,13 +366,29 @@ function runHook(config) {
   }
 
   const target = input.tool_input?.file_path ?? input.tool_input?.notebook_path;
-  if (typeof target !== "string" || !isGuarded(config, target)) return 0;
+  if (typeof target !== "string") return 0;
+  const relative = projectRelative(target);
+  if (relative === null || !isGuarded(config, relative)) return 0;
 
-  const run = evaluateRun(config);
+  const run = evaluateRun(config, [relative]);
   if (run.ready) return 0;
 
-  console.error(blockMessage([projectRelative(target)], run));
-  return BLOCKED;
+  if (level === "block") {
+    console.error(problemMessage([relative], run, "block"));
+    return BLOCKED;
+  }
+
+  const message = problemMessage([relative], run, "warn");
+  if (firstTimeInSession(input.session_id, message)) {
+    // additionalContext reaches the model; systemMessage reaches the person.
+    console.log(
+      JSON.stringify({
+        systemMessage: `Harness gate: ${relative} changed before the run is ready (${run.problems.length} pending).`,
+        hookSpecificOutput: { hookEventName: "PreToolUse", additionalContext: message },
+      }),
+    );
+  }
+  return 0;
 }
 
 function runStatus(config) {
@@ -194,26 +399,44 @@ function runStatus(config) {
   return run.ready ? 0 : 1;
 }
 
-function runCheck(config, paths) {
-  const files = (paths.length > 0 ? paths : stagedFiles()).filter((file) => isGuarded(config, file));
+function runCheck(config, level, paths) {
+  const files = (paths.length > 0 ? paths : stagedFiles())
+    .map((file) => projectRelative(file))
+    .filter((file) => file !== null && isGuarded(config, file));
   if (files.length === 0) return 0;
 
-  const run = evaluateRun(config);
+  const run = evaluateRun(config, files);
   if (run.ready) return 0;
 
-  console.error(blockMessage(files, run));
+  console.error(problemMessage(files, run, level));
+  return level === "block" ? 1 : 0;
+}
+
+function runValidate(config, [stage, record]) {
+  if (!stage || !record) {
+    console.error("Usage: node harness/gate.mjs validate <stage> <record>");
+    return 1;
+  }
+  const problems = recordProblems(config, stage, record);
+  if (problems.length === 0) {
+    console.log(`${record}: ready to count as ${stage} done.`);
+    return 0;
+  }
+  console.error(`${record} is not ready to count as ${stage} done:`);
+  for (const problem of problems) console.error(`  - ${problem}`);
   return 1;
 }
 
 function main() {
   const [command, ...args] = process.argv.slice(2);
   const config = loadConfig();
-  const enforced = config.enforce !== false && process.env.HARNESS_GATE !== "off";
+  const level = enforcement(config);
 
   if (command === "status") return runStatus(config);
-  if (!enforced) return 0;
-  if (command === "check") return runCheck(config, args);
-  return runHook(config);
+  if (command === "validate") return runValidate(config, args);
+  if (level === "off") return 0;
+  if (command === "check") return runCheck(config, level, args);
+  return runHook(config, level);
 }
 
 // Node resolves symlinks in import.meta.url, so compare real paths.
@@ -225,9 +448,7 @@ function isEntryPoint() {
   }
 }
 
-const runDirectly = isEntryPoint();
-
-if (runDirectly) {
+if (isEntryPoint()) {
   try {
     process.exitCode = main();
   } catch (error) {

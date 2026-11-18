@@ -63,7 +63,7 @@ If no spec exists, skip the Spec sub-agent. The Spec block then says `No spec av
 
 The repository always overrides the knowledge base. Collect, in this order of precedence:
 
-1. **The repository's documented standards:** `CODING_STANDARDS.md`, `CONTRIBUTING.md`, style guides, conventions stated in `AGENTS.md` or `CLAUDE.md`, and the architecture decision records the ADR gate (`docs/adr/README.md`) routes the changed areas and paths to. Read only the accepted ADRs the gate selects, cite them by ID, and flag an architectural decision the diff makes without an ADR.
+1. **The repository's documented standards.** Start with the project rules the diff reaches: run `node tools/review-context.mjs <fixed-point>` when it is installed. It reads the rule tables (`| ID | Rule | Applies to | Enforced by | ... |`) of every `AGENTS.md`, keeps the rules whose folder and globs the changed files fall under, and separates the ones a machine already enforces. Pass the Standards agent those rules, not every convention file. Then add what the tables do not cover: `CODING_STANDARDS.md`, `CONTRIBUTING.md`, style guides, conventions stated in prose in `AGENTS.md` or `CLAUDE.md`, and the architecture decision records the ADR gate (`docs/adr/README.md`) routes the changed areas and paths to. Read only the accepted ADRs the gate selects, cite them by ID, and flag an architectural decision the diff makes without an ADR.
 2. **Linter, formatter, and type-checker configuration.** These define what the axis skips: never report what a configured tool already enforces.
 3. **The installed knowledge base**, read only for what the diff touches:
 
@@ -95,7 +95,7 @@ If the runtime cannot spawn sub-agents, run the Standards axis first and write i
 > Review `git diff <fixed-point>...HEAD` for whether the code is built the way this repository says code should be built. Read the sources listed below, in order of precedence; the repository's own documents override the knowledge base. Do not report anything a configured linter, formatter, or type checker enforces.
 >
 > Report two kinds of finding:
-> - **Breach:** the change contradicts a rule written in one of the repository's own files. Cite the file and quote the rule.
+> - **Breach:** the change contradicts a rule written in one of the repository's own files. Cite the rule's ID when it has one (`API-07`), otherwise the file, and quote the rule.
 > - **Smell:** the change matches a heuristic in the knowledge base. Always a judgement call: label it "possible" (for example `possible G14 Feature Envy`), cite the skill path and the heuristic code or red flag, and give the fix the skill describes.
 >
 > Every finding quotes the hunk it is about, with `path:line`. Follow the calibration in `smellsReview.md`: flag what actually hurts the reader or the next change, report one root cause under one code, and follow the language's idiom over a dated heuristic. Report only problems introduced by this diff. Do not modify any file.
@@ -176,7 +176,7 @@ The axes are reported separately and not ranked against each other.
 
 Each fix adds new code, and the Smell half of the Standards axis varies between runs, so a rerun always finds something. Treat a pass as a list of leads: act on the Breaches, the Spec findings, and the Smells whose cost is clear, then stop. Do not rerun until it comes back clean.
 
-When reviews keep catching the same class of mistake, propose a rule for the repository's own standards file so the next Standards pass reads it as a Breach instead of rediscovering it as a Smell. The user decides whether to add it.
+When reviews keep catching the same class of mistake, propose a rule so the next Standards pass reads it as a Breach instead of rediscovering it as a Smell: one row in the "Project Rules" table of the `AGENTS.md` for the folder where it applies, with a new ID, the globs it applies to, what enforces it (`review` until a tool can), whether a tool could check it, and why. Write the rule once there; docs link to the ID instead of restating it. When the "Checkable" column says yes, propose the lint rule or test that would enforce it. The user decides whether to add it.
 
 ## Guardrails
 
