@@ -167,3 +167,41 @@ describe("the hook", () => {
     assert.equal(run(project, "harness/gate.mjs", ["check", "src/app.ts"], "", { HARNESS_GATE: "block" }).code, 1);
   });
 });
+
+describe("what git shows", () => {
+  it("reports guarded files changed while the run is open", async () => {
+    const { git } = await import("./helpers.mjs");
+    const project = makeProject(["harness"]);
+    git(project, "init", "-q", "-b", "work");
+    git(project, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "--allow-empty", "-m", "start");
+    write(project, "docs/harness/runs/r.md", `# Run: x\n\n**Opened:** ${new Date().toISOString().slice(0, 10)}\n`);
+    activeRun(project, { mode: "chore", stages: { "adr-gate": "pending" } });
+    write(project, "src/app.ts", "export {};\n");
+    const gate = await importFrom(project, "harness/gate.mjs");
+    const facts = gate.derivedFacts(gate.loadConfig());
+    assert.match(facts.join(), /1 guarded file\(s\) changed and not committed: src\/app\.ts/);
+    assert.match(run(project, "harness/gate.mjs", ["status"]).stdout, /code already changed while the run was not ready/);
+  });
+});
+
+describe("escaped defects", () => {
+  it("counts fix runs, escapes, and battery cases per month", async () => {
+    const project = makeProject(["harness"]);
+    const fix = (name, opened, escaped) =>
+      write(
+        project,
+        `docs/harness/runs/${name}.md`,
+        `# Run: ${name}\n\n**Mode:** Fix — wrong\n${escaped ? `**Escaped:** yes — introduced by v1.2; battery case: ${escaped}\n` : ""}**Opened:** ${opened}   **Closed:**\n`,
+      );
+    fix("a", "2026-10-02", "EC-15");
+    fix("b", "2026-10-20", "pending");
+    fix("c", "2026-11-03", null);
+    write(project, "docs/harness/runs/d.md", "**Mode:** Feature — new\n**Opened:** 2026-11-04\n");
+    const gate = await importFrom(project, "harness/gate.mjs");
+    assert.deepEqual(gate.escapeReport(), [
+      { month: "2026-10", fixes: 2, escaped: 2, withCase: 1 },
+      { month: "2026-11", fixes: 1, escaped: 0, withCase: 0 },
+    ]);
+    assert.match(run(project, "harness/gate.mjs", ["escapes"]).stdout, /\| 2026-10 \| 2 \| 2 \| 1 \|/);
+  });
+});

@@ -103,7 +103,7 @@ const skills: Skill[] = [
     value: "tdd",
     name: "Test-driven development",
     description: "Testing workflow and the TDD test pattern library",
-    files: ["actions/tdd.md", "TDD/README.md"],
+    files: ["actions/tdd.md", "TDD/README.md", "docs/qa/edge-cases.md"],
     directories: ["TDD"],
   },
   {
@@ -117,7 +117,7 @@ const skills: Skill[] = [
     value: "bdd",
     name: "Behavior-driven development",
     description: "Examples, executable Gherkin scenarios, and the BDD pattern library",
-    files: ["actions/bdd.md", "BDD/README.md"],
+    files: ["actions/bdd.md", "BDD/README.md", "docs/qa/edge-cases.md"],
     directories: ["BDD"],
   },
   {
@@ -851,7 +851,7 @@ async function offerGuardsHook(): Promise<void> {
 
   await addPreToolUseHook(guardsHookCommand, "Bash|Read|Edit|Write|MultiEdit|NotebookEdit", "guards");
   console.log(
-    'List the folders your tools must own (migrations, generated code) in guards/config.json "protectedPaths", and the branches nobody commits to directly in "protectedBranches".\n',
+    'List the folders your tools must own (migrations, generated code) in guards/config.json "protectedPaths", the branches nobody commits to directly in "protectedBranches", and the words that name your production cloud targets (a project, profile, or context such as "prod") in "production.markers".\n',
   );
 }
 

@@ -119,6 +119,9 @@ It also installs a test pattern library: one skill per chapter of Kent Beck's *T
 
 - `actions/tdd.md`
 - `TDD/` — the `README.md` entry point plus one skill folder per chapter, grouped into `MoneyExample/`, `XUnitExample/` and `Patterns/`.
+- `docs/qa/edge-cases.md` — the project's edge-case battery (also installed with BDD).
+
+The battery lists the cases the project's tests must cover whenever they apply: empty and oversized input, time zones, rounding, double submit, another tenant's ID, a 390 px screen, and so on. It starts with common defect classes marked `seed`; every escaped defect adds a row in the change that fixes it. `tdd` adds the matching rows to its test list, `bdd` turns the user-visible ones into scenarios, and `review` reports an applicable row without a test.
 
 ### 6. Databases (DBA): Oracle and PostgreSQL
 
@@ -389,6 +392,8 @@ Selecting this group also installs the business knowledge base.
 
 Why warn by default: a hook that blocks needs irreversible damage on the other side. Skipping a stage is recoverable, and a gate that blocks recoverable mistakes gets switched off by the first person it stops twice. Blocking is for the damage that does not come back, which is what the guards group does. The gate is not a security boundary.
 
+**Escaped defects teach the battery.** A fix run opened for a defect that reached a user or QA records what shipped it, and closes only once `docs/qa/edge-cases.md` has the case that would have caught it. `node harness/gate.mjs escapes` counts them per month. `node harness/gate.mjs status` also reads git, so code changed while the run was not ready shows up even if `active.json` says otherwise.
+
 Selecting this group also installs product definition, domain research, the knowledge base, ADR, development, TDD, and review. With the Scrum team installed, Sprint Planning opens one run per backlog item.
 
 **Installed files:** `actions/harness.md`, `harness/gate.mjs`, `harness/config.json`.
@@ -403,6 +408,7 @@ Selecting this group also installs product definition, domain research, the know
 - **Protected paths:** writing the folders your tools must own, such as migrations or generated code (`"protectedPaths": ["prisma/migrations/**"]`), by tool, redirect, copy, or in-place edit. Reading them is fine.
 - **Destructive commands:** `rm -rf` on the root, home, or working folder, `git reset --hard`, `git clean -f`, a force push to main or master, piping a download into a shell, `chmod 777`, and `--no-verify` when the project has git hooks.
 - **Protected branches:** commits and pushes on the branches you list in `"protectedBranches"` (empty by default).
+- **Production cloud:** a `gcloud`, `aws`, `az`, `kubectl`, `helm`, or `terraform` command that changes something, when its arguments or environment name production by one of your `"production.markers"` (`--project=acme-prod`, `--profile prod`, `-var-file=production.tfvars`). Reading production (list, describe, get, logs, plan) passes, and a verb the guard does not know counts as a change. Set `"unknownIsProduction": true` to also refuse changes whose target is not named. Empty by default.
 
 It parses the command text, so it catches accidents, not an adversary; a heredoc body is treated as data, and a payload it cannot read is let through.
 
@@ -611,6 +617,15 @@ npm run eval:routing -- --write-baseline   # after a change you accept
 It asks the Claude Code CLI (`claude -p`, one short request per case) to route each request in `evals/routing/corpus.json` using only the descriptions, and fails below 0.90 accuracy, below 0.80 on the cases that have a workflow, on any request sent to the wrong workflow, or on a drop of more than 0.05 from the baseline. Add a case for every routing mistake you see in real use. The eval has no baseline yet: the first `--write-baseline` run sets it.
 
 Use a patch version for fixes, a minor version for backward-compatible features, and a major version for breaking changes. The script does not commit; commit and tag the version change after publishing.
+
+### Publishing from CI
+
+`.github/workflows/ci.yml` runs the frontmatter check and the tests on every pull request. `.github/workflows/release.yml` publishes when a `v*` tag is pushed, with npm provenance, so a release can be traced to the commit that built it. Set up npm trusted publishing for this repository on npmjs.com (or add an `NPM_TOKEN` secret), then release with:
+
+```bash
+npm version minor --no-git-tag-version
+git commit -am "1.2.0" && git tag v1.2.0 && git push origin main v1.2.0
+```
 
 ## Guiding principle
 

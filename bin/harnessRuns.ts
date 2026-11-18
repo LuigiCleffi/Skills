@@ -26,6 +26,7 @@ type RunState = {
   run: string;
   mode: string;
   triggers?: string[];
+  escaped?: { from: string };
   stages: Record<string, string>;
   records: Record<string, string>;
 };
@@ -92,7 +93,14 @@ export async function harnessStatus(projectDirectory: string): Promise<string> {
 
 export async function openRun(
   projectDirectory: string,
-  input: { request: string; mode: string; reason: string; slug: string; triggers?: string[] },
+  input: {
+    request: string;
+    mode: string;
+    reason: string;
+    slug: string;
+    triggers?: string[];
+    escapedFrom?: string;
+  },
 ): Promise<string> {
   const gate = await loadGate(projectDirectory);
   const config = gate.loadConfig();
@@ -103,6 +111,11 @@ export async function openRun(
     throw new Error(
       `Unknown trigger(s): ${unknown.join(", ")}. Defined in harness/config.json: ${Object.keys(config.triggers ?? {}).join(", ") || "none"}.`,
     );
+  }
+
+  const escapedFrom = input.escapedFrom?.trim();
+  if (escapedFrom && input.mode !== "fix") {
+    throw new Error("Only a fix run records an escaped defect.");
   }
 
   const preCode = preCodeStages(gate, config, input.mode, triggers);
@@ -122,7 +135,7 @@ export async function openRun(
 
 **Mode:** ${mode} — ${input.reason}
 **Triggers:** ${triggerLine(config, triggers)}
-**Opened:** ${today()}   **Closed:**
+${escapedFrom ? `**Escaped:** yes — introduced by ${escapedFrom}; battery case: pending\n` : ""}**Opened:** ${today()}   **Closed:**
 **Status:** Open
 
 | Stage | Status | Record | Notes |
@@ -140,6 +153,7 @@ ${stages.map((stage) => stageRow(stage, "pending")).join("\n")}
     run: runFile,
     mode: input.mode,
     triggers,
+    ...(escapedFrom ? { escaped: { from: escapedFrom } } : {}),
     stages: Object.fromEntries(stages.map((stage) => [stage, "pending"])),
     records: {},
   });
@@ -230,11 +244,19 @@ export async function declareTriggers(
 
 export async function closeRun(
   projectDirectory: string,
-  input: { status: "Closed" | "Abandoned"; result: string },
+  input: { status: "Closed" | "Abandoned"; result: string; batteryCase?: string },
 ): Promise<string> {
   const gate = await loadGate(projectDirectory);
   const config = gate.loadConfig();
   const state = await readState(gate, config);
+  const batteryCase = input.batteryCase?.trim();
+
+  // An escaped defect is not fixed until the battery would catch the next one.
+  if (input.status === "Closed" && state.escaped && !batteryCase) {
+    throw new Error(
+      "This fix is for an escaped defect: add its case to docs/qa/edge-cases.md (or name the row that already covers it) and pass it as batteryCase, e.g. \"EC-15\" or \"covered by EC-06\".",
+    );
+  }
 
   if (input.status === "Closed") {
     const unsettled = Object.entries(state.stages)
@@ -249,6 +271,7 @@ export async function closeRun(
     document
       .replace(/^\*\*Opened:\*\*(.*?)\*\*Closed:\*\*.*$/m, `**Opened:**$1**Closed:** ${today()}`)
       .replace(/^\*\*Status:\*\* Open$/m, `**Status:** ${input.status}`)
+      .replace(/(^\*\*Escaped:\*\*.*battery case:) pending$/m, `$1 ${batteryCase ?? "pending"}`)
       .replace(/## Result\n?([\s\S]*)$/, (_match, existing: string) => {
         const kept = existing.trim() === "" ? "" : `${existing.trimEnd()}\n\n`;
         return `## Result\n${kept}${input.result}\n`;

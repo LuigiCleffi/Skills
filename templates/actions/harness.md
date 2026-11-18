@@ -68,6 +68,12 @@ With no trigger, the run needs only the mode's stages. With at least one, the mo
 
 Name each trigger with its evidence when you open the run ("schema: adds a `refund_window` column"). When one shows up later, declare it then; its stages join the run as pending, and guarded code waits for them again. Triggers with `paths` in the config are also detected: an edit to a migration in a run that did not declare `schema` is reported by the gate.
 
+## Escaped defects
+
+A fix for a defect that reached a user or QA after the code was reviewed is an **escaped defect**. Open its run with what shipped it (`escapedFrom`: the run, PR, or release), so the run record says `**Escaped:** yes`. Such a run closes only when the edge-case battery, `docs/qa/edge-cases.md`, has a row that would have caught it: add one in the same change (the `tdd` workflow says how), or name the row that already covers it, and pass it as the battery case when closing.
+
+That is how the battery learns: each escape becomes a case every later test list checks. `node harness/gate.mjs escapes` counts fix runs, escaped defects, and the ones with a battery case, per month, from the run records; a month with more escapes than the one before is a reason to look at which stage let them through.
+
 ## Files
 
 ```text
@@ -120,6 +126,7 @@ Each stage value is `pending`, `done`, `skipped: <reason>`, or `n/a: <reason>`. 
 
 **Mode:** Feature | Fix | Chore — [why]
 **Triggers:** none | schema (adds a refund_window column); ...
+**Escaped:** yes — introduced by <run, PR, or release>; battery case: EC-15   (fix runs for an escaped defect only)
 **Opened:** YYYY-MM-DD   **Closed:** YYYY-MM-DD
 **Status:** Open | Closed | Abandoned
 
@@ -178,15 +185,16 @@ A run that the user stops is set to **Abandoned** with the reason, and `active.j
 
 - **As a Claude Code hook.** The installer can add a `PreToolUse` hook to `.claude/settings.json` that runs it before every file edit. An edit to a guarded path while the run is not ready gets a warning (shown to you and to the agent, once per session for the same problems), or is refused when `"enforce"` is `"block"`.
 - **From the command line**, for any tool, a git pre-commit hook, or CI:
-  - `node harness/gate.mjs status` — prints the active run and what is still pending.
+  - `node harness/gate.mjs status` — prints the active run and what is still pending, and what git shows: guarded files already changed, committed or not, since the run opened. `active.json` says what was recorded; git says what happened.
   - `node harness/gate.mjs check [paths...]` — reports any of the paths (default: the files staged in git) that is guarded while the run is not ready; it exits with an error only when `"enforce"` is `"block"`.
   - `node harness/gate.mjs validate <stage> <record>` — checks one record against the stage's checks.
+  - `node harness/gate.mjs escapes` — escaped defects per month.
 
 ### Warn or block
 
 `"enforce"` is `"warn"` by default. A hook that blocks needs irreversible damage on the other side: a leaked secret, a hand-written migration, a force push. Skipping a stage is recoverable, and a gate that blocks recoverable mistakes gets switched off by the first person it stops twice, after which it protects nothing. So the gate tells the agent what is pending and lets the user see it; the run record and the review catch what is left. Set `"block"` only when the team has agreed to it, and use the guards group for the damage that does not come back.
 
-When the Skills Code Kit MCP server is installed, prefer its tools to editing the files by hand: `harness_open_run` (with the triggers), `harness_declare_triggers`, `harness_set_stage` (it refuses `done` when the record is missing or fails its checks, and `skipped` without a reason, and keeps the run record and `active.json` in step), `harness_status`, and `harness_close_run`.
+When the Skills Code Kit MCP server is installed, prefer its tools to editing the files by hand: `harness_open_run` (with the triggers, and `escapedFrom` for an escaped defect), `harness_declare_triggers`, `harness_set_stage` (it refuses `done` when the record is missing or fails its checks, and `skipped` without a reason, and keeps the run record and `active.json` in step), `harness_status`, and `harness_close_run` (with `batteryCase` for an escaped defect).
 
 `harness/config.json` sets what is guarded, what each mode and trigger requires, and how each record is checked:
 

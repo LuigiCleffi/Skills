@@ -11,6 +11,7 @@
 //                                             # (default paths: files staged in git)
 //   node harness/gate.mjs validate <stage> <record>
 //                                             # check one record against harness/config.json "records"
+//   node harness/gate.mjs escapes             # escaped defects per month, from the run records
 //
 // "enforce" in harness/config.json decides what a problem does:
 //   "warn"  (default) the hook tells the agent and the user what is pending and lets the edit through;
@@ -391,12 +392,96 @@ function runHook(config, level) {
   return 0;
 }
 
+function git(args) {
+  try {
+    return execFileSync("git", args, { cwd: projectDirectory, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })
+      .split("\n")
+      .filter(Boolean);
+  } catch {
+    return null;
+  }
+}
+
+function openedDate(runFile) {
+  try {
+    return /^\*\*Opened:\*\*\s*(\d{4}-\d{2}-\d{2})/m.exec(readFileSync(path.resolve(projectDirectory, runFile), "utf8"))?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// What the disk and git say, not what active.json says: guarded files already
+// changed, committed or not, since the run opened. Status reads these so a
+// stale active.json cannot hide work done before the run was ready.
+export function derivedFacts(config) {
+  const { state } = readState(config);
+  if (!state) return [];
+  const facts = [];
+  const guarded = (files) => [...new Set(files)].filter((file) => isGuarded(config, file));
+
+  const uncommitted = git(["status", "--porcelain", "--untracked-files=all"]);
+  if (uncommitted) {
+    const files = guarded(uncommitted.map((line) => line.slice(3).replace(/^.* -> /, "")));
+    if (files.length > 0) facts.push(`${files.length} guarded file(s) changed and not committed: ${files.slice(0, 5).join(", ")}${files.length > 5 ? ", ..." : ""}`);
+  }
+
+  const since = state.run ? openedDate(state.run) : null;
+  if (since) {
+    const committed = git(["log", `--since=${since} 00:00`, "--name-only", "--pretty=format:"]);
+    if (committed) {
+      const files = guarded(committed);
+      if (files.length > 0) facts.push(`${files.length} guarded file(s) changed in commits since the run opened on ${since}`);
+    }
+  }
+  return facts;
+}
+
 function runStatus(config) {
   const run = evaluateRun(config);
   console.log(run.summary);
   console.log(run.ready ? "Ready: guarded code may change." : "Not ready:");
   for (const problem of run.problems) console.log(`  - ${problem}`);
+  const facts = derivedFacts(config);
+  if (facts.length > 0) {
+    console.log(run.ready ? "From git:" : "From git (code already changed while the run was not ready):");
+    for (const fact of facts) console.log(`  - ${fact}`);
+  }
   return run.ready ? 0 : 1;
+}
+
+// Reads every run record and counts, per month, the fix runs, the escaped
+// defects among them, and whether each escaped one added its battery case.
+export function escapeReport() {
+  const runsDirectory = path.join(projectDirectory, "docs/harness/runs");
+  if (!existsSync(runsDirectory)) return [];
+  const months = new Map();
+
+  for (const name of readdirSync(runsDirectory).filter((file) => file.endsWith(".md")).sort()) {
+    const document = readFileSync(path.join(runsDirectory, name), "utf8");
+    const opened = /^\*\*Opened:\*\*\s*(\d{4}-\d{2})/m.exec(document)?.[1];
+    if (!opened || !/^\*\*Mode:\*\*\s*Fix/im.test(document)) continue;
+    const month = months.get(opened) ?? { month: opened, fixes: 0, escaped: 0, withCase: 0 };
+    month.fixes += 1;
+    const escaped = /^\*\*Escaped:\*\*\s*yes.*?battery case:\s*(.+)$/im.exec(document);
+    if (escaped) {
+      month.escaped += 1;
+      if (!/^pending/i.test(escaped[1].trim())) month.withCase += 1;
+    }
+    months.set(opened, month);
+  }
+  return [...months.values()];
+}
+
+function runEscapes() {
+  const report = escapeReport();
+  if (report.length === 0) {
+    console.log("No fix runs recorded in docs/harness/runs/ yet.");
+    return 0;
+  }
+  console.log("| Month | Fix runs | Escaped defects | With a battery case |");
+  console.log("|---|---|---|---|");
+  for (const row of report) console.log(`| ${row.month} | ${row.fixes} | ${row.escaped} | ${row.withCase} |`);
+  return 0;
 }
 
 function runCheck(config, level, paths) {
@@ -434,6 +519,7 @@ function main() {
 
   if (command === "status") return runStatus(config);
   if (command === "validate") return runValidate(config, args);
+  if (command === "escapes") return runEscapes();
   if (level === "off") return 0;
   if (command === "check") return runCheck(config, level, args);
   return runHook(config, level);

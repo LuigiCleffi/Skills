@@ -190,20 +190,18 @@ Ask concise, specific questions that resolve meaningful uncertainty.
 
 Rules for the conversation:
 
-1. Ask one question at a time by default.
-2. Ask the highest-impact unresolved question first.
-3. Explain the relevant ambiguity briefly when context helps.
-4. Offer concrete alternatives when they make answering easier.
-5. Allow the user to provide a different answer from the alternatives.
-6. Do not ask questions whose answers are already available.
+1. Ask in rounds of at most four questions, highest impact first, and wait for the answers before the next round.
+2. Give every question your recommended answer and why ("Recommended: refuse files over 10 MB, the limit the upload service already has"), so the user can answer with "yes" and spends their attention on the ones that need it.
+3. Before asking, run each question through one test: would a different answer change the spec? If not, decide it, record it as an assumption, and do not ask.
+4. Explain the relevant ambiguity briefly when context helps.
+5. Offer concrete alternatives when they make answering easier, and allow an answer that is none of them.
+6. Do not ask questions whose answers are already available in the request, the code, or the knowledge base.
 7. Do not ask about implementation details unless they are actual constraints.
-8. Do not force the user to answer every low-risk unknown.
-9. Update the problem model as answers arrive.
-10. Reassess whether each answer introduces new ambiguities or conflicts.
+8. Update the problem model as answers arrive, and reassess whether each answer introduces new ambiguities or conflicts.
 
-For complex issues, group related questions into a compact set only when answering them together is more efficient.
+If the user does not know an answer, propose a reasonable default and explain its consequences. Mark it as an assumption rather than silently converting it into a requirement. If nobody present can answer and the answer changes behavior, it becomes an open question with an owner (`[NEEDS CLARIFICATION: ... — owner: <who decides>]`); never fill it with invented text, and never let it reach implementation unanswered.
 
-If the user does not know an answer, propose a reasonable default and explain its consequences. Mark it as an assumption rather than silently converting it into a requirement.
+Stop asking when the remaining unknowns are low-risk: record them as assumptions and move on.
 
 If the user explicitly requests a draft without further discussion, generate the best possible draft, preserve unresolved questions in the specification, and state which decisions remain open.
 

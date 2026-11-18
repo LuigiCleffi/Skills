@@ -126,3 +126,43 @@ describe("the hook", () => {
     assert.equal(run(project, "guards/guard.mjs", [], "not json").code, 0);
   });
 });
+
+describe("production cloud", () => {
+  const production = { production: { markers: ["prod", "production"], unknownIsProduction: false } };
+
+  it("blocks changes to a target named as production", async () => {
+    const { guard, config } = await guardIn(makeProject(["guards"]), production);
+    for (const command of [
+      "gcloud run services delete api --project=acme-prod",
+      "CLOUDSDK_CORE_PROJECT=acme-prod gcloud sql instances patch db",
+      "kubectl --context prod-eu apply -f deploy.yaml",
+      "terraform apply -var-file=production.tfvars",
+      "terraform state rm module.db -var-file=prod.tfvars",
+      "aws ec2 terminate-instances --instance-ids i-1 --profile prod",
+    ]) {
+      assert.match(guard.toolProblem(config, bash(command)) ?? "", /production/, command);
+    }
+  });
+
+  it("lets reads of production and changes elsewhere through", async () => {
+    const { guard, config } = await guardIn(makeProject(["guards"]), production);
+    for (const command of [
+      "gcloud run services list --project=acme-prod",
+      "kubectl --context prod-eu get pods",
+      "terraform plan -var-file=production.tfvars",
+      "aws ec2 describe-instances --profile prod",
+      "gcloud run deploy api --project=acme-staging",
+      "npm run product:build",
+    ]) {
+      assert.equal(guard.toolProblem(config, bash(command)), null, command);
+    }
+  });
+
+  it("does nothing without markers, and can refuse unnamed targets", async () => {
+    const off = await guardIn(makeProject(["guards"]));
+    assert.equal(off.guard.toolProblem(off.config, bash("kubectl --context prod apply -f x.yaml")), null);
+    const strict = await guardIn(makeProject(["guards"]), { production: { markers: ["prod"], unknownIsProduction: true } });
+    assert.match(strict.guard.toolProblem(strict.config, bash("kubectl apply -f x.yaml")), /does not name/);
+    assert.equal(strict.guard.toolProblem(strict.config, bash("kubectl get pods")), null);
+  });
+});
