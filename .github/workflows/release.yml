@@ -1,0 +1,37 @@
+# Publishes to npm when a version tag is pushed, with provenance, so anyone
+# installing can check the package was built from this repository at that
+# tag. Set up npm trusted publishing for this repository and workflow on
+# npmjs.com (no token needed), or add an NPM_TOKEN repository secret.
+#
+#   npm version minor --no-git-tag-version
+#   git commit -am "1.2.0" && git tag v1.2.0 && git push origin main v1.2.0
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+  id-token: write # provenance and trusted publishing
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - name: Use an npm that supports trusted publishing
+        run: npm install -g npm@11
+      - name: Check the tag matches package.json
+        run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+      - run: npm ci --no-audit --no-fund
+      - run: npm run check:frontmatter
+      - run: npm test
+      - run: npm publish --provenance --access public --ignore-scripts
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

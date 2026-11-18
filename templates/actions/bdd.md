@@ -85,7 +85,7 @@ If the project has no BDD tooling, propose the lightest option that fits the sta
 For each user story, map:
 
 - **Rules**: the business rules and acceptance criteria that govern it.
-- **Examples**: one or two concrete, contrasting examples per rule, with real-looking values, including the boundary and the failure that matters.
+- **Examples**: one or two concrete, contrasting examples per rule, with real-looking values, including the boundary and the failure that matters. Check the rows of `docs/qa/edge-cases.md` that apply to the story: a row that changes what the user sees (another tenant's ID, a double submit) is a scenario; arithmetic and format rows go to `tdd`.
 - **Questions**: anything the spec does not answer. Return product questions to `spec-definition`.
 
 Prefer the few key examples that pin a rule down over exhaustive combinations. Combinations and edge arithmetic belong in unit tests through `tdd`.

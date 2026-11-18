@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { after, describe, it } from "node:test";
 import { classify, hashContent, verifyProject, writeLock } from "../dist/lock.js";
-import { declareTriggers, openRun, setStage } from "../dist/harnessRuns.js";
+import { closeRun, declareTriggers, openRun, setStage } from "../dist/harnessRuns.js";
 import { cleanUp, makeProject, write } from "./helpers.mjs";
 
 after(cleanUp);
@@ -100,6 +100,35 @@ describe("harness runs", () => {
     await assert.rejects(
       setStage(project, { stage: "ddd", status: "done", record: "specs/DomainModel.md" }),
       /Bounded Context/,
+    );
+  });
+});
+
+describe("escaped defect runs", () => {
+  const read = (project, file) => readFileSync(path.join(project, file), "utf8");
+  const settleAll = async (project) => {
+    const state = JSON.parse(read(project, "docs/harness/active.json"));
+    for (const stage of Object.keys(state.stages)) {
+      await setStage(project, { stage, status: "skipped", reason: "not needed in this test" });
+    }
+  };
+
+  it("records the escape and closes only with the battery case", async () => {
+    const project = makeProject(["harness"]);
+    await openRun(project, { request: "Fix double charge", mode: "fix", reason: "charged twice", slug: "charge", escapedFrom: "PR #12" });
+    const runFile = JSON.parse(read(project, "docs/harness/active.json")).run;
+    assert.match(read(project, runFile), /\*\*Escaped:\*\* yes — introduced by PR #12; battery case: pending/);
+
+    await settleAll(project);
+    await assert.rejects(closeRun(project, { status: "Closed", result: "fixed" }), /edge-cases\.md/);
+    await closeRun(project, { status: "Closed", result: "fixed", batteryCase: "EC-15" });
+    assert.match(read(project, runFile), /battery case: EC-15/);
+  });
+
+  it("refuses an escape on a run that is not a fix", async () => {
+    await assert.rejects(
+      openRun(makeProject(["harness"]), { request: "x", mode: "feature", reason: "y", slug: "z", escapedFrom: "PR #1" }),
+      /Only a fix run/,
     );
   });
 });

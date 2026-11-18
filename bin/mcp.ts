@@ -131,6 +131,10 @@ function registerHarnessTools(server: McpServer, project: string): void {
           .array(z.string())
           .default([])
           .describe("Triggers from harness/config.json the change hits; empty when none applies"),
+        escapedFrom: z
+          .string()
+          .optional()
+          .describe("Fix runs only: the defect reached a user or QA after review; name the run, PR, or release that shipped it"),
       },
     },
     (input) => respond(() => openRun(project, input)),
@@ -171,9 +175,13 @@ function registerHarnessTools(server: McpServer, project: string): void {
     {
       title: "Close a harness run",
       description:
-        "Close the active run with its result (Closed requires every stage settled), or abandon it. Writes the result into the run record and removes docs/harness/active.json.",
+        "Close the active run with its result (Closed requires every stage settled, and for an escaped defect the battery case that now covers it), or abandon it. Writes the result into the run record and removes docs/harness/active.json.",
       inputSchema: {
         status: z.enum(["Closed", "Abandoned"]),
+        batteryCase: z
+          .string()
+          .optional()
+          .describe("For an escaped defect: the docs/qa/edge-cases.md row added or already covering it, e.g. \"EC-15\""),
         result: z.string().describe("What changed, checks run and their results, review findings, what remains; or why it was abandoned"),
       },
     },

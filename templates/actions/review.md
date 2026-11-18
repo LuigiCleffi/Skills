@@ -35,7 +35,7 @@ At the end of the task, review the complete task diff as a whole. Include:
 - Interactions between changed files and behaviors.
 - Cross-cutting security and authorization implications.
 - Consistency with the repository's existing architecture and conventions.
-- Regression risks, edge cases, error handling, and compatibility.
+- Regression risks, edge cases, error handling, and compatibility. When `docs/qa/edge-cases.md` exists, every row that applies to the changed behavior has a test, or a stated reason it does not apply; an applicable row with neither is a finding.
 - Whether tests meaningfully validate the important requirements.
 - Findings from incremental reviews and whether they were resolved.
 

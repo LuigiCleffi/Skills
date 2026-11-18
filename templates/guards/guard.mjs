@@ -3,7 +3,8 @@
 // Guards: a Claude Code PreToolUse hook that refuses the few things whose
 // damage does not come back: reading or leaking a secret, writing a file the
 // project's tools must own (migrations, generated code), a destructive shell
-// command, and committing or pushing to a protected branch. Configured in
+// command, committing or pushing to a protected branch, and changing a
+// production cloud environment from the shell. Configured in
 // guards/config.json. No dependencies beyond Node.js 20.
 //
 // It blocks only irreversible damage. A recoverable mistake (skipping a
@@ -246,6 +247,57 @@ function dangerousReason(name, args, branch) {
   return null;
 }
 
+// Cloud CLIs whose subcommands are read-only. Anything not listed counts as a
+// change: the CLIs grow new verbs all the time, and a new verb that writes
+// must not pass until someone notices.
+const cloudReadVerbs = {
+  gcloud: /^(list|describe|get|get-iam-policy|read|tail|logs?|help|info|version|config|auth|components)$/,
+  aws: /^((describe|get|list|head|show|wait)(-.*)?|help|ls|configure)$/,
+  az: /^((list|show|get)(-.*)?|help|version|account|login|find)$/,
+  kubectl: /^(get|describe|logs|top|explain|version|api-resources|api-versions|auth|config|diff|cluster-info|wait)$/,
+  helm: /^(list|ls|get|status|history|show|search|template|lint|version|env|repo|diff)$/,
+  terraform: /^(plan|show|validate|output|fmt|version|providers|graph|init|workspace|console|state)$/,
+};
+const terraformStateWrites = /^(rm|mv|push|replace-provider)$/;
+
+function hasMarker(words, markers) {
+  return words.some((word) =>
+    word
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .some((part) => markers.includes(part)),
+  );
+}
+
+// Returns why a cloud command would change production, or null. The command
+// names its target in its arguments or environment (a project, account,
+// context, or var file); a marker in them ("prod") makes it production.
+function productionReason(config, segment, name, args) {
+  const settings = config.production ?? {};
+  const markers = (settings.markers ?? []).map((marker) => marker.toLowerCase());
+  const reads = cloudReadVerbs[name];
+  if (!reads || markers.length === 0) return null;
+
+  const verbs = args.filter((arg) => !arg.startsWith("-"));
+  // aws and az take a service first (aws s3 cp), gcloud a group or two
+  // (gcloud run services delete): the verb is the first word that is one.
+  const isRead =
+    verbs.length === 0 ||
+    verbs.some((verb) => reads.test(verb)) &&
+      !(name === "terraform" && verbs[0] === "state" && terraformStateWrites.test(verbs[1] ?? "")) &&
+      !(name === "terraform" && verbs[0] === "init" && args.some((arg) => /^-(migrate-state|reconfigure)/.test(arg)));
+  if (isRead) return null;
+
+  const env = segment.filter((item) => typeof item === "string" && /^[A-Za-z_][A-Za-z0-9_]*=/.test(item));
+  if (hasMarker([...args, ...env], markers)) {
+    return `${name} ${verbs.slice(0, 3).join(" ")} changes production (guards/config.json "production"); production changes go through the deploy pipeline or the user`;
+  }
+  if (settings.unknownIsProduction) {
+    return `${name} ${verbs.slice(0, 3).join(" ")} changes an environment the command does not name; name a non-production target explicitly or ask the user`;
+  }
+  return null;
+}
+
 // Returns why a shell command must not run, or null.
 export function bashProblem(config, command, cwd = projectDirectory) {
   const segments = parseCommand(command);
@@ -282,6 +334,9 @@ export function bashProblem(config, command, cwd = projectDirectory) {
     ];
     const protectedTarget = writeTargets.find((word) => isProtected(config, word, cwd));
     if (protectedTarget) return `${protectedTarget} is protected (guards/config.json "protectedPaths"); let the project's tool write it`;
+
+    const production = productionReason(config, segment, name, args);
+    if (production) return production;
 
     if (config.dangerousCommands !== false) {
       const reason = dangerousReason(name, args, branch);

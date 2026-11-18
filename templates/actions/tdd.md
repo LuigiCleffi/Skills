@@ -41,7 +41,11 @@ If expected behavior is materially ambiguous, requirements conflict, or an exter
 
 Before writing test code, list the tests the behavior needs: operations, boundaries, failure cases, and refactorings you expect. Keep it short and concrete. Order it so the first test is the one you can make pass easily and that teaches something; leave hard or uncertain items for later.
 
+Then open the project's edge-case battery, `docs/qa/edge-cases.md`, when it exists, and add every row whose "Applies when" matches this behavior to the list, by ID ("EC-06 double submit"). A row that matches but cannot apply here is noted as skipped with the reason. These rows are the defects this project has already shipped once; they are not speculative.
+
 Work from this list one test at a time. Add new ideas to the list as they come up instead of chasing them immediately.
+
+When the change fixes an escaped defect (one that reached a user or QA after review), write the regression test first, then add the case to the battery in the same change unless a row already covers it, with the defect in **Source**.
 
 ### 3. Assess existing coverage
 
