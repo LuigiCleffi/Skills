@@ -182,6 +182,25 @@ Classify each ambiguity by its impact:
 
 Ask questions about critical and important ambiguities. Resolve minor ones with documented assumptions where reasonable.
 
+#### Split before specifying
+
+A request that holds several stories becomes one large specification, one large change, and one large review, and the edge cases of each story get lost among the others. Look for the signs before writing anything:
+
+- It names an area instead of an action ("file management", "the refunds module").
+- It has two or more operations (create, edit, cancel, export).
+- It involves two or more roles, or more than one screen.
+- Its title needs "and".
+
+When you see them, propose a split and let the user choose before specifying. Split vertically, so each piece is a thin slice a user can use end to end (screen, rule, and data), never "the backend" and "the frontend". Common ways to cut:
+
+- By step of the workflow (submit, then review, then approve).
+- By business rule variation (standard refund, then partial refund).
+- By data variation (one file type first, then the rest).
+- By operation (create first; edit and delete next).
+- By role (the customer's path first, the operator's next).
+
+Specify only the first slice now, and list the others, each with a one-line title, under Out of Scope as the next features. A specification with more than three user stories is a sign the split was skipped; with the harness, the spec's record check refuses it.
+
 ### Phase 3: Conduct a focused clarification conversation
 
 When clarification is necessary, enter clarification mode before generating the final specification.

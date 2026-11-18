@@ -31,11 +31,13 @@ Each workflow in this kit is good on its own. Without something that runs them i
 | 9 | `uiux` | `actions/uiux.md` | `UIUXDecisions.md` | ● | | |
 | 10 | `knowledge-gate` | `actions/knowledge.md` | rules consulted | ● | ● | |
 | 11 | `adr-gate` | `actions/adr.md` | ADRs consulted or recorded | ● | ● | ● |
-| 12 | `dev` | `actions/dev.md` + `actions/tdd.md` | code, tests, checks run | ● | ● | ● |
-| 13 | `review` | `actions/review.md` | findings resolved | ● | ● | ● |
-| 14 | `code-review` | `actions/code-review.md` | review of the committed diff | ● | ● | |
+| 12 | `tasks` | `actions/dev.md` (Plan the tasks) | `docs/harness/tasks/<slug>.md`, each task with files, change, and a Verify command | ◆ | ◆ | |
+| 13 | `dev` | `actions/dev.md` + `actions/tdd.md` | code, tests, checks run | ● | ● | ● |
+| 14 | `review` | `actions/review.md` | findings resolved | ● | ● | ● |
+| 15 | `qa` | `actions/qa.md` | QA report with **Verdict:** PASS | ● | ● | |
+| 16 | `code-review` | `actions/code-review.md` | review of the committed diff | ● | ● | |
 
-● = the stage is in the mode. ◆ = the stage joins the mode when the run declares a trigger (see Depth). Stages 1 to 11 are the **pre-code stages**: the gate script requires each one the run needs to be settled before guarded code changes. The modes, their triggered stages, and the triggers are defined in `harness/config.json`, so a project can tighten or loosen them.
+● = the stage is in the mode. ◆ = the stage joins the mode when the run declares a trigger (see Depth). Stages 1 to 12 are the **pre-code stages**: the gate script requires each one the run needs to be settled before guarded code changes. The modes, their triggered stages, and the triggers are defined in `harness/config.json`, so a project can tighten or loosen them.
 
 A stage whose workflow is not installed is recorded `n/a: not installed`. A stage that does not apply is recorded `skipped: <reason>` ("skipped: no user-facing surface"). A stage is never skipped without a reason, and `dev` follows the reasons the workflows themselves give for skipping (for example "DDD: not applicable").
 
@@ -64,7 +66,7 @@ Declare a trigger when the change does any of these (the defaults in `harness/co
 | `new-entity` | introduces a new domain entity, aggregate, or table |
 | `cross-module` | changes two or more modules or bounded contexts together |
 
-With no trigger, the run needs only the mode's stages. With at least one, the mode's triggered stages join it (◆ in the table): `ddd` for a feature; `spec` and `ddd` for a fix, since a fix whose cause is in the design is no longer a one-line fix. If you can describe the whole change in one sentence and no trigger applies, keep the run light.
+With no trigger, the run needs only the mode's stages. With at least one, the mode's triggered stages join it (◆ in the table): `ddd` and `tasks` for a feature; `spec`, `ddd`, and `tasks` for a fix, since a fix whose cause is in the design is no longer a one-line fix. `tasks` makes the risky change a list of small steps, each with the command that proves it. If you can describe the whole change in one sentence and no trigger applies, keep the run light.
 
 Name each trigger with its evidence when you open the run ("schema: adds a `refund_window` column"). When one shows up later, declare it then; its stages join the run as pending, and guarded code waits for them again. Triggers with `paths` in the config are also detected: an edit to a migration in a run that did not declare `schema` is reported by the gate.
 
@@ -173,9 +175,10 @@ If building shows a pre-code record is wrong (a missing rule, a model that does 
 ### 4. Review and close
 
 1. Run `review` on the complete diff, and resolve its findings as `dev` describes. Record `review: done`.
-2. With the user's approval, commit. Then run `code-review` from a fresh session on the committed diff when the mode includes it, and record the result.
-3. Capture every rule and term confirmed during the run through `knowledge`, and check every architectural decision has its ADR.
-4. Write the result in the run record, set its status to **Closed**, and delete `docs/harness/active.json`.
+2. Run `qa` for a feature or fix: one scenario per acceptance criterion and per applicable battery row, each run for real with evidence. Record `qa: done` with the report; a failed scenario goes back to `dev` first.
+3. With the user's approval, commit. Then run `code-review` from a fresh session on the committed diff when the mode includes it, and record the result.
+4. Capture every rule and term confirmed during the run through `knowledge`, and check every architectural decision has its ADR.
+5. Write the result in the run record, set its status to **Closed**, and delete `docs/harness/active.json`.
 
 A run that the user stops is set to **Abandoned** with the reason, and `active.json` is deleted.
 
@@ -209,18 +212,20 @@ When the Skills Code Kit MCP server is installed, prefer its tools to editing th
     "concurrency": { "description": "two requests, jobs, or users can race on the same data", "paths": [] }
   },
   "modes": {
-    "feature": { "stages": ["plan", "research", "spec", "spec-checklist", "strategy", "bdd", "uiux", "knowledge-gate", "adr-gate"], "triggered": ["ddd"] },
-    "fix": { "stages": ["reproduce", "knowledge-gate", "adr-gate"], "triggered": ["spec", "ddd"] },
+    "feature": { "stages": ["plan", "research", "spec", "spec-checklist", "strategy", "bdd", "uiux", "knowledge-gate", "adr-gate"], "triggered": ["ddd", "tasks"] },
+    "fix": { "stages": ["reproduce", "knowledge-gate", "adr-gate"], "triggered": ["spec", "ddd", "tasks"] },
     "chore": { "stages": ["adr-gate"], "triggered": [] }
   },
   "records": {
     "spec": { "headings": ["Problem Statement", "Functional Requirements", "Edge Cases", "Success Criteria"], "forbid": ["[NEEDS CLARIFICATION"], "maxWords": 3000 },
-    "ddd": { "headings": ["Bounded Context", "Ubiquitous Language", "Invariants"], "require": ["Open Questions: None."], "maxWords": 2500 }
+    "ddd": { "headings": ["Bounded Context", "Ubiquitous Language", "Invariants"], "require": ["Open Questions: None."], "maxWords": 2500 },
+    "tasks": { "blocks": { "pattern": "^#{2,4} TASK-\\d+", "fields": ["Files", "Change", "Verify"], "commands": ["Verify"] } },
+    "qa": { "headings": ["Scenarios"], "require": ["**Verdict:** PASS"], "forbid": ["| FAIL |"] }
   }
 }
 ```
 
-(Abridged: the installed file lists every trigger and record check.) A record check can list `headings` the record must have, text it must `require` or must not contain (`forbid`), and a `maxWords` budget. The budget is there because an agent reads every record of the run before writing code, and a 6,000-word spec crowds out the code it is about; when a record is over, split the work or cut repetition, and raise the budget only if the user agrees.
+(Abridged: the installed file lists every trigger and record check.) A record check can list `headings` the record must have, text it must `require` or must not contain (`forbid`), `blocks` (every block starting with a matching line must fill the named fields, and `commands` fields must hold a command in backticks), `limits` (at most `max` lines matching a pattern, such as three user stories per spec), and a `maxWords` budget. The budget is there because an agent reads every record of the run before writing code, and a 6,000-word spec crowds out the code it is about; when a record is over, split the work or cut repetition, and raise the budget only if the user agrees.
 
 Adjust `guarded`, the trigger `paths`, and the record checks to the project when the run is first opened, and tell the user what changed. The gate can be switched off with `"enforce": "off"` or, for one shell, `HARNESS_GATE=off` (`warn` and `block` work there too). Only the user turns it off.
 

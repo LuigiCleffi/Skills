@@ -33,6 +33,7 @@
   "dangerousCommands": true,
   "production": {
     "markers": [],
-    "unknownIsProduction": false
+    "nonProductionMarkers": [],
+    "requireNonProduction": false
   }
 }

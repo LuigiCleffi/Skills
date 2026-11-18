@@ -128,7 +128,7 @@ describe("the hook", () => {
 });
 
 describe("production cloud", () => {
-  const production = { production: { markers: ["prod", "production"], unknownIsProduction: false } };
+  const production = { production: { markers: ["prod", "production"] } };
 
   it("blocks changes to a target named as production", async () => {
     const { guard, config } = await guardIn(makeProject(["guards"]), production);
@@ -158,11 +158,17 @@ describe("production cloud", () => {
     }
   });
 
-  it("does nothing without markers, and can refuse unnamed targets", async () => {
+  it("does nothing without markers, and can require a proven non-production target", async () => {
     const off = await guardIn(makeProject(["guards"]));
     assert.equal(off.guard.toolProblem(off.config, bash("kubectl --context prod apply -f x.yaml")), null);
-    const strict = await guardIn(makeProject(["guards"]), { production: { markers: ["prod"], unknownIsProduction: true } });
-    assert.match(strict.guard.toolProblem(strict.config, bash("kubectl apply -f x.yaml")), /does not name/);
-    assert.equal(strict.guard.toolProblem(strict.config, bash("kubectl get pods")), null);
+    const strict = await guardIn(makeProject(["guards"]), {
+      production: { markers: ["prod"], nonProductionMarkers: ["staging", "dev"], requireNonProduction: true },
+    });
+    const problem = (command) => strict.guard.toolProblem(strict.config, bash(command));
+    assert.match(problem("kubectl apply -f x.yaml"), /does not prove/);
+    assert.match(problem("gcloud run deploy api --project=acme-prod"), /changes production/);
+    assert.equal(problem("gcloud run deploy api --project=acme-staging"), null);
+    assert.equal(problem("kubectl --context dev-eu apply -f x.yaml"), null);
+    assert.equal(problem("kubectl get pods"), null);
   });
 });

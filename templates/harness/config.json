@@ -11,19 +11,36 @@
     "test/**",
     "tests/**"
   ],
-  "unguarded": ["**/*.md", "docs/**"],
+  "unguarded": [
+    "**/*.md",
+    "docs/**"
+  ],
   "triggers": {
     "schema": {
       "description": "changes a database schema, a migration, or persisted data",
-      "paths": ["**/migrations/**", "**/*.prisma", "**/schema.sql", "**/*.migration.*"]
+      "paths": [
+        "**/migrations/**",
+        "**/*.prisma",
+        "**/schema.sql",
+        "**/*.migration.*"
+      ]
     },
     "permission": {
       "description": "changes who may see or do something: authentication, authorization, roles, tenants",
-      "paths": ["**/auth/**", "**/*permission*", "**/*policy*", "**/*role*"]
+      "paths": [
+        "**/auth/**",
+        "**/*permission*",
+        "**/*policy*",
+        "**/*role*"
+      ]
     },
     "public-contract": {
       "description": "changes an API, event, file format, or other contract another system depends on",
-      "paths": ["**/*.proto", "**/openapi.*", "**/graphql/**"]
+      "paths": [
+        "**/*.proto",
+        "**/openapi.*",
+        "**/graphql/**"
+      ]
     },
     "concurrency": {
       "description": "two requests, jobs, or users can race on the same data",
@@ -40,40 +57,128 @@
   },
   "modes": {
     "feature": {
-      "stages": ["plan", "research", "spec", "spec-checklist", "strategy", "bdd", "uiux", "knowledge-gate", "adr-gate"],
-      "triggered": ["ddd"]
+      "stages": [
+        "plan",
+        "research",
+        "spec",
+        "spec-checklist",
+        "strategy",
+        "bdd",
+        "uiux",
+        "knowledge-gate",
+        "adr-gate"
+      ],
+      "triggered": [
+        "ddd",
+        "tasks"
+      ]
     },
     "fix": {
-      "stages": ["reproduce", "knowledge-gate", "adr-gate"],
-      "triggered": ["spec", "ddd"]
+      "stages": [
+        "reproduce",
+        "knowledge-gate",
+        "adr-gate"
+      ],
+      "triggered": [
+        "spec",
+        "ddd",
+        "tasks"
+      ]
     },
     "chore": {
-      "stages": ["adr-gate"],
+      "stages": [
+        "adr-gate"
+      ],
       "triggered": []
     }
   },
   "records": {
-    "plan": { "require": ["Open Questions: None."], "maxWords": 1500 },
+    "plan": {
+      "require": [
+        "Open Questions: None."
+      ],
+      "maxWords": 1500
+    },
     "spec": {
-      "headings": ["Problem Statement", "Functional Requirements", "Edge Cases", "Success Criteria"],
-      "forbid": ["[NEEDS CLARIFICATION"],
-      "maxWords": 3000
+      "headings": [
+        "Problem Statement",
+        "Functional Requirements",
+        "Edge Cases",
+        "Success Criteria"
+      ],
+      "forbid": [
+        "[NEEDS CLARIFICATION"
+      ],
+      "maxWords": 3000,
+      "limits": [
+        {
+          "pattern": "^#{2,4} User Story",
+          "max": 3,
+          "why": "split it into features that ship and get reviewed apart (see Phase 2 of spec-definition)"
+        }
+      ]
     },
     "strategy": {
-      "headings": ["Diagnosis", "Target Customer", "First Release"],
-      "require": ["Open Questions: None."],
+      "headings": [
+        "Diagnosis",
+        "Target Customer",
+        "First Release"
+      ],
+      "require": [
+        "Open Questions: None."
+      ],
       "maxWords": 2000
     },
     "ddd": {
-      "headings": ["Bounded Context", "Ubiquitous Language", "Invariants"],
-      "require": ["Open Questions: None."],
+      "headings": [
+        "Bounded Context",
+        "Ubiquitous Language",
+        "Invariants"
+      ],
+      "require": [
+        "Open Questions: None."
+      ],
       "maxWords": 2500
     },
-    "bdd": { "require": ["Scenario"] },
+    "bdd": {
+      "require": [
+        "Scenario"
+      ]
+    },
     "uiux": {
-      "headings": ["Screens and Components", "Accessibility", "UI Acceptance Checks"],
-      "require": ["Open Questions: None."],
+      "headings": [
+        "Screens and Components",
+        "Accessibility",
+        "UI Acceptance Checks"
+      ],
+      "require": [
+        "Open Questions: None."
+      ],
       "maxWords": 2500
+    },
+    "tasks": {
+      "blocks": {
+        "pattern": "^#{2,4} TASK-\\d+",
+        "fields": [
+          "Files",
+          "Change",
+          "Verify"
+        ],
+        "commands": [
+          "Verify"
+        ]
+      }
+    },
+    "qa": {
+      "headings": [
+        "Scenarios"
+      ],
+      "require": [
+        "**Verdict:** PASS"
+      ],
+      "forbid": [
+        "| FAIL |"
+      ]
     }
   }
 }

@@ -91,7 +91,19 @@ const skills: Skill[] = [
     name: "Spec-driven harness",
     description: "Runs every stage in order with a run record in docs/harness/, and a gate script that blocks code edits until the pre-code stages are settled",
     files: ["actions/harness.md", "harness/gate.mjs", "harness/config.json"],
-    requires: ["product", "research", "knowledge", "adr", "dev", "tdd", "review"],
+    requires: ["product", "research", "knowledge", "adr", "dev", "tdd", "review", "qa"],
+  },
+  {
+    value: "qa",
+    name: "QA that runs and proves",
+    description: "One scenario per acceptance criterion and per applicable edge-case row, each run for real with evidence, in a report in docs/qa/reports/",
+    files: ["actions/qa.md", "docs/qa/edge-cases.md"],
+  },
+  {
+    value: "worktrees",
+    name: "Worktree slots for parallel sessions",
+    description: "Gives each git worktree its own ports and database name, so several agent sessions can run the app at once",
+    files: ["tools/worktree-slot.mjs", "tools/worktree.json"],
   },
   {
     value: "guards",
@@ -252,6 +264,10 @@ const workflowStages: { skill: string; step: string }[] = [
   { skill: "tdd", step: "`actions/tdd.md` — tests first, before each production change" },
   { skill: "review", step: "`actions/review.md` — incremental and final review" },
   {
+    skill: "qa",
+    step: "`actions/qa.md` — run every acceptance criterion and applicable edge case for real, with evidence",
+  },
+  {
     skill: "code-review",
     step: "`actions/code-review.md` — standards and spec review of the committed diff, from a fresh session",
   },
@@ -407,6 +423,18 @@ entry, following \`actions/adr.md\`.
 `
     : "";
 
+  const worktreeSection = selectedValues.includes("worktrees")
+    ? `## Parallel Sessions
+
+When you work in a git worktree, run \`node tools/worktree-slot.mjs\` before
+starting the app. It gives the worktree its own slot and writes its ports
+and database name to \`.worktree-slot.env\`; use those values instead of
+the defaults, so sessions in other worktrees keep running. Create the
+database it names with the project's own tool.
+
+`
+    : "";
+
   const pullRequestSection = selectedValues.includes("pull-request")
     ? generatePullRequestSection(usesPlaywright)
     : "";
@@ -472,7 +500,7 @@ Use them to guide implementation, code reviews, testing, and planning.
 
 ${sections.join("\n\n")}
 
-${workflowSection}${harnessSection}${knowledgeSection}${adrSection}${pullRequestSection}${rulesSection}## Working Rules
+${workflowSection}${harnessSection}${knowledgeSection}${adrSection}${pullRequestSection}${worktreeSection}${rulesSection}## Working Rules
 
 1. Understand the existing codebase and architecture before making changes.
 2. Read the relevant instruction files before starting a task.

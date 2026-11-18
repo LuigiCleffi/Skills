@@ -56,6 +56,7 @@ describe("depth by trigger", () => {
       "ddd",
       "knowledge-gate",
       "adr-gate",
+      "tasks",
     ]);
   });
 
@@ -203,5 +204,68 @@ describe("escaped defects", () => {
       { month: "2026-11", fixes: 1, escaped: 0, withCase: 0 },
     ]);
     assert.match(run(project, "harness/gate.mjs", ["escapes"]).stdout, /\| 2026-10 \| 2 \| 2 \| 1 \|/);
+  });
+});
+
+describe("tasks, qa, and story limits", () => {
+  const goodTasks = `# Tasks
+
+### TASK-01 Add the column
+**Files:** \`db/migrations/001.sql\`
+**Change:** add refund_window_days
+**Verify:** \`npm test -- orders\`
+
+### TASK-02 Use it
+**Files:** \`src/orders/order.ts\`
+**Change:** canRefund reads it
+**Verify:** \`npm test -- order.test.ts\`
+`;
+
+  it("accepts tasks that each name files, change, and a command", async () => {
+    const project = makeProject(["harness"]);
+    const gate = await importFrom(project, "harness/gate.mjs");
+    write(project, "docs/harness/tasks/t.md", goodTasks);
+    assert.deepEqual(gate.recordProblems(gate.loadConfig(), "tasks", "docs/harness/tasks/t.md"), []);
+  });
+
+  it("names the task missing a field or a command to verify it", async () => {
+    const project = makeProject(["harness"]);
+    const gate = await importFrom(project, "harness/gate.mjs");
+    write(
+      project,
+      "t.md",
+      goodTasks.replace("**Verify:** `npm test -- orders`", "**Verify:** run the tests").replace("**Files:** `src/orders/order.ts`\n", ""),
+    );
+    assert.deepEqual(gate.recordProblems(gate.loadConfig(), "tasks", "t.md"), [
+      "TASK-01 Add the column: Verify needs a command in backticks",
+      "TASK-02 Use it has no Files",
+    ]);
+    write(project, "empty.md", "# Tasks\n");
+    assert.match(gate.recordProblems(gate.loadConfig(), "tasks", "empty.md").join(), /no block matching/);
+  });
+
+  it("adds tasks to a run with a trigger", async () => {
+    const gate = await importFrom(makeProject(["harness"]), "harness/gate.mjs");
+    assert.ok(gate.requiredStages(gate.loadConfig(), "feature", ["schema"]).includes("tasks"));
+    assert.ok(!gate.requiredStages(gate.loadConfig(), "feature", []).includes("tasks"));
+  });
+
+  it("refuses a spec with more than three user stories", async () => {
+    const project = makeProject(["harness"]);
+    const gate = await importFrom(project, "harness/gate.mjs");
+    const stories = [1, 2, 3, 4].map((n) => `### User Story ${n} — x (Priority: P${n})`).join("\n");
+    write(project, "spec.md", `## Problem Statement\n## Functional Requirements\n## Edge Cases\n## Success Criteria\n${stories}\n`);
+    assert.match(gate.recordProblems(gate.loadConfig(), "spec", "spec.md").join(), /4 lines matching .* over 3: split it/);
+  });
+
+  it("accepts only a qa report that passed", async () => {
+    const project = makeProject(["harness"]);
+    const gate = await importFrom(project, "harness/gate.mjs");
+    const report = (verdict, row) =>
+      `# QA\n\n**Verdict:** ${verdict}\n\n## Scenarios\n\n| ID | Scenario | Source | How | Result | Evidence |\n|---|---|---|---|---|---|\n${row}\n`;
+    write(project, "pass.md", report("PASS", "| QA-01 | x | US-1 | test | PASS | ok |"));
+    write(project, "fail.md", report("FAIL", "| QA-01 | x | US-1 | test | FAIL | 500 |"));
+    assert.equal(gate.stageProblem("qa", "done", "pass.md", gate.loadConfig()), null);
+    assert.match(gate.stageProblem("qa", "done", "fail.md", gate.loadConfig()), /Verdict:\*\* PASS.*FAIL/);
   });
 });

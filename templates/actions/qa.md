@@ -1,0 +1,94 @@
+---
+name: qa
+description: "Try to break a finished change before it reaches review of the commit or a person: one scenario per acceptance criterion, plus every row of the edge-case battery (docs/qa/edge-cases.md) that applies, each run for real (a test command, a Playwright or browser run, or exact manual steps) and recorded with its evidence in docs/qa/reports/. A failed scenario goes back to dev. Use after dev and review, before code-review and the pull request; for a QA person, to rerun the scenarios of a branch and get the report to check by hand."
+---
+
+# qa — Prove It Works, Scenario by Scenario
+
+## Purpose and ownership
+
+Tests written while building show that the code does what the developer understood. `qa` checks what was asked: every acceptance criterion and every known way this project breaks, run against the finished change, with evidence anyone can check again. The common failure it catches is a plausible implementation that does not handle an edge case.
+
+`qa` owns `docs/qa/reports/`. It does not change production code or tests: a failure goes back to `dev`, which fixes it and asks for `qa` again.
+
+## Inputs
+
+- The acceptance criteria: the spec's user stories and scenarios (`SpecifyRequirements.md`), the feature files from `bdd`, the UI acceptance checks in `UIUXDecisions.md`, or, without a spec, the criteria in the task.
+- The edge-case battery, `docs/qa/edge-cases.md`, when it exists.
+- The branch with the change, built and runnable.
+
+## Workflow
+
+### 1. List the scenarios
+
+Write one scenario per acceptance criterion, with the criterion's ID as its source (`US-1 AC-2`, `FR-04`, the scenario name from the feature file). Then add every battery row whose "Applies when" matches the change (`EC-06`). A row that matches but cannot apply here is listed as not applicable, with the reason.
+
+Each scenario says what to do and what must happen, in the words a person testing the screen or the API would use.
+
+### 2. Run each one for real
+
+Choose the most direct way that proves the behavior, in this order:
+
+1. **An automated test that already covers it** (from `tdd` or `bdd`): run it and record the command and its result.
+2. **A browser run** for anything a user sees: Playwright when the project has it, otherwise your own browser tools. Take a screenshot of the state that proves the result and save it under `docs/qa/reports/<report>/`.
+3. **An API or command-line call** for behavior without a screen: record the exact request and the relevant part of the response.
+4. **Exact manual steps** only when none of the above can run here: write them so a person can follow them, and mark the result `MANUAL` until someone does.
+
+Never mark a scenario passed because the code looks right. Never edit a test to make a scenario pass.
+
+### 3. Decide each result
+
+- `PASS`: the observed result matches what must happen, with evidence.
+- `FAIL`: it does not. Write what happened instead, with the evidence, and send it to `dev`.
+- `BLOCKED`: it could not run (no seed data, a service down). Say what is missing.
+- `MANUAL`: it needs a person; the steps are in the report.
+
+### 4. Write the report
+
+`docs/qa/reports/YYYY-MM-DD-short-slug.md`:
+
+```markdown
+# QA: [change in one line]
+
+**Branch:** feature/refund-window   **Commit:** abc1234
+**Verdict:** PASS | FAIL | PARTIAL
+
+## Scenarios
+
+| ID | Scenario | Source | How | Result | Evidence |
+|---|---|---|---|---|---|
+| QA-01 | Refund within 30 days is accepted | US-1 AC-1 | `npm test -- refunds` | PASS | 12 passed |
+| QA-02 | Double click on "Refund" refunds once | EC-06 | Playwright | PASS | qa-02.png |
+| QA-03 | Another store's order ID shows "not found" | EC-08 | API call | FAIL | 200 with the order; see below |
+
+## Not applicable
+
+EC-11 (390 px screen): the change has no screen.
+
+## Failures and what is left
+
+QA-03: GET /orders/123 as store B returned store A's order. Sent back to dev.
+```
+
+The verdict is `PASS` only when every scenario passed; `PARTIAL` when the rest passed and some are `MANUAL` or `BLOCKED` with the reason; `FAIL` otherwise.
+
+### 5. Hand back
+
+On `FAIL`, hand the failures to `dev` and run `qa` again on the fix: rerun the failed scenarios and the ones near them. On `PASS`, the change goes on to `code-review` and the pull request; the pull request's "How to test it?" steps can come from the scenarios.
+
+When a scenario fails because of a kind of input the battery does not list, propose a new battery row with it.
+
+## With the harness
+
+`qa` is a post-code stage of feature and fix runs, after `review` and before `code-review`. Record it done with the report as its record; the gate checks that the report says **Verdict:** PASS and has no `FAIL` row. A `PARTIAL` report can close the run only if the user accepts the manual or blocked scenarios: record that in the run's approvals and set the stage `skipped: <reason>` for what is left.
+
+## Guardrails
+
+- Never change production code or tests; report.
+- Never mark a scenario passed without running it, or a run without its evidence.
+- Never test against production or with real customer data.
+- Keep evidence small: the screenshot or output lines that prove the result, not whole logs.
+
+## Completion criteria
+
+`qa` is complete when every acceptance criterion and every applicable battery row has a scenario, every scenario has a result with its evidence or the reason it could not run, the report has its verdict, and every failure is back with `dev`.

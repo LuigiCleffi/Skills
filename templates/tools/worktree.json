@@ -1,0 +1,10 @@
+{
+  "output": ".worktree-slot.env",
+  "portStep": 10,
+  "ports": {
+    "PORT": 3000
+  },
+  "variables": {
+    "DATABASE_NAME": "app{suffix}"
+  }
+}

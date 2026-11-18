@@ -64,6 +64,7 @@ const stageOrder = [
   "uiux",
   "knowledge-gate",
   "adr-gate",
+  "tasks",
 ];
 
 function readJson(file) {
@@ -197,8 +198,34 @@ function hasHeading(document, text) {
     .some((line) => /^#{1,6}\s/.test(line) && line.toLowerCase().includes(wanted));
 }
 
+// Each block that starts with a line matching `pattern` (a task, say) must
+// fill every field ("**Verify:** ..."); a field listed in `commands` must hold
+// a command in backticks, so the block says how it is proven.
+function blockProblems(document, record, rule) {
+  const pattern = new RegExp(rule.pattern, "m");
+  const lines = document.split("\n");
+  const starts = lines.flatMap((line, index) => (pattern.test(line) ? [index] : []));
+  if (starts.length === 0) return [`${record} has no block matching ${rule.pattern}`];
+
+  const problems = [];
+  starts.forEach((start, n) => {
+    const block = lines.slice(start, starts[n + 1] ?? lines.length).join("\n");
+    const name = lines[start].replace(/^#+\s*/, "").trim();
+    for (const field of rule.fields ?? []) {
+      const value = new RegExp(`^\\s*[-*]?\\s*\\*\\*${field}:\\*\\*[ \\t]*(.*)$`, "m").exec(block)?.[1]?.trim();
+      if (!value) {
+        problems.push(`${name} has no ${field}`);
+      } else if ((rule.commands ?? []).includes(field) && !/`[^`]+`/.test(value)) {
+        problems.push(`${name}: ${field} needs a command in backticks`);
+      }
+    }
+  });
+  return problems;
+}
+
 // Checks a record's shape against config.records[stage]: required headings and
-// text, forbidden text, and a word budget. Returns a list of problems.
+// text, forbidden text, blocks with required fields, limits on how often a
+// line may repeat, and a word budget. Returns a list of problems.
 export function recordProblems(config, stage, record) {
   const file = path.resolve(projectDirectory, record);
   if (!existsSync(file)) return [`its record ${record} does not exist`];
@@ -225,6 +252,15 @@ export function recordProblems(config, stage, record) {
   }
   for (const text of rules.forbid ?? []) {
     if (document.includes(text)) problems.push(`${record} still contains "${text}"`);
+  }
+  for (const rule of [rules.blocks].flat().filter(Boolean)) {
+    problems.push(...blockProblems(document, record, rule));
+  }
+  for (const limit of rules.limits ?? []) {
+    const count = document.split("\n").filter((line) => new RegExp(limit.pattern).test(line)).length;
+    if (count > limit.max) {
+      problems.push(`${record} has ${count} lines matching ${limit.pattern}, over ${limit.max}${limit.why ? `: ${limit.why}` : ""}`);
+    }
   }
   if (typeof rules.maxWords === "number") {
     const words = countWords(document);
