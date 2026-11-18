@@ -1,0 +1,27 @@
+{
+  "secrets": {
+    "files": [
+      ".env",
+      ".env.*",
+      "**/.env",
+      "**/.env.*",
+      "**/.envrc",
+      "**/*.pem",
+      "**/*.key",
+      "**/*.p12",
+      "**/*.pfx",
+      "**/id_rsa*",
+      "**/id_ed25519*",
+      "**/id_ecdsa*",
+      "**/credentials.json",
+      "**/service-account*.json",
+      "**/.npmrc",
+      "**/.netrc",
+      "**/.pgpass"
+    ],
+    "allow": ["**/.env.example", "**/.env.sample", "**/.env.template", ".env.example", ".env.sample", ".env.template"]
+  },
+  "protectedPaths": [],
+  "protectedBranches": [],
+  "dangerousCommands": true
+}

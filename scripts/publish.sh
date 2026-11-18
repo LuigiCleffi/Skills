@@ -81,8 +81,8 @@ npm ci --no-audit --no-fund
 step "Checking skill frontmatter"
 npm run check:frontmatter
 
-step "Building"
-npm run build
+step "Building and testing"
+npm test
 
 step "Checking the package"
 node -e "
@@ -98,7 +98,7 @@ if echo "$pack_output" | grep -qi "npm warn"; then
   fail "npm reported warnings while packing. Fix them (often with 'npm pkg fix') before publishing."
 fi
 
-for required_file in dist/cli.js templates/CleanCode/README.md; do
+for required_file in dist/cli.js templates/CleanCode/README.md templates/harness/gate.mjs templates/guards/guard.mjs templates/tools/review-context.mjs; do
   echo "$pack_output" | grep -q "$required_file" || fail "The package is missing $required_file."
 done
 
@@ -115,8 +115,14 @@ if [ "$next_version" != "$current_version" ]; then
 fi
 
 step "Publishing $package_name@$next_version"
-# The build already ran above, so skip prepublishOnly.
-npm publish --ignore-scripts
+# The build already ran above, so skip prepublishOnly. In GitHub Actions
+# (with id-token: write), publish with provenance so anyone installing can
+# check the package was built from this repository.
+provenance=()
+if [ -n "${GITHUB_ACTIONS:-}" ]; then
+  provenance=(--provenance)
+fi
+npm publish --ignore-scripts "${provenance[@]+"${provenance[@]}"}"
 
 echo
 echo "✔ Published $package_name@$next_version"

@@ -110,7 +110,7 @@ If evidence is incomplete, label the concern as uncertain and explain what must 
 ## Review procedure
 
 1. Read the task and relevant requirements/checklist.
-2. Inspect the actual diff and relevant tests; do not rely only on a summary.
+2. Inspect the actual diff and relevant tests; do not rely only on a summary. When `tools/review-context.mjs` is installed, run it (`--worktree` for uncommitted work, or a fixed point) to get the project rules the changed files reach, check the diff against the review-enforced ones, and cite their IDs in findings.
 3. Follow code paths and inspect surrounding context only where necessary.
 4. Run targeted, non-destructive checks when available and useful. Do not claim to have run tools or tests that were not executed.
 5. Validate each potential finding against the code and expected behavior.

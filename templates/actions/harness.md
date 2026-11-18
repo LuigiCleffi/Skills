@@ -1,6 +1,6 @@
 ---
 name: harness
-description: "Run a change through the whole spec-driven workflow in order, and keep the evidence: classify the request (feature, fix, or chore), open a run in docs/harness/, run each stage the mode needs (plan, research, spec-definition, spec-checklist, strategy, ddd, bdd, uiux, the knowledge and ADR gates, dev with tdd, review, code-review), record each stage as done with its record, or skipped with a reason, and close the run. Keeps docs/harness/active.json, which the installed gate script (harness/gate.mjs) reads to block edits to production code and tests until every pre-code stage is settled. Use for any request that will change guarded code; for a question or a change to docs only, no run is needed."
+description: "Run a change through the whole spec-driven workflow in order, and keep the evidence: classify the request (feature, fix, or chore), open a run in docs/harness/, run each stage the mode needs (plan, research, spec-definition, spec-checklist, strategy, ddd, bdd, uiux, the knowledge and ADR gates, dev with tdd, review, code-review), record each stage as done with its record, or skipped with a reason, and close the run. Declares the triggers a change hits (schema, permission, public contract, concurrency, new entity, cross module), which decide how deep the run goes. Keeps docs/harness/active.json, which the installed gate script (harness/gate.mjs) reads to warn about (or block) edits to production code and tests until every pre-code stage is settled, and checks each stage's record before it counts as done. Use for any request that will change guarded code; for a question or a change to docs only, no run is needed."
 ---
 
 # harness — Spec-Driven Delivery, Enforced
@@ -9,10 +9,10 @@ description: "Run a change through the whole spec-driven workflow in order, and 
 
 Each workflow in this kit is good on its own. Without something that runs them in order, an agent under pressure skips to the code, and the spec, the model, the scenarios, and the gates become optional. `harness` is that something:
 
-- It **classifies** the request and picks the stages it needs.
+- It **classifies** the request and picks the stages it needs: the mode sets the kind of work, and the triggers set how deep it goes.
 - It **runs** them in order, invoking each workflow instead of repeating it.
 - It **records** every stage in a run file: done with the record it produced, or skipped with a reason. Nothing is skipped silently.
-- It **enforces** the order. `docs/harness/active.json` tells the gate script which run is active and which stages are settled; until every pre-code stage is, edits to guarded paths (production code and tests) are blocked.
+- It **checks** the order and the records. `docs/harness/active.json` tells the gate script which run is active and which stages are settled; until every pre-code stage is, an edit to a guarded path (production code and tests) gets a warning, or is refused when the project chose to block. A stage counts as done only when its record passes the checks in `harness/config.json`.
 
 `harness` owns `docs/harness/` and `harness/config.json`. It does not write specs, models, scenarios, decisions, or code itself; the stage workflows do.
 
@@ -22,11 +22,11 @@ Each workflow in this kit is good on its own. Without something that runs them i
 |---|---|---|---|---|---|---|
 | 1 | `plan` | `ProductDefinition/plan.md` | product plan | ● | | |
 | 2 | `research` | `actions/research.md` | RS notes, proposed rules, questions | ● | | |
-| 3 | `spec` | `ProductDefinition/specs/spec-definition.md` | `SpecifyRequirements.md` | ● | | |
+| 3 | `spec` | `ProductDefinition/specs/spec-definition.md` | `SpecifyRequirements.md` | ● | ◆ | |
 | 4 | `spec-checklist` | `ProductDefinition/specs/spec-checklist.md` | checklist, all items Ready | ● | | |
 | 5 | `reproduce` | `actions/tdd.md` | a failing test or exact reproduction steps | | ● | |
 | 6 | `strategy` | `actions/strategy.md` | `StrategyBrief.md` | ● | | |
-| 7 | `ddd` | `actions/ddd.md` | `DomainModel.md`, glossary | ● | | |
+| 7 | `ddd` | `actions/ddd.md` | `DomainModel.md`, glossary | ◆ | ◆ | |
 | 8 | `bdd` | `actions/bdd.md` | feature files, failing scenarios | ● | | |
 | 9 | `uiux` | `actions/uiux.md` | `UIUXDecisions.md` | ● | | |
 | 10 | `knowledge-gate` | `actions/knowledge.md` | rules consulted | ● | ● | |
@@ -35,7 +35,7 @@ Each workflow in this kit is good on its own. Without something that runs them i
 | 13 | `review` | `actions/review.md` | findings resolved | ● | ● | ● |
 | 14 | `code-review` | `actions/code-review.md` | review of the committed diff | ● | ● | |
 
-● = the stage is in the mode. Stages 1 to 11 are the **pre-code stages**: the gate script requires each one in the mode to be settled before guarded code can change. The modes and their stages are defined in `harness/config.json`, so a project can tighten or loosen them.
+● = the stage is in the mode. ◆ = the stage joins the mode when the run declares a trigger (see Depth). Stages 1 to 11 are the **pre-code stages**: the gate script requires each one the run needs to be settled before guarded code changes. The modes, their triggered stages, and the triggers are defined in `harness/config.json`, so a project can tighten or loosen them.
 
 A stage whose workflow is not installed is recorded `n/a: not installed`. A stage that does not apply is recorded `skipped: <reason>` ("skipped: no user-facing surface"). A stage is never skipped without a reason, and `dev` follows the reasons the workflows themselves give for skipping (for example "DDD: not applicable").
 
@@ -48,6 +48,25 @@ Choose the mode from the request and tell the user which one and why. When in do
 - **Chore:** no behavior change: dependencies, build, refactoring under green tests, configuration, tooling.
 
 No run is needed for a question, an explanation, or a change to documentation only.
+
+## Depth
+
+The mode says what kind of work it is; the triggers say how much design it needs. Ceremony should follow risk, not habit: a one-line copy change and a new billing table are both features, and only one needs a domain model.
+
+Declare a trigger when the change does any of these (the defaults in `harness/config.json`):
+
+| Trigger | The change |
+|---|---|
+| `schema` | changes a database schema, a migration, or persisted data |
+| `permission` | changes who may see or do something: authentication, authorization, roles, tenants |
+| `public-contract` | changes an API, event, file format, or other contract another system depends on |
+| `concurrency` | lets two requests, jobs, or users race on the same data |
+| `new-entity` | introduces a new domain entity, aggregate, or table |
+| `cross-module` | changes two or more modules or bounded contexts together |
+
+With no trigger, the run needs only the mode's stages. With at least one, the mode's triggered stages join it (◆ in the table): `ddd` for a feature; `spec` and `ddd` for a fix, since a fix whose cause is in the design is no longer a one-line fix. If you can describe the whole change in one sentence and no trigger applies, keep the run light.
+
+Name each trigger with its evidence when you open the run ("schema: adds a `refund_window` column"). When one shows up later, declare it then; its stages join the run as pending, and guarded code waits for them again. Triggers with `paths` in the config are also detected: an edit to a migration in a run that did not declare `schema` is reported by the gate.
 
 ## Files
 
@@ -66,6 +85,7 @@ harness/
 {
   "run": "docs/harness/runs/2026-11-12-refund-window.md",
   "mode": "feature",
+  "triggers": ["schema"],
   "stages": {
     "plan": "done",
     "research": "done",
@@ -91,7 +111,7 @@ harness/
 }
 ```
 
-Each stage value is `pending`, `done`, `skipped: <reason>`, or `n/a: <reason>`. A stage marked `done` that lists a record must point to a file that exists; the gate script checks it.
+Each stage value is `pending`, `done`, `skipped: <reason>`, or `n/a: <reason>`. A stage marked `done` must point to a record that exists, and when `harness/config.json` has checks for that stage under `"records"`, the record must pass them; the gate script checks both.
 
 ### Run record (`docs/harness/runs/YYYY-MM-DD-short-slug.md`)
 
@@ -99,6 +119,7 @@ Each stage value is `pending`, `done`, `skipped: <reason>`, or `n/a: <reason>`. 
 # Run: [request in one line]
 
 **Mode:** Feature | Fix | Chore — [why]
+**Triggers:** none | schema (adds a refund_window column); ...
 **Opened:** YYYY-MM-DD   **Closed:** YYYY-MM-DD
 **Status:** Open | Closed | Abandoned
 
@@ -121,7 +142,7 @@ The run record is for people; `active.json` is for the gate. Keep them in step: 
 
 ### 1. Open the run
 
-1. Classify the request and state the mode with its reason.
+1. Classify the request and state the mode with its reason, and the triggers it hits with their evidence (or "none").
 2. If `docs/harness/active.json` already exists, a run is open. Continue it if this request belongs to it; otherwise ask the user whether to close, abandon, or pause it. One active run at a time.
 3. Create the run record and `active.json` with every stage of the mode set to `pending`, and stages outside the mode left out.
 
@@ -131,7 +152,7 @@ For each pre-code stage of the mode, in the table's order:
 
 1. **Decide whether it applies.** If not, record `skipped: <reason>` (or `n/a: not installed`) and move on.
 2. **Invoke its workflow** with the outputs of the earlier stages. Do not copy the workflow; follow it.
-3. **Respect its gate.** A stage is `done` only when its workflow's completion criteria are met: the plan and the spec have no open questions, the checklist marks the scope Ready, the domain model says **Open Questions: None.**, and so on. When a workflow needs the user, stop and ask; the run waits.
+3. **Respect its gate.** A stage is `done` only when its workflow's completion criteria are met: the plan and the spec have no open questions, the checklist marks the scope Ready, the domain model says **Open Questions: None.**, and so on. Run `node harness/gate.mjs validate <stage> <record>` before recording it: it checks the record's required headings, the "Open Questions: None." line, leftover placeholders and `[NEEDS CLARIFICATION]` markers, and the word budget. When a workflow needs the user, stop and ask; the run waits.
 4. **Record** the status and the record path in `active.json` and the run record.
 
 Two stages run as gates rather than producing documents: `knowledge-gate` (consult `actions/knowledge.md` for the subject, then capture every rule confirmed along the way) and `adr-gate` (consult `actions/adr.md`, and record each architectural decision the plan needs). Run them last before code, so they see everything the earlier stages decided.
@@ -140,7 +161,7 @@ Two stages run as gates rather than producing documents: `knowledge-gate` (consu
 
 When every pre-code stage is settled, run `node harness/gate.mjs status`; it must report the run as ready. Then set `dev` to `pending` work and follow `actions/dev.md`, using the recorded spec, model, scenarios, decisions, and rules as its inputs instead of rerunning their stages. `dev` uses BDD scenarios as the outer loop and `tdd` as the inner loop.
 
-If building shows a pre-code record is wrong (a missing rule, a model that does not fit, an infeasible UI decision), set that stage back to `pending`, go back to it with the user, and continue only when it is settled again. The gate script then blocks code edits again until it is, which is intended.
+If building shows a pre-code record is wrong (a missing rule, a model that does not fit, an infeasible UI decision), set that stage back to `pending`, go back to it with the user, and continue only when it is settled again. If it shows a trigger nobody declared (the change needs a migration after all), declare it. Either way the gate script reports code edits again until the run is ready, which is intended.
 
 ### 4. Review and close
 
@@ -155,41 +176,57 @@ A run that the user stops is set to **Abandoned** with the reason, and `active.j
 
 `harness/gate.mjs` has no dependencies beyond Node.js and runs in two ways:
 
-- **As a Claude Code hook.** The installer can add a `PreToolUse` hook to `.claude/settings.json` that runs it before every file edit. An edit to a guarded path is blocked, with the reason shown to the agent, unless an active run has every pre-code stage of its mode settled.
+- **As a Claude Code hook.** The installer can add a `PreToolUse` hook to `.claude/settings.json` that runs it before every file edit. An edit to a guarded path while the run is not ready gets a warning (shown to you and to the agent, once per session for the same problems), or is refused when `"enforce"` is `"block"`.
 - **From the command line**, for any tool, a git pre-commit hook, or CI:
   - `node harness/gate.mjs status` — prints the active run and what is still pending.
-  - `node harness/gate.mjs check [paths...]` — exits with an error when any of the paths (default: the files staged in git) is guarded and the run is not ready.
+  - `node harness/gate.mjs check [paths...]` — reports any of the paths (default: the files staged in git) that is guarded while the run is not ready; it exits with an error only when `"enforce"` is `"block"`.
+  - `node harness/gate.mjs validate <stage> <record>` — checks one record against the stage's checks.
 
-When the Skills Code Kit MCP server is installed, prefer its tools to editing the files by hand: `harness_open_run`, `harness_set_stage` (it refuses `done` without an existing record and `skipped` without a reason, and keeps the run record and `active.json` in step), `harness_status`, and `harness_close_run`.
+### Warn or block
 
-`harness/config.json` sets what is guarded and what each mode requires:
+`"enforce"` is `"warn"` by default. A hook that blocks needs irreversible damage on the other side: a leaked secret, a hand-written migration, a force push. Skipping a stage is recoverable, and a gate that blocks recoverable mistakes gets switched off by the first person it stops twice, after which it protects nothing. So the gate tells the agent what is pending and lets the user see it; the run record and the review catch what is left. Set `"block"` only when the team has agreed to it, and use the guards group for the damage that does not come back.
+
+When the Skills Code Kit MCP server is installed, prefer its tools to editing the files by hand: `harness_open_run` (with the triggers), `harness_declare_triggers`, `harness_set_stage` (it refuses `done` when the record is missing or fails its checks, and `skipped` without a reason, and keeps the run record and `active.json` in step), `harness_status`, and `harness_close_run`.
+
+`harness/config.json` sets what is guarded, what each mode and trigger requires, and how each record is checked:
 
 ```json
 {
-  "enforce": true,
+  "enforce": "warn",
   "state": "docs/harness/active.json",
   "guarded": ["src/**", "lib/**", "app/**", "packages/**", "server/**", "client/**", "test/**", "tests/**"],
   "unguarded": ["**/*.md", "docs/**"],
+  "triggers": {
+    "schema": { "description": "changes a database schema, a migration, or persisted data", "paths": ["**/migrations/**", "**/*.prisma"] },
+    "concurrency": { "description": "two requests, jobs, or users can race on the same data", "paths": [] }
+  },
   "modes": {
-    "feature": ["plan", "research", "spec", "spec-checklist", "strategy", "ddd", "bdd", "uiux", "knowledge-gate", "adr-gate"],
-    "fix": ["reproduce", "knowledge-gate", "adr-gate"],
-    "chore": ["adr-gate"]
+    "feature": { "stages": ["plan", "research", "spec", "spec-checklist", "strategy", "bdd", "uiux", "knowledge-gate", "adr-gate"], "triggered": ["ddd"] },
+    "fix": { "stages": ["reproduce", "knowledge-gate", "adr-gate"], "triggered": ["spec", "ddd"] },
+    "chore": { "stages": ["adr-gate"], "triggered": [] }
+  },
+  "records": {
+    "spec": { "headings": ["Problem Statement", "Functional Requirements", "Edge Cases", "Success Criteria"], "forbid": ["[NEEDS CLARIFICATION"], "maxWords": 3000 },
+    "ddd": { "headings": ["Bounded Context", "Ubiquitous Language", "Invariants"], "require": ["Open Questions: None."], "maxWords": 2500 }
   }
 }
 ```
 
-Adjust `guarded` to the project's real source and test folders when the run is first opened, and tell the user what changed. The gate can be switched off with `"enforce": false` or, for one shell, `HARNESS_GATE=off`. Only the user turns it off.
+(Abridged: the installed file lists every trigger and record check.) A record check can list `headings` the record must have, text it must `require` or must not contain (`forbid`), and a `maxWords` budget. The budget is there because an agent reads every record of the run before writing code, and a 6,000-word spec crowds out the code it is about; when a record is over, split the work or cut repetition, and raise the budget only if the user agrees.
+
+Adjust `guarded`, the trigger `paths`, and the record checks to the project when the run is first opened, and tell the user what changed. The gate can be switched off with `"enforce": "off"` or, for one shell, `HARNESS_GATE=off` (`warn` and `block` work there too). Only the user turns it off.
 
 The gate is a guard against skipping stages by accident, not a security boundary: an agent can write `active.json` itself. Never mark a stage settled to get past the gate. The run record and the user's approvals are the evidence that it was.
 
 ## With the Scrum team
 
-When `scrum/README.md` is installed, the ceremonies decide when each stage runs. The Tech Lead opens one run per backlog item in Sprint Planning (mode Feature, or Fix for a defect), fills its pre-code stages from the records Refinement and Planning produced, and closes it when the item is Done. The gate then blocks Dev, DBA, and DevOps tasks whose item has not been designed.
+When `scrum/README.md` is installed, the ceremonies decide when each stage runs. The Tech Lead opens one run per backlog item in Sprint Planning (mode Feature, or Fix for a defect), declares its triggers, fills its pre-code stages from the records Refinement and Planning produced, and closes it when the item is Done. The gate then flags Dev, DBA, and DevOps tasks whose item has not been designed.
 
 ## Guardrails
 
 - Never mark a stage `done` before its workflow's completion criteria are met, or `skipped` without a reason.
-- Never edit `active.json` to get around the gate, or turn the gate off, without the user asking.
+- Never edit `active.json` to get around the gate, or turn the gate off, without the user asking. A warning is not permission: settle what it lists, or tell the user why the edit cannot wait.
+- Never leave out a trigger to keep the run light; declare it with its evidence.
 - Never commit, push, or merge without the user's approval.
 - Never run a stage's workflow from memory; read and follow the installed file.
 - Keep one active run at a time, and never delete a run record.

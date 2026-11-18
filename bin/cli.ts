@@ -17,6 +17,7 @@ import {
   detectAgentTools,
   generateAgentFiles,
 } from "./agents.js";
+import { classify, hashContent, hashFile, readLock, verifyProject, writeLock } from "./lock.js";
 import { detectMcpClients, mcpClients, registerMcpServer } from "./mcpConfig.js";
 
 type Skill = {
@@ -58,13 +59,13 @@ const skills: Skill[] = [
     value: "review",
     name: "Code review",
     description: "Review standards and quality checks",
-    files: ["actions/review.md"],
+    files: ["actions/review.md", "tools/review-context.mjs"],
   },
   {
     value: "code-review",
     name: "Standards and spec code review",
     description: "Two-axis review of a committed diff against repo standards, the knowledge base, and the spec",
-    files: ["actions/code-review.md"],
+    files: ["actions/code-review.md", "tools/review-context.mjs"],
   },
   {
     value: "adr",
@@ -91,6 +92,12 @@ const skills: Skill[] = [
     description: "Runs every stage in order with a run record in docs/harness/, and a gate script that blocks code edits until the pre-code stages are settled",
     files: ["actions/harness.md", "harness/gate.mjs", "harness/config.json"],
     requires: ["product", "research", "knowledge", "adr", "dev", "tdd", "review"],
+  },
+  {
+    value: "guards",
+    name: "Guards against irreversible damage",
+    description: "A Claude Code hook that refuses reading or leaking secrets, writing protected files such as migrations, destructive shell commands, and commits to protected branches",
+    files: ["guards/guard.mjs", "guards/config.json"],
   },
   {
     value: "tdd",
@@ -421,14 +428,35 @@ every rule, term, and domain fact learned, following
     ? `## Harness
 
 For any change to production code or tests, follow \`actions/harness.md\`:
-classify the request (feature, fix, or chore), open a run in
-\`docs/harness/\`, and settle every pre-code stage of its mode before
-writing code. \`harness/gate.mjs\` blocks edits to guarded paths until the
-run is ready; \`node harness/gate.mjs status\` shows what is pending. Never
-edit \`docs/harness/active.json\` to get past the gate.
+classify the request (feature, fix, or chore), declare the triggers it
+hits (schema, permission, public contract, concurrency, new entity, cross
+module), open a run in \`docs/harness/\`, and settle every pre-code stage of
+its mode before writing code. \`harness/gate.mjs\` checks edits to guarded
+paths against the run, warning (or blocking, when \`harness/config.json\`
+says so) until it is ready; \`node harness/gate.mjs status\` shows what is
+pending. Never edit \`docs/harness/active.json\` to get past the gate.
 
 `
     : "";
+
+  const reviewInstalled = selectedValues.some((value) => value === "review" || value === "code-review");
+  const rulesSection = `## Project Rules
+
+Each rule this project enforces lives once, as a row below (or in the
+\`AGENTS.md\` of the folder it applies to). Docs explain a rule by linking
+to its ID; they never restate it, because a rule written in two places
+drifts. Add a row when a review catches the same mistake twice.
+
+| ID | Rule | Applies to | Enforced by | Checkable | Why |
+|---|---|---|---|---|---|
+
+- **ID:** a prefix for the folder's level (\`ROOT\`, \`API\`, \`WEB\`) and two digits.
+- **Applies to:** globs relative to this file's folder; empty means the whole folder.
+- **Enforced by:** \`lint\`, \`test\`, \`hook\`, or \`review\`. A machine-enforced rule is not reviewed by hand.
+- **Checkable:** yes, partial, or no. A "yes" enforced by review is a candidate for a lint rule or test.
+- **Why:** one line, or a link to the doc that explains it.
+${reviewInstalled ? "\nReviews run \`node tools/review-context.mjs\` to get the rules a diff reaches and cite them by ID.\n" : ""}
+`;
 
   return `# AGENTS.md
 
@@ -444,7 +472,7 @@ Use them to guide implementation, code reviews, testing, and planning.
 
 ${sections.join("\n\n")}
 
-${workflowSection}${harnessSection}${knowledgeSection}${adrSection}${pullRequestSection}## Working Rules
+${workflowSection}${harnessSection}${knowledgeSection}${adrSection}${pullRequestSection}${rulesSection}## Working Rules
 
 1. Understand the existing codebase and architecture before making changes.
 2. Read the relevant instruction files before starting a task.
@@ -474,24 +502,54 @@ are clearly communicated.
 `;
 }
 
+async function readIncoming(
+  file: string,
+  generatedFiles: Map<string, string>,
+): Promise<Buffer> {
+  const generatedContent = generatedFiles.get(file);
+  if (generatedContent !== undefined) return Buffer.from(generatedContent, "utf8");
+
+  const source = path.join(templateDirectory, file);
+  if (!(await exists(source))) {
+    throw new Error(`Template not found: ${file}\nExpected location: ${source}`);
+  }
+  return readFile(source);
+}
+
+function printList(title: string, files: string[], mark: string): void {
+  if (files.length === 0) return;
+  console.log(`\n${title}`);
+  for (const file of files) console.log(`  ${mark} ${file}`);
+}
+
+// Installs the files, using the lock to tell an untouched earlier install
+// (updated without asking) from a file someone edited (asked about).
 async function installFiles(
   filesToInstall: string[],
   generatedFiles: Map<string, string>,
 ): Promise<void> {
-  const conflicts: string[] = [];
+  const lock = await readLock(projectDirectory);
+  const incoming = new Map<string, Buffer>();
+  const states = new Map<string, ReturnType<typeof classify>>();
 
   for (const file of filesToInstall) {
-    const destination = path.join(projectDirectory, file);
-
-    if (await exists(destination)) {
-      conflicts.push(file);
-    }
+    const content = await readIncoming(file, generatedFiles);
+    incoming.set(file, content);
+    states.set(
+      file,
+      classify(await hashFile(path.join(projectDirectory, file)), lock?.files[file], hashContent(content)),
+    );
   }
 
+  const conflicts = filesToInstall.filter((file) => states.get(file) === "modified");
   let overwriteAll = false;
 
   if (conflicts.length > 0) {
-    console.log("\nExisting files were found:\n");
+    console.log(
+      lock
+        ? "\nThese files changed since they were installed:\n"
+        : "\nExisting files were found:\n",
+    );
 
     for (const file of conflicts) {
       console.log(`  - ${file}`);
@@ -508,60 +566,49 @@ async function installFiles(
   }
 
   const installed: string[] = [];
+  const updated: string[] = [];
+  const upToDate: string[] = [];
   const skipped: string[] = [];
+  const lockedFiles: Record<string, string> = { ...(lock?.files ?? {}) };
 
   for (const file of filesToInstall) {
-    const destination = path.join(projectDirectory, file);
-    const destinationExists = await exists(destination);
+    const state = states.get(file);
+    const content = incoming.get(file) as Buffer;
 
-    if (destinationExists && !overwriteAll) {
+    if (state === "same") {
+      upToDate.push(file);
+      lockedFiles[file] = hashContent(content);
+      continue;
+    }
+    if (state === "modified" && !overwriteAll) {
       skipped.push(file);
       continue;
     }
 
+    const destination = path.join(projectDirectory, file);
     await mkdir(path.dirname(destination), { recursive: true });
-
-    const generatedContent = generatedFiles.get(file);
-
-    if (generatedContent !== undefined) {
-      await writeFile(destination, generatedContent, "utf8");
-    } else {
-      const source = path.join(templateDirectory, file);
-
-      if (!(await exists(source))) {
-        throw new Error(
-          `Template not found: ${file}\nExpected location: ${source}`,
-        );
-      }
-
-      await copyFile(source, destination);
-    }
-
-    installed.push(file);
+    await writeFile(destination, content);
+    lockedFiles[file] = hashContent(content);
+    (state === "new" ? installed : updated).push(file);
   }
 
-  console.log("\nInstallation finished.\n");
+  await writeLock(projectDirectory, { version: await packageVersion(), files: lockedFiles });
 
-  if (installed.length > 0) {
-    console.log("Installed files:");
-
-    for (const file of installed) {
-      console.log(`  ✓ ${file}`);
-    }
-  }
+  console.log("\nInstallation finished.");
+  printList("Installed files:", installed, "✓");
+  printList("Updated (unchanged since the last install, or overwritten as you chose):", updated, "↻");
+  if (upToDate.length > 0) console.log(`\n${upToDate.length} file(s) already up to date.`);
 
   if (skipped.length > 0) {
-    console.log("\nSkipped to protect existing files:");
-
-    for (const file of skipped) {
-      console.log(`  - ${file}`);
-    }
-
+    printList("Skipped to protect your changes:", skipped, "-");
     console.log(
       "\nReview these files and merge the instructions manually if needed.",
     );
   }
 
+  console.log(
+    `\nRecorded what was installed in .skills-code-kit/lock.json. Run \`npx skills-code-kit verify\` to see what changed since.`,
+  );
   console.log("\nHappy coding!\n");
 }
 
@@ -656,6 +703,10 @@ async function main(): Promise<void> {
     await offerHarnessHook();
   }
 
+  if (selectedSkills.some((skill) => skill.value === "guards")) {
+    await offerGuardsHook();
+  }
+
   await offerMcpServer();
 }
 
@@ -696,26 +747,14 @@ async function offerMcpServer(): Promise<void> {
 }
 
 const harnessHookCommand = 'node "$CLAUDE_PROJECT_DIR"/harness/gate.mjs';
+const guardsHookCommand = 'node "$CLAUDE_PROJECT_DIR"/guards/guard.mjs';
 
 type HookEntry = { matcher?: string; hooks?: { type?: string; command?: string }[] };
 type ClaudeSettings = { hooks?: Record<string, HookEntry[]> } & Record<string, unknown>;
 
-// Adds the harness gate as a Claude Code PreToolUse hook, merged into any
-// existing .claude/settings.json without touching its other settings.
-async function offerHarnessHook(): Promise<void> {
-  const enforce = await confirm({
-    message:
-      "Enforce the harness in Claude Code? Adds a PreToolUse hook to .claude/settings.json that blocks code edits until the run is ready.",
-    default: true,
-  });
-
-  if (!enforce) {
-    console.log(
-      "\nSkipped the hook. Run `node harness/gate.mjs check` from a git pre-commit hook or CI to enforce the harness instead.\n",
-    );
-    return;
-  }
-
+// Adds a Claude Code PreToolUse hook, merged into any existing
+// .claude/settings.json without touching its other settings.
+async function addPreToolUseHook(command: string, matcher: string, name: string): Promise<void> {
   const settingsPath = path.join(projectDirectory, ".claude", "settings.json");
   let settings: ClaudeSettings = {};
 
@@ -724,7 +763,7 @@ async function offerHarnessHook(): Promise<void> {
       settings = JSON.parse(await readFile(settingsPath, "utf8")) as ClaudeSettings;
     } catch {
       console.log(
-        `\n.claude/settings.json is not valid JSON, so it was left unchanged. Add this PreToolUse hook yourself: ${harnessHookCommand}\n`,
+        `\n.claude/settings.json is not valid JSON, so it was left unchanged. Add this PreToolUse hook yourself (matcher "${matcher}"): ${command}\n`,
       );
       return;
     }
@@ -732,28 +771,88 @@ async function offerHarnessHook(): Promise<void> {
 
   const preToolUse = settings.hooks?.PreToolUse ?? [];
   const installed = preToolUse.some((entry) =>
-    entry.hooks?.some((hook) => hook.command === harnessHookCommand),
+    entry.hooks?.some((hook) => hook.command === command),
   );
 
   if (installed) {
-    console.log("\nThe harness hook is already in .claude/settings.json.\n");
+    console.log(`\nThe ${name} hook is already in .claude/settings.json.\n`);
     return;
   }
 
   settings.hooks = {
     ...settings.hooks,
-    PreToolUse: [
-      ...preToolUse,
-      {
-        matcher: "Edit|Write|MultiEdit|NotebookEdit",
-        hooks: [{ type: "command", command: harnessHookCommand }],
-      },
-    ],
+    PreToolUse: [...preToolUse, { matcher, hooks: [{ type: "command", command }] }],
   };
 
   await mkdir(path.dirname(settingsPath), { recursive: true });
   await writeFile(settingsPath, `${JSON.stringify(settings, null, 2)}\n`, "utf8");
-  console.log("\n✓ Added the harness gate hook to .claude/settings.json\n");
+  console.log(`\n✓ Added the ${name} hook to .claude/settings.json\n`);
+}
+
+// Sets "enforce" in the installed harness/config.json, keeping the rest.
+async function setHarnessEnforcement(level: "warn" | "block"): Promise<void> {
+  const configPath = path.join(projectDirectory, "harness", "config.json");
+  try {
+    const config = JSON.parse(await readFile(configPath, "utf8")) as Record<string, unknown>;
+    if (config.enforce === level) return;
+    config.enforce = level;
+    await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`, "utf8");
+  } catch {
+    console.log(`\nCould not update harness/config.json; set "enforce": "${level}" in it yourself.`);
+  }
+}
+
+// The harness gate warns by default: skipping a stage is recoverable, and a
+// hook that blocks recoverable mistakes gets switched off.
+async function offerHarnessHook(): Promise<void> {
+  const choice = await select({
+    message: "How should the harness gate act in Claude Code when guarded code changes before the run is ready?",
+    choices: [
+      {
+        name: "Warn (recommended)",
+        value: "warn",
+        description: "Tells the agent and you what is pending, once per session, and lets the edit through",
+      },
+      {
+        name: "Block",
+        value: "block",
+        description: "Refuses the edit until every pre-code stage is settled",
+      },
+      {
+        name: "No hook",
+        value: "none",
+        description: "Use node harness/gate.mjs check from a git hook or CI instead",
+      },
+    ],
+  });
+
+  if (choice === "none") {
+    console.log(
+      "\nSkipped the hook. Run `node harness/gate.mjs check` from a git pre-commit hook or CI to check the harness instead.\n",
+    );
+    return;
+  }
+
+  await setHarnessEnforcement(choice as "warn" | "block");
+  await addPreToolUseHook(harnessHookCommand, "Edit|Write|MultiEdit|NotebookEdit", "harness gate");
+}
+
+async function offerGuardsHook(): Promise<void> {
+  const enable = await confirm({
+    message:
+      "Turn the guards on in Claude Code? Adds a PreToolUse hook to .claude/settings.json that blocks secrets, protected files, destructive commands, and commits to protected branches.",
+    default: true,
+  });
+
+  if (!enable) {
+    console.log("\nSkipped the guards hook. guards/guard.mjs reads the same hook JSON if you wire it into another tool.\n");
+    return;
+  }
+
+  await addPreToolUseHook(guardsHookCommand, "Bash|Read|Edit|Write|MultiEdit|NotebookEdit", "guards");
+  console.log(
+    'List the folders your tools must own (migrations, generated code) in guards/config.json "protectedPaths", and the branches nobody commits to directly in "protectedBranches".\n',
+  );
 }
 
 // Pull request screenshots come from Playwright. The user opts in; when the
@@ -841,10 +940,42 @@ async function generateScrumAgentFiles(): Promise<
   return files;
 }
 
+// `skills-code-kit verify` reports installed files that were edited, deleted,
+// or have a newer template, using .skills-code-kit/lock.json.
+async function runVerify(): Promise<number> {
+  const report = await verifyProject(projectDirectory, templateDirectory);
+
+  if (!report) {
+    console.log("No .skills-code-kit/lock.json here. Run `npx skills-code-kit` to install and record the files.");
+    return 1;
+  }
+
+  const section = (title: string, files: string[]) => {
+    if (files.length === 0) return;
+    console.log(`\n${title}`);
+    for (const file of files) console.log(`  - ${file}`);
+  };
+
+  console.log(`Checked ${report.checked} installed file(s) against .skills-code-kit/lock.json.`);
+  section("Changed since installed:", report.modified);
+  section("Deleted since installed:", report.missing);
+  section(`Newer template in skills-code-kit ${await packageVersion()}:`, report.outdated);
+
+  if (report.modified.length + report.missing.length + report.outdated.length === 0) {
+    console.log("Everything matches what was installed.");
+  }
+  return report.modified.length + report.missing.length > 0 ? 1 : 0;
+}
+
 // `skills-code-kit mcp` serves the MCP server over stdio instead of
 // installing; stdout then belongs to the protocol, so nothing else prints.
 async function run(): Promise<void> {
   const [command, ...args] = process.argv.slice(2);
+
+  if (command === "verify") {
+    process.exitCode = await runVerify();
+    return;
+  }
 
   if (command === "mcp") {
     const { startMcpServer } = await import("./mcp.js");
