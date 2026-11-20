@@ -139,3 +139,13 @@ describe("hooks for checks and worktrees", () => {
     assert.equal(existsSync(path.join(project, ".claude/settings.json")), false);
   });
 });
+
+describe("explore and finish", () => {
+  it("installs both workflows and lists them in AGENTS.md", () => {
+    const project = makeProject();
+    assert.equal(kit(project, "install", "--groups", "explore,finish", "--yes").code, 0);
+    const agents = read(project, "AGENTS.md");
+    assert.ok(agents.includes("actions/explore.md"));
+    assert.ok(agents.includes("actions/finish.md"));
+  });
+});

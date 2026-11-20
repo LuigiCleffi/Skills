@@ -441,6 +441,8 @@ It parses the command text, so it catches accidents, not an adversary; a heredoc
 
 `actions/qa.md` writes one scenario per acceptance criterion (from the spec, the feature files, or the UI acceptance checks) plus one per applicable row of the edge-case battery, then runs each for real: an existing test, a Playwright or browser run with a screenshot, an API call, or, only when nothing else can run, exact manual steps for a person. The report in `docs/qa/reports/` gives each scenario its result and evidence and an overall verdict; a failure goes back to `dev`. It never edits code or tests to make a scenario pass. A QA person can run it on a branch to get the scenarios to check by hand.
 
+Before running anything, it checks the change against the tasks: MISSING CHANGE (a file a task names that the branch never changed) and UNEXPECTED CHANGE (a module the branch changed that no task names), from `node harness/gate.mjs scope` when the harness is installed. Every command it ran goes into `docs/qa/reports/<report>/run.sh`, so anyone can rerun the proof; the harness accepts a QA record only with its "Change against the tasks" section.
+
 **Installed files:** `actions/qa.md`, `docs/qa/edge-cases.md`.
 
 ### 23. Worktree Slots for Parallel Sessions
@@ -457,11 +459,27 @@ The installer offers a Claude Code `SessionStart` hook that runs it when a sessi
 
 **Purpose:** Make "the checks passed on this commit" something a hook can verify, so an agent does not open a pull request it would see go red.
 
-`node checks/checks.mjs` compares the branch with its base (`origin/main` by default), runs the checks in `checks/config.json` that the changed files reach (a check with `when` runs only for the paths it lists; files matching `ignore`, such as docs, reach nothing), and when they all pass, stamps the commit in the git directory. It refuses to stamp uncommitted work, and a new commit needs a new run. `--waive "<reason>"` stamps without running, with the reason in the stamp for the pull request body to repeat; `status` says whether `HEAD` is stamped.
+`node checks/checks.mjs` compares the branch with its base (`origin/main` by default), runs the checks in `checks/config.json` that the changed files reach (a check with `when` runs only for the paths it lists; files matching `ignore`, such as docs, reach nothing), and when they all pass, stamps the commit in the git directory. It refuses to stamp uncommitted work, and a new commit needs a new run. A stamp stands only while the branch starts from the same point of the base: after a rebase or a merge of the base into the branch, the same commit sits on different code and the checks run again. `--waive "<reason>"` stamps without running, with the reason in the stamp for the pull request body to repeat; `status` says whether `HEAD` is stamped.
 
 As a Claude Code `PreToolUse` hook, `node checks/checks.mjs hook` refuses `gh pr create`, a `gh api` call that creates a pull request, and any MCP `create_pull_request` from a commit with no stamp. It is the one block outside the guards: an opened pull request notifies reviewers and runs CI, and the way past it is one command with a reason. It does not replace CI, which proves the change on a clean machine; a pull request opened in the browser never passes through it. Add `node checks/checks.mjs` to a git `pre-push` hook to run the checks on every push as well (it does nothing when the commit is already stamped).
 
 **Installed files:** `checks/checks.mjs`, `checks/config.json`.
+
+### 25. Explore an Idea
+
+**Purpose:** Question an idea before it becomes a plan.
+
+`actions/explore.md` reads what the repository, the knowledge base, and the ADRs already say, finds the problem behind the idea, raises the honest objection, and lays out two or three options (always including the smallest one, and "do nothing" when that is honest) with their cost, risk, and what each leaves out. It writes no plan, spec, or code, and ends in a decision: go ahead with an option, wait, or drop it.
+
+**Installed files:** `actions/explore.md`.
+
+### 26. Finish After the Merge
+
+**Purpose:** Close out a merged change without losing work.
+
+`actions/finish.md` proves the merge reached the base branch (including squash merges) before deleting anything, closes the harness run with its result, removes the worktree (freeing its slot) and the merged branches without ever forcing, captures what the change taught (a knowledge rule, a battery case, a check, a routing case), and suggests a version tag for the user to push.
+
+**Installed files:** `actions/finish.md`.
 
 ## Optional MCP server
 

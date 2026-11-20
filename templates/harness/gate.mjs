@@ -551,6 +551,15 @@ export function undeclaredModules(touched, declared, depth = 2) {
   return [...modules.entries()].map(([module, files]) => ({ module, files }));
 }
 
+// Files the records name that the change never touched: a task that may not
+// be done. Only guarded files count, so commands, docs, and globs stay out.
+export function missingChanges(touched, declared, isCode = () => true) {
+  const changed = new Set(touched);
+  return [...new Set(declared)].filter(
+    (file) => !file.includes("*") && /\.[a-z0-9]+$/i.test(file) && isCode(file) && !changed.has(file),
+  );
+}
+
 function runScope(config, args) {
   const { state } = readState(config);
   if (!state) {
@@ -579,16 +588,26 @@ function runScope(config, args) {
 
   const depth = config.scope?.depth ?? 2;
   const foreign = undeclaredModules(touched, declared, depth);
+  const missing = missingChanges(touched, declared, (file) => isGuarded(config, file));
   console.log(`${touched.length} guarded file(s) changed since ${base}; ${declared.length} path(s) named in the run's records.`);
+
   if (foreign.length === 0) {
-    console.log("Every touched module is named in the run's records.");
-    return 0;
+    console.log("UNEXPECTED CHANGE: none. Every touched module is named in the run's records.");
+  } else {
+    console.log("UNEXPECTED CHANGE: touched but not named in the run's records (is this ours?):");
+    for (const { module, files } of foreign) {
+      console.log(`  - ${module} (${files.length} file${files.length === 1 ? "" : "s"}: ${files.slice(0, 3).join(", ")}${files.length > 3 ? ", ..." : ""})`);
+    }
+    console.log("  Claim each one in the plan or tasks record, or move its change to its own pull request.");
   }
-  console.log("Touched but not named in the run's records (is this ours?):");
-  for (const { module, files } of foreign) {
-    console.log(`  - ${module} (${files.length} file${files.length === 1 ? "" : "s"}: ${files.slice(0, 3).join(", ")}${files.length > 3 ? ", ..." : ""})`);
+
+  if (missing.length === 0) {
+    console.log("MISSING CHANGE: none. Every code file the records name was changed.");
+  } else {
+    console.log("MISSING CHANGE: named in the run's records but not changed (is a task undone?):");
+    for (const file of missing) console.log(`  - ${file}`);
+    console.log("  Finish the task, or update the record if the plan changed.");
   }
-  console.log("Claim each one in the plan or tasks record, or move its change to its own pull request.");
   return 0;
 }
 

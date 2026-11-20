@@ -104,6 +104,35 @@ function writeStamp(sha, stamp) {
   writeFileSync(file, `${JSON.stringify({ sha, at: new Date().toISOString(), ...stamp }, null, 2)}\n`);
 }
 
+// Whether a stamp still certifies the commit. A waiver always stands. A run
+// stands while the branch still starts where the checks measured it from:
+// once the base moved (a rebase, or a merge of main into the branch changes
+// the merge base), the same commit sits on different code, so it is checked
+// again. When the base cannot be read here (not fetched), the stamp stands:
+// the hook is a safety net, and CI still runs.
+export function stampStands(stamp, currentBaseSha) {
+  if (!stamp) return false;
+  if (stamp.waived) return true;
+  if (!stamp.baseSha || !currentBaseSha) return true;
+  return stamp.baseSha === currentBaseSha;
+}
+
+function currentBaseSha(sha, base, cwd = projectDirectory) {
+  try {
+    return git(["merge-base", base, sha], cwd);
+  } catch {
+    return null;
+  }
+}
+
+function configuredBase(cwd = projectDirectory) {
+  try {
+    return JSON.parse(readFileSync(path.join(cwd, "checks", "config.json"), "utf8")).base ?? "origin/main";
+  } catch {
+    return loadConfig().base ?? "origin/main";
+  }
+}
+
 // The commit a PR would open from: the MCP call names its head branch;
 // otherwise HEAD.
 function headSha(cwd, toolInput) {
@@ -127,9 +156,14 @@ export function hookProblem(input) {
   } catch {
     return null;
   }
-  if (readStamp(sha, input.cwd || projectDirectory)) return null;
+  const cwd = input.cwd || projectDirectory;
+  const stamp = readStamp(sha, cwd);
+  if (stampStands(stamp, stamp ? currentBaseSha(sha, stamp.base ?? configuredBase(cwd), cwd) : null)) return null;
+  const why = stamp
+    ? `the base moved since the checks ran on commit ${sha.slice(0, 9)} (a rebase or a merge of ${stamp.base}), so they run again`
+    : `the checks have not passed on commit ${sha.slice(0, 9)}`;
   return (
-    `Checks: the checks have not passed on commit ${sha.slice(0, 9)}, so the pull request does not open. ` +
+    `Checks: ${why}; the pull request does not open. ` +
     "Run `node checks/checks.mjs` and fix what fails. If the checks do not apply, " +
     '`node checks/checks.mjs --waive "<reason>"` and repeat the reason in the pull request body.'
   );
@@ -150,6 +184,10 @@ function runStatus() {
   const stamp = readStamp(sha);
   if (!stamp) {
     console.log(`${sha.slice(0, 9)}: not stamped. Run node checks/checks.mjs.`);
+    return 1;
+  }
+  if (!stampStands(stamp, currentBaseSha(sha, stamp.base ?? configuredBase()))) {
+    console.log(`${sha.slice(0, 9)}: stamped against an older ${stamp.base}; the base moved, so run node checks/checks.mjs again.`);
     return 1;
   }
   console.log(
@@ -174,8 +212,14 @@ function runChecks(config, args) {
     return 0;
   }
 
-  if (readStamp(sha)) {
-    console.log(`Checks already passed on ${sha.slice(0, 9)}.`);
+  const base = option(args, "--base") ?? config.base ?? "origin/main";
+  const previous = readStamp(sha);
+  if (previous?.waived) {
+    console.log(`Checks waived on ${sha.slice(0, 9)}: ${previous.waived}`);
+    return 0;
+  }
+  if (previous && stampStands(previous, currentBaseSha(sha, base))) {
+    console.log(`Checks already passed on ${sha.slice(0, 9)} against ${previous.base}.`);
     return 0;
   }
 
@@ -185,7 +229,6 @@ function runChecks(config, args) {
     return 1;
   }
 
-  const base = option(args, "--base") ?? config.base ?? "origin/main";
   let diff;
   try {
     diff = changedFiles(base);

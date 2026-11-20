@@ -128,6 +128,22 @@
     {
       "prompt": "Summarize yesterday's meeting notes",
       "expected": "none"
+    },
+    {
+      "prompt": "I have an idea: what if customers could pause their subscription instead of cancelling? Is it worth it?",
+      "expected": "actions/explore.md"
+    },
+    {
+      "prompt": "A customer asked for bulk export; not sure what we actually need yet",
+      "expected": "actions/explore.md"
+    },
+    {
+      "prompt": "PR #42 got merged, clean everything up",
+      "expected": "actions/finish.md"
+    },
+    {
+      "prompt": "The refund feature is merged, wrap it up and close the run",
+      "expected": "actions/finish.md"
     }
   ]
 }

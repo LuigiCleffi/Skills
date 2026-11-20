@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { after, describe, it } from "node:test";
 import { cleanUp, git, importFrom, makeProject, run, write } from "./helpers.mjs";
@@ -87,6 +87,29 @@ describe("the checks run", () => {
     assert.match(run(project, "checks/checks.mjs", ["hook"], prCreate(project)).stderr, /have not passed on commit/);
   });
 
+  it("runs again when the base moves under the same commit", () => {
+    const project = repo([{ name: "ok", command: "node -e \"0\"" }]);
+    commit(project, "src/a.js");
+    run(project, "checks/checks.mjs");
+    assert.equal(run(project, "checks/checks.mjs", ["hook"], prCreate(project)).code, 0);
+
+    git(project, "checkout", "-q", "main");
+    commit(project, "src/other.js");
+    git(project, "checkout", "-q", "feature");
+    git(project, "rebase", "-q", "main");
+    const head = git(project, "rev-parse", "HEAD");
+    // The rebase made a new commit; stamp the old one's verdict on it to stand in for a stale stamp.
+    const stampDirectory = path.join(project, ".git", "skills-code-kit-checks");
+    const [old] = readdirSync(stampDirectory);
+    const stale = JSON.parse(readFileSync(path.join(stampDirectory, old), "utf8"));
+    writeFileSync(path.join(stampDirectory, `${head}.json`), JSON.stringify({ ...stale, sha: head }));
+
+    assert.match(run(project, "checks/checks.mjs", ["hook"], prCreate(project)).stderr, /the base moved/);
+    assert.match(run(project, "checks/checks.mjs", ["status"]).stdout, /base moved/);
+    assert.match(run(project, "checks/checks.mjs").stdout, /stamped/);
+    assert.equal(run(project, "checks/checks.mjs", ["hook"], prCreate(project)).code, 0);
+  });
+
   it("stamps a waiver only with its reason", () => {
     const project = repo([{ name: "fails", command: "node -e \"process.exit(1)\"" }]);
     commit(project, "src/a.js");
@@ -133,5 +156,9 @@ describe("harness scope", () => {
     assert.equal(code, 0);
     assert.match(stdout, /src\/essay \(1 file: src\/essay\/fix.ts\)/);
     assert.doesNotMatch(stdout, /src\/billing \(/);
+    assert.match(stdout, /MISSING CHANGE: none/);
+
+    write(project, "docs/harness/tasks.md", "### TASK-1\n- **Files:** `src/billing/refund.ts`, `src/billing/api.ts`\n");
+    assert.match(run(project, "harness/gate.mjs", ["scope", "--base", "main"]).stdout, /MISSING CHANGE: named in the run's records but not changed[^\n]*\n\s+- src\/billing\/api.ts/);
   });
 });

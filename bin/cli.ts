@@ -245,6 +245,18 @@ const skills: Skill[] = [
     files: ["tools/worktree-slot.mjs", "tools/worktree.json"],
   },
   {
+    value: "explore",
+    name: "Explore an idea",
+    description: "Think an idea through before any plan: the real problem, an honest objection, two or three options with their cost, and a decision to go ahead, wait, or drop it",
+    files: ["actions/explore.md"],
+  },
+  {
+    value: "finish",
+    name: "Finish after the merge",
+    description: "After a merge: prove it landed, close the harness run, remove the worktree and merged branches, keep the lessons, and suggest a tag",
+    files: ["actions/finish.md"],
+  },
+  {
     value: "checks",
     name: "Checks before a pull request",
     description: "Runs the checks a commit's diff reaches and stamps the commit; a Claude Code hook refuses to open a pull request from a commit with no stamp",
