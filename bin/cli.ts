@@ -315,7 +315,7 @@ const skills: Skill[] = [
     value: "checks",
     name: "Checks before a pull request",
     description: "Runs the checks a commit's diff reaches and stamps the commit; a Claude Code hook refuses to open a pull request from a commit with no stamp",
-    files: ["checks/checks.mjs", "checks/config.json", "tools/mermaid-check.mjs"],
+    files: ["checks/checks.mjs", "checks/config.json", "tools/mermaid-check.mjs", "tools/rulers.mjs", "tools/rulers.json"],
   },
   {
     value: "guards",

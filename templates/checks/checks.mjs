@@ -285,7 +285,9 @@ function checkCommit(config, sha, base) {
   const results = [];
   for (const check of planned) {
     console.log(`\n▶ ${check.name}: ${check.command}`);
-    const result = spawnSync(check.command, { cwd: projectDirectory, shell: true, stdio: "inherit", env: checkEnvironment() });
+    // CHECKS_BASE tells a check (tools/rulers.mjs, say) what the change is measured against.
+    const env = { ...checkEnvironment(), CHECKS_BASE: base, CHECKS_BASE_SHA: diff.baseSha };
+    const result = spawnSync(check.command, { cwd: projectDirectory, shell: true, stdio: "inherit", env });
     results.push({ name: check.name, command: check.command, ok: result.status === 0 });
     if (result.status !== 0) {
       console.error(`\n✗ ${check.name} failed. Fix it, commit, and run the checks again.`);

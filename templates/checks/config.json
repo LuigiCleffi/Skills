@@ -39,6 +39,10 @@
       "when": [
         "**/*.md"
       ]
+    },
+    {
+      "name": "rulers",
+      "command": "node tools/rulers.mjs"
     }
   ]
 }
