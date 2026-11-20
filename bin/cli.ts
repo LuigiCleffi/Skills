@@ -706,7 +706,24 @@ drifts. Add a row when a review catches the same mistake twice.
 - **Enforced by:** \`lint\`, \`test\`, \`hook\`, \`check\`, \`ci\`, or \`review\`. A machine-enforced rule is not reviewed by hand.
 - **Checkable:** yes, partial, or no. A "yes" enforced by review is a candidate for a lint rule or test.
 - **Why:** one line, or a link to the doc that explains it.
-${reviewInstalled ? "\nReviews run \`node tools/review-context.mjs\` to get the rules a diff reaches and cite them by ID.\n" : ""}
+${reviewInstalled ? "\nReviews run \`node tools/review-context.mjs\` to get the rules a diff reaches and cite them by ID, and \`node tools/rules-check.mjs\` keeps these tables consistent.\n" : ""}
+### Where a rule goes
+
+| What you learned | Where it goes |
+|---|---|
+| Something an agent finds in the code in under a minute | Nowhere: do not write it down |
+| Something a machine can check | A lint rule, test, or check; then delete the prose |
+| A procedure with steps | A workflow (\`actions/\`), not a rule |
+| An invariant someone could break by accident | One row above, phrased as what never or always happens |
+
+A rule enters when a review explains the same thing twice. It is narrowed or removed after two false alarms. It becomes a check as soon as one is possible.
+
+## Exceptions
+
+Where a rule above knowingly does not apply. Each entry names the rule ID, the place, and why.
+
+- **Allowed here:** (none yet)
+- **Legacy tolerated:** (none yet; this list only shrinks)
 `;
 
   return `# AGENTS.md

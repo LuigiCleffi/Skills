@@ -47,6 +47,9 @@ Run these checks yourself, in the main session, so a mistyped ref fails in front
 2. `git diff --quiet "<fixed-point>...HEAD"` — the diff is not empty (exit code 1 means there are changes). If it is empty, stop and say there is nothing to review between the two points.
 3. `git status --porcelain` — note uncommitted changes, which the review will not see.
 4. `git diff --stat "<fixed-point>...HEAD"` and `git log --format='%h %s%n%b' "<fixed-point>..HEAD"` — the changed files and the commit messages, which both axes need.
+5. **Earlier reviews of the same change.** When the branch has a pull request, read the review comments already on it and the replies to them (`gh pr view <number> --comments`, and `gh api repos/{owner}/{repo}/pulls/<number>/comments` for line comments). A finding the author already refuted with a reason is not raised again unless the code changed since; a finding that was fixed is checked, not repeated. Pass both lists to the sub-agents.
+
+**A large diff.** Above about 15 files or 800 changed lines, one pass cannot read everything with the same care. Split the diff by unit of change (a module, a migration, a screen), and classify each block by risk: data and migrations, permissions and tenancy, money, public contracts, concurrency, and user-facing behavior. Review the risky blocks in depth, give the rest a light pass, and say which is which in the Coverage section ("Reviewed in depth", "Light pass", "Not covered"). Never claim a full review of a diff you sampled.
 
 ### 2. Find the spec
 
@@ -123,6 +126,12 @@ Sub-agent output is a hypothesis, not evidence. Before writing the report, check
 
 Fix a wrong location you can resolve. Drop a finding whose citation does not hold, and count it in the coverage notes. Do not re-rank, merge, or reword findings across axes.
 
+Then filter what remains with one question: **does it change the decision to merge?** A finding stays when it costs more to fix later than now, becomes a reference others will copy, risks data or security, breaks under a concrete case you can name, is code that need not exist, or makes the code or a screen lie to the reader. Everything else collapses into one line at the end: "N minor points; ask if you want them." Within an axis, merge findings that one fix resolves into a single finding titled by the fix. Keep the report to about five findings per axis, three lines each; more than that is not read.
+
+Two exceptions to "only problems introduced by this diff": dead code in a file the diff touches is a finding even if it is old, and a comment, doc line, or screen text the diff made false is a finding.
+
+**Fix the right layer.** Each finding says where its fix belongs: the code, a test that should have caught it, a rule (a new row in a "Project Rules" table), a check or lint that would refuse it next time, or the spec when the requirement was wrong. When a guardrail (a test, a lint, a check) passed while the problem got through, fix the guardrail first: the next change will hit the same gap.
+
 ### 6. Report
 
 Use the output format below. Return the report in chat. If the user wants it posted on the PR, show them the exact comment first and post only after they confirm.
@@ -170,6 +179,8 @@ The axes are reported separately and not ranked against each other.
 - Checks run: <commands and observed results>, or none.
 - Dropped in citation check: <count and reason>.
 - Context: <fresh session | authoring session | axes ran in one context>.
+- Depth: <all reviewed in depth | Reviewed in depth: <blocks>; Light pass: <blocks>; Not covered: <blocks>>.
+- Earlier reviews: <findings not repeated because refuted or fixed, or none>.
 ```
 
 ## Repeated runs
