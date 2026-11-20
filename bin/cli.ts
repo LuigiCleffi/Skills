@@ -279,7 +279,7 @@ const skills: Skill[] = [
     value: "design-rules",
     name: "Interface rules with IDs",
     description: "docs/design/RULES.md: the product's interface rules with stable IDs (laws, components, tokens, motion, data, writing, permissions, accessibility, verification) and the defects that must not come back, routed by what is being built",
-    files: ["actions/design-rules.md", "docs/design/RULES.md"],
+    files: ["actions/design-rules.md", "docs/design/RULES.md", "tools/palette-check.mjs", "tools/palette.json"],
   },
   {
     value: "writing-style",
