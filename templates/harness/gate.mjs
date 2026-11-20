@@ -520,6 +520,78 @@ function runEscapes() {
   return 0;
 }
 
+// The paths a record names: anything in backticks that looks like a path.
+// A loose scan on purpose: the point is to cover the touched list, and a
+// format-exact one would report declared code as foreign.
+export function declaredPaths(document) {
+  return [...document.matchAll(/`([^`\s]+)`/g)]
+    .map((match) => match[1].replace(/^\.\//, "").replace(/[:,;.]+$/, ""))
+    .filter((value) => value.includes("/") || /\.[a-z0-9]+$/i.test(value));
+}
+
+// The unit "is this ours?" is asked about: the first `depth` folders of a
+// path. Per file, the list is too long to read; per module, a stray one shows.
+export function moduleOf(file, depth = 2) {
+  const parts = file.split("/");
+  return parts.length <= depth ? parts.slice(0, -1).join("/") || "." : parts.slice(0, depth).join("/");
+}
+
+// Modules the change touched that the run's records never named. A question,
+// not a verdict: claim the module in the plan, or move the change to its own
+// pull request.
+export function undeclaredModules(touched, declared, depth = 2) {
+  const claimed = new Set(declared.map((file) => moduleOf(file, depth)));
+  const declaredSet = new Set(declared);
+  const modules = new Map();
+  for (const file of touched) {
+    const module = moduleOf(file, depth);
+    if (declaredSet.has(file) || claimed.has(module)) continue;
+    modules.set(module, [...(modules.get(module) ?? []), file]);
+  }
+  return [...modules.entries()].map(([module, files]) => ({ module, files }));
+}
+
+function runScope(config, args) {
+  const { state } = readState(config);
+  if (!state) {
+    console.log("No active harness run; nothing to compare the change with.");
+    return 0;
+  }
+  const baseIndex = args.indexOf("--base");
+  const base = baseIndex === -1 ? (config.scope?.base ?? "origin/main") : args[baseIndex + 1];
+  const mergeBase = git(["merge-base", base, "HEAD"])?.[0];
+  if (!mergeBase) {
+    console.error(`Cannot find ${base} to compare with. Fetch it, or pass --base <branch>.`);
+    return 1;
+  }
+  const committed = git(["diff", "--name-only", `${mergeBase}..HEAD`]) ?? [];
+  const uncommitted = (git(["status", "--porcelain", "--untracked-files=all"]) ?? []).map((line) => line.slice(3).replace(/^.* -> /, ""));
+  const touched = [...new Set([...committed, ...uncommitted])].filter((file) => isGuarded(config, file));
+
+  const records = Object.values(state.records ?? {}).filter(Boolean);
+  const declared = records.flatMap((record) => {
+    try {
+      return declaredPaths(readRecord(path.resolve(projectDirectory, record)));
+    } catch {
+      return [];
+    }
+  });
+
+  const depth = config.scope?.depth ?? 2;
+  const foreign = undeclaredModules(touched, declared, depth);
+  console.log(`${touched.length} guarded file(s) changed since ${base}; ${declared.length} path(s) named in the run's records.`);
+  if (foreign.length === 0) {
+    console.log("Every touched module is named in the run's records.");
+    return 0;
+  }
+  console.log("Touched but not named in the run's records (is this ours?):");
+  for (const { module, files } of foreign) {
+    console.log(`  - ${module} (${files.length} file${files.length === 1 ? "" : "s"}: ${files.slice(0, 3).join(", ")}${files.length > 3 ? ", ..." : ""})`);
+  }
+  console.log("Claim each one in the plan or tasks record, or move its change to its own pull request.");
+  return 0;
+}
+
 function runCheck(config, level, paths) {
   const files = (paths.length > 0 ? paths : stagedFiles())
     .map((file) => projectRelative(file))
@@ -556,6 +628,7 @@ function main() {
   if (command === "status") return runStatus(config);
   if (command === "validate") return runValidate(config, args);
   if (command === "escapes") return runEscapes();
+  if (command === "scope") return runScope(config, args);
   if (level === "off") return 0;
   if (command === "check") return runCheck(config, level, args);
   return runHook(config, level);
