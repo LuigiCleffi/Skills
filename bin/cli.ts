@@ -55,6 +55,7 @@ type InstallOptions = {
   checks?: boolean;
   worktreeHook?: boolean;
   harnessHelpers?: boolean;
+  updateNotice?: boolean;
   mcp?: string[];
   overwrite: boolean;
 };
@@ -86,6 +87,8 @@ Install options (each one answers its question; the rest are asked):
                                    Brief the agent on the run at each prompt, and check
                                    the format of issues it saves through a tracker's MCP
   --checks / --no-checks           The hook that refuses a pull request from an unchecked commit
+  --update-notice / --no-update-notice
+                                   Say at session start when a newer kit is out
   --worktree-hook / --no-worktree-hook
                                    Assign the worktree slot when a Claude Code session starts
   --mcp claude,opencode,codex      Register the MCP server with these clients ("none" for none)
@@ -130,6 +133,8 @@ function parseInstallOptions(args: string[]): InstallOptions {
       "no-checks": { type: "boolean" },
       "worktree-hook": { type: "boolean" },
       "harness-helpers": { type: "boolean" },
+      "update-notice": { type: "boolean" },
+      "no-update-notice": { type: "boolean" },
       "no-harness-helpers": { type: "boolean" },
       "no-worktree-hook": { type: "boolean" },
       mcp: { type: "string" },
@@ -164,6 +169,7 @@ function parseInstallOptions(args: string[]): InstallOptions {
     checks: flag(values.checks, values["no-checks"]),
     worktreeHook: flag(values["worktree-hook"], values["no-worktree-hook"]),
     harnessHelpers: flag(values["harness-helpers"], values["no-harness-helpers"]),
+    updateNotice: flag(values["update-notice"], values["no-update-notice"]),
     mcp,
     overwrite: values.overwrite ?? false,
   };
@@ -250,6 +256,18 @@ const skills: Skill[] = [
     name: "Worktree slots for parallel sessions",
     description: "Gives each git worktree its own ports and database name, so several agent sessions can run the app at once",
     files: ["tools/worktree-slot.mjs", "tools/worktree.json"],
+  },
+  {
+    value: "help",
+    name: "Help for anyone working here",
+    description: "start-here (a first session: the doctor, five plain lines, the first request), diagnose (probe, known causes, fix, a plain explanation), undo (one recoverable step back, shown), and tools/doctor.mjs, a read-only check of the machine",
+    files: ["actions/start-here.md", "actions/diagnose.md", "actions/undo.md", "tools/doctor.mjs", "tools/doctor.json"],
+  },
+  {
+    value: "kit-updates",
+    name: "Kit update notice",
+    description: "At the start of a Claude Code session, says when a newer skills-code-kit is out than the one installed, with the command that updates the same groups; never downloads anything",
+    files: ["tools/kit-update.mjs"],
   },
   {
     value: "cycle-metrics",
@@ -982,6 +1000,14 @@ async function installSkills(selectedSkills: Skill[]): Promise<void> {
     await useOutputStyle("Plain answers");
   }
 
+  if (selectedSkills.some((skill) => skill.value === "kit-updates")) {
+    const enable = await answer("--update-notice or --no-update-notice", options.updateNotice, () => true, () => confirm({
+      message: "Say at the start of each Claude Code session when a newer skills-code-kit is out? Adds a SessionStart hook; it never installs anything.",
+      default: true,
+    }));
+    if (enable) await addHook("SessionStart", updateHookCommand, undefined, "kit update notice");
+  }
+
   if (selectedSkills.some((skill) => skill.value === "checks")) {
     await offerChecksHook();
   }
@@ -1037,6 +1063,7 @@ const harnessHookCommand = 'node "$CLAUDE_PROJECT_DIR"/harness/gate.mjs';
 const guardsHookCommand = 'node "$CLAUDE_PROJECT_DIR"/guards/guard.mjs';
 const briefHookCommand = 'node "$CLAUDE_PROJECT_DIR"/harness/gate.mjs brief';
 const issueHookCommand = 'node "$CLAUDE_PROJECT_DIR"/harness/gate.mjs issue';
+const updateHookCommand = 'node "$CLAUDE_PROJECT_DIR"/tools/kit-update.mjs';
 const checksHookCommand = 'node "$CLAUDE_PROJECT_DIR"/checks/checks.mjs hook';
 // A session must start even outside git or before the config exists.
 const worktreeHookCommand = 'node "$CLAUDE_PROJECT_DIR"/tools/worktree-slot.mjs --hook';

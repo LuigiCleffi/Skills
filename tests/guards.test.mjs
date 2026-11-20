@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { after, describe, it } from "node:test";
-import { cleanUp, git, importFrom, makeProject, run } from "./helpers.mjs";
+import { cleanUp, git, importFrom, makeProject, run, write } from "./helpers.mjs";
 
 after(cleanUp);
 
@@ -16,6 +16,7 @@ async function guardIn(project, changes = {}) {
 
 const bash = (command) => ({ tool_name: "Bash", tool_input: { command } });
 const file = (tool, filePath) => ({ tool_name: tool, tool_input: { file_path: filePath } });
+const file_ = file;
 
 describe("parseCommand", () => {
   it("splits segments, keeps quoted words, and records redirect targets", async () => {
@@ -222,5 +223,26 @@ describe("worktree isolation", () => {
     } finally {
       git(project, "worktree", "remove", "--force", other);
     }
+  });
+});
+
+describe("session scope", () => {
+  it("keeps a session in the first unit it writes in, and templates behind a flag", async () => {
+    const project = makeProject(["guards"]);
+    write(project, "apps/a/package.json", "{}");
+    write(project, "apps/b/package.json", "{}");
+    const { guard, config } = await guardIn(project, { sessionScope: { units: ["apps/*", "packages/*"], templates: ["templates/**"] } });
+    const session = `s-${Date.now()}-${Math.random()}`;
+    const edit = (file) => ({ ...file_("Write", `${project}/${file}`), cwd: project, session_id: session });
+    assert.equal(guard.unitOf("apps/a/src/x.ts", ["apps/*"]), "apps/a");
+    assert.equal(guard.unitOf("apps/a", ["apps/*"]), null);
+    assert.equal(guard.toolProblem(config, edit("apps/a/src/x.ts")), null);
+    assert.equal(guard.toolProblem(config, edit("apps/a/src/y.ts")), null);
+    assert.equal(guard.toolProblem(config, edit("README.md")), null);
+    assert.match(guard.toolProblem(config, edit("apps/b/src/x.ts")), /this session works in apps\/a/);
+    assert.match(guard.toolProblem(config, { ...bash("echo x > apps/b/notes.txt"), cwd: project, session_id: session }), /open a new session for apps\/b/);
+    assert.match(guard.toolProblem(config, edit("templates/app/page.tsx")), /GUARDS_ALLOW_TEMPLATES=1/);
+    const other = { ...file_("Write", `${project}/apps/b/src/x.ts`), cwd: project, session_id: `${session}-2` };
+    assert.equal(guard.toolProblem(config, other), null);
   });
 });

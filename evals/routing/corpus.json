@@ -164,6 +164,18 @@
     {
       "prompt": "Write the manual test steps for QA for the refund feature that was merged",
       "expected": "actions/test-guide.md"
+    },
+    {
+      "prompt": "I just cloned this repo, how do I start?",
+      "expected": "actions/start-here.md"
+    },
+    {
+      "prompt": "The dashboard doesn't load the data anymore, it was fine yesterday",
+      "expected": "actions/diagnose.md"
+    },
+    {
+      "prompt": "I don't like the new header, put it back how it was",
+      "expected": "actions/undo.md"
     }
   ]
 }
