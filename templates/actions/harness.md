@@ -238,6 +238,15 @@ The gate is a guard against skipping stages by accident, not a security boundary
 
 When `scrum/README.md` is installed, the ceremonies decide when each stage runs. The Tech Lead opens one run per backlog item in Sprint Planning (mode Feature, or Fix for a defect), declares its triggers, fills its pre-code stages from the records Refinement and Planning produced, and closes it when the item is Done. The gate then flags Dev, DBA, and DevOps tasks whose item has not been designed.
 
+## Agents, models, and effort
+
+Spend follows how much can go wrong, not how important the work feels:
+
+- **Match the check to the artifact.** A doc or a record gets a factual check (do the paths, IDs, and commands it cites exist?). Code, migrations, and ambiguous requirements get an adversarial review in a fresh context.
+- **One reviewer by default.** The default review is one fresh-context agent with the whole rule set. Add a second agent only for a distinct risk axis (data, permissions, money, public contract, concurrency), never just because the diff is big; a big diff is split, not multiplied (see `actions/code-review.md`).
+- **The reviewer is never on a weaker model than the author.** A review cheaper than the work it judges approves what it cannot see.
+- **Diagnose a miss before escalating.** When an agent got something wrong, ask whether it did not know (it lacked the context or the capability: give it the missing file, or a stronger model) or did not try (it skipped a step it could do: raise the effort, or make the step a check). Changing the model for a "did not try" miss changes nothing.
+
 ## Guardrails
 
 - Never mark a stage `done` before its workflow's completion criteria are met, or `skipped` without a reason.

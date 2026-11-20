@@ -1,0 +1,28 @@
+{
+  "maxRuleLength": 280,
+  "enforcedBy": [
+    "lint",
+    "test",
+    "hook",
+    "check",
+    "ci",
+    "review"
+  ],
+  "retired": [],
+  "budgets": {
+    "root": 400,
+    "nested": 150
+  },
+  "claudeImportsAgents": true,
+  "createdLater": [
+    "docs/harness",
+    "docs/knowledge",
+    "docs/adr",
+    "docs/scrum",
+    "docs/qa/reports",
+    "docs/qa/guides",
+    "docs/explore",
+    "docs/design/BEHAVIOR.md",
+    "docs/diagnose.md"
+  ]
+}

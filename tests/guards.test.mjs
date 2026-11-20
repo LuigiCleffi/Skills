@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { after, describe, it } from "node:test";
-import { cleanUp, git, importFrom, makeProject, run } from "./helpers.mjs";
+import { cleanUp, git, importFrom, makeProject, run, write } from "./helpers.mjs";
 
 after(cleanUp);
 
@@ -16,6 +16,7 @@ async function guardIn(project, changes = {}) {
 
 const bash = (command) => ({ tool_name: "Bash", tool_input: { command } });
 const file = (tool, filePath) => ({ tool_name: tool, tool_input: { file_path: filePath } });
+const file_ = file;
 
 describe("parseCommand", () => {
   it("splits segments, keeps quoted words, and records redirect targets", async () => {
@@ -222,5 +223,43 @@ describe("worktree isolation", () => {
     } finally {
       git(project, "worktree", "remove", "--force", other);
     }
+  });
+});
+
+describe("session scope", () => {
+  it("keeps a session in the first unit it writes in, and templates behind a flag", async () => {
+    const project = makeProject(["guards"]);
+    write(project, "apps/a/package.json", "{}");
+    write(project, "apps/b/package.json", "{}");
+    const { guard, config } = await guardIn(project, { sessionScope: { units: ["apps/*", "packages/*"], templates: ["templates/**"] } });
+    const session = `s-${Date.now()}-${Math.random()}`;
+    const edit = (file) => ({ ...file_("Write", `${project}/${file}`), cwd: project, session_id: session });
+    assert.equal(guard.unitOf("apps/a/src/x.ts", ["apps/*"]), "apps/a");
+    assert.equal(guard.unitOf("apps/a", ["apps/*"]), null);
+    assert.equal(guard.toolProblem(config, edit("apps/a/src/x.ts")), null);
+    assert.equal(guard.toolProblem(config, edit("apps/a/src/y.ts")), null);
+    assert.equal(guard.toolProblem(config, edit("README.md")), null);
+    assert.match(guard.toolProblem(config, edit("apps/b/src/x.ts")), /this session works in apps\/a/);
+    assert.match(guard.toolProblem(config, { ...bash("echo x > apps/b/notes.txt"), cwd: project, session_id: session }), /open a new session for apps\/b/);
+    assert.match(guard.toolProblem(config, edit("templates/app/page.tsx")), /GUARDS_ALLOW_TEMPLATES=1/);
+    const other = { ...file_("Write", `${project}/apps/b/src/x.ts`), cwd: project, session_id: `${session}-2` };
+    assert.equal(guard.toolProblem(config, other), null);
+  });
+});
+
+describe("queries against production", () => {
+  it("lets one read-only statement through and refuses writes, scripts, and sessions", async () => {
+    const { guard, config } = await guardIn(makeProject(["guards"]), { production: { markers: ["prod"] } });
+    const problem = (command) => guard.toolProblem(config, bash(command));
+    assert.equal(problem(`psql "host=db-prod user=ro" -c "SELECT id FROM orders LIMIT 10"`), null);
+    assert.equal(problem(`bq query --project_id=acme-prod --use_legacy_sql=false 'WITH x AS (SELECT 1) SELECT * FROM x'`), null);
+    assert.equal(problem(`PGHOST=db-prod psql -c "EXPLAIN SELECT 1"`), null);
+    assert.match(problem(`psql "host=db-prod" -c "DELETE FROM orders"`), /read-only statement/);
+    assert.match(problem(`psql "host=db-prod" -c "SELECT 1; DROP TABLE x"`), /read-only statement/);
+    assert.match(problem(`mysql -h db-prod -e "UPDATE users SET admin = 1"`), /read-only statement/);
+    assert.match(problem(`psql "host=db-prod" -f fix.sql`), /read-only statement/);
+    assert.match(problem(`psql postgres://app@db-prod/app`), /read-only statement/);
+    assert.equal(problem(`psql "host=db-staging" -c "DELETE FROM orders"`), null);
+    assert.equal(guard.readOnlyQuery("with w as (delete from t returning *) select * from w"), false);
   });
 });

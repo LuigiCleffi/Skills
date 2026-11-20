@@ -31,6 +31,10 @@
   "protectedPaths": [],
   "protectedBranches": [],
   "worktreeIsolation": false,
+  "sessionScope": {
+    "units": [],
+    "templates": []
+  },
   "dangerousCommands": true,
   "production": {
     "markers": [],

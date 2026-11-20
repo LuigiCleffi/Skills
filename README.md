@@ -37,8 +37,8 @@ npx skills-code-kit install --groups dev,review,tdd,harness --yes
 ```
 
 - `--all` or `--groups a,b` picks the groups (`npx skills-code-kit list` shows them and what each requires).
-- `--harness warn|block|none`, `--harness-helpers` / `--no-harness-helpers`, `--guards` / `--no-guards`, `--checks` / `--no-checks`, `--worktree-hook` / `--no-worktree-hook`, `--playwright` / `--no-playwright`, `--agents claude,codex,opencode`, and `--mcp claude,codex,opencode` answer the other questions (`none` for an empty list).
-- Under `--yes` the defaults are: the harness hook warns, the harness helpers, guards, checks, and worktree hooks are on, Playwright only if it is configured, Scrum agents for the AI tools found in the project, no MCP server.
+- `--harness warn|block|none`, `--harness-helpers` / `--no-harness-helpers`, `--update-notice` / `--no-update-notice`, `--guards` / `--no-guards`, `--checks` / `--no-checks`, `--worktree-hook` / `--no-worktree-hook`, `--playwright` / `--no-playwright`, `--agents claude,codex,opencode`, and `--mcp claude,codex,opencode` answer the other questions (`none` for an empty list).
+- Under `--yes` the defaults are: the harness hook warns, the harness helpers, guards, checks, worktree, and update notice hooks are on, Playwright only if it is configured, Scrum agents for the AI tools found in the project, no MCP server.
 - Files you edited since the last install are kept unless you add `--overwrite`.
 
 Without a terminal and without `--yes`, the installer stops with exit code 2 instead of waiting for an answer. `npx skills-code-kit --help` lists every command and option.
@@ -92,13 +92,17 @@ The review workflow focuses on:
 - Missing or inadequate tests.
 - Maintainability and consistency with the existing architecture.
 
+`tools/rules-check.mjs` keeps the "Project Rules" tables honest: unique IDs, retired IDs never reused, one-line rules, known "Enforced by" values, a "Why" on every row, no pointers to a context file by line number, cited paths that exist (paths workflows create later are listed in `tools/rules-check.json`), line budgets per `AGENTS.md`, and a `CLAUDE.md` that imports `AGENTS.md`. The generated `AGENTS.md` also says where a rule goes (nowhere, a check, a workflow, or a row), when a rule enters and leaves, and has an Exceptions section whose legacy list only shrinks.
+
 **Installed files:**
 
-`actions/review.md`, `tools/review-context.mjs`
+`actions/review.md`, `tools/review-context.mjs`, `tools/rules-check.mjs`, `tools/rules-check.json`
 
 Both reviews start from the project rules the diff reaches. Rules live once, as rows of the "Project Rules" table in an `AGENTS.md` (`| ID | Rule | Applies to | Enforced by | Checkable | Why |`), and a rule in `api/AGENTS.md` applies only under `api/`. `node tools/review-context.mjs <fixed-point>` (or `--worktree`) lists the rules the changed files fall under, separating the ones a linter, test, or hook already enforces, so the reviewer reads those rules instead of every convention file and cites them by ID.
 
 `actions/code-review.md` is a separate, standalone review of the committed diff between `HEAD` and a fixed point you name (a commit, branch, tag, `main`, `HEAD~5`). It runs two axes in separate sub-agents. Standards checks the code against the repository's own documented conventions first, then against the installed knowledge base: the Clean Code heuristic catalog as the smell baseline, plus the JavaScript, LLM, TDD, BDD, DDD, DBA, DataSystems, DevOps, and UI/UX skills that match what the diff touches. Spec checks it against the originating issue or `SpecifyRequirements.md` and its companion records (`DomainModel.md`, feature files, `UIUXDecisions.md`, `StrategyBrief.md`). Every finding cites a rule, a heuristic code, or a spec line. The report keeps the two axes apart and never gives one blended verdict. Run it from a fresh session, not the one that wrote the code.
+
+It reads the review comments already on the pull request and their replies, so a finding the author refuted is not raised again. A diff over about 15 files or 800 lines is split by unit and risk, and the report says what was reviewed in depth, lightly, or not at all. Only findings that change the merge decision stay (cost later, a pattern others will copy, data or security risk, a concrete failure, code that need not exist, text that lies), merged by fix and capped at about five per axis; each says which layer its fix belongs to, a guardrail that let it through first.
 
 **Installed files:**
 
@@ -417,6 +421,8 @@ Why warn by default: a hook that blocks needs irreversible damage on the other s
 
 **Escaped defects teach the battery.** A fix run opened for a defect that reached a user or QA records what shipped it, and closes only once `docs/qa/edge-cases.md` has the case that would have caught it. `node harness/gate.mjs escapes` counts them per month.
 
+**Agents, models, and effort.** `actions/harness.md` sets how to spend: a factual check for docs and records, an adversarial fresh-context review for code, migrations, and ambiguous requirements; one reviewer by default and a second only for a distinct risk axis; never a reviewer on a weaker model than the author; and a miss diagnosed as "did not know" (give context or a stronger model) or "did not try" (raise the effort or add a check) before anything changes.
+
 **Brief.** The installer offers two hooks that only inform (`--harness-helpers`, on by default). At each prompt, `node harness/gate.mjs brief` tells the agent, once per session and state, the active run, the next stage and its workflow, and how far the tasks are, so it does not answer a request from memory while a stage is pending. When an issue is saved through any issue tracker's MCP (`save_issue`, `create_issue`, `update_issue`), `node harness/gate.mjs issue` checks its body against `records.issue` (by default a Problem and an Acceptance criteria section, under 600 words) and warns.
 
 **Territory.** Before a file is edited, the harness hook reminds the agent, once per session, of the knowledge gate, ADR gate, and interface rules rows whose `Paths` match it: "read BR-0003 before writing here", "read L, K, V, DONT".
@@ -440,6 +446,8 @@ Selecting this group also installs product definition, domain research, the know
 - **Destructive commands:** `rm -rf` on the root, home, or working folder, `git reset --hard`, `git clean -f`, a force push to main or master, piping a download into a shell, `chmod 777`, and `--no-verify` when the project has git hooks.
 - **Protected branches:** on the branches you list in `"protectedBranches"` (empty by default), edits to files and the git commands that change the branch (commit, push, merge, rebase, cherry-pick, revert, pull). Reading and creating a new branch are fine.
 - **Worktree isolation:** with `"worktreeIsolation": true`, a session may not write into another worktree of the same repository, which is another session's branch. Off by default.
+- **One area per session:** in a repository of several apps or packages, `"sessionScope": { "units": ["apps/*", "packages/*"] }` keeps a session in the first unit it writes in, so "fix the button in app A" never rewrites app B; the root and everything outside the units stay writable. Folders listed in `"templates"`, which every future unit starts from, are refused unless the user asked (`GUARDS_ALLOW_TEMPLATES=1`). Off by default.
+- **Queries against production:** `psql`, `mysql`, `mariadb`, `mongosh`, or `bq` against a target named by a production marker may run only one read-only statement given on the command line (`SELECT`, `WITH`, `EXPLAIN`, `SHOW`); a write, several statements, a script file, or an interactive session goes to the user.
 - **Production cloud:** a `gcloud`, `aws`, `az`, `kubectl`, `helm`, or `terraform` command that changes something, when its arguments or environment name production by one of your `"production.markers"` (`--project=acme-prod`, `--profile prod`, `-var-file=production.tfvars`). Reading production (list, describe, get, logs, plan) passes, and a verb the guard does not know counts as a change. Set `"requireNonProduction": true` with `"nonProductionMarkers"` (`staging`, `dev`) to go further: a change passes only when the command proves its target is not production, because a command that names no target goes wherever the CLI's current project or context points. Empty by default.
 
 It parses the command text, so it catches accidents, not an adversary. It follows `cd` and `pushd` inside a command, and forgets a `cd` made inside parentheses, so `cd db/migrations && echo x > m.sql` is checked where it runs. A heredoc body is treated as data, and a payload it cannot read is let through.
@@ -468,6 +476,8 @@ Before the battery it answers three questions about the change (the worst value 
 
 In `tools/worktree.json`, `"include"` names a file in the main checkout (`.worktreeinclude`) listing the untracked files a new worktree needs, such as `.env.local` (one per line, `*` within a folder); they are copied when missing and never overwritten. `"linkDependencies"` lists folders such as `node_modules` to link from the main checkout instead of installing again (off by default: a dependency change on the branch then needs its own install). A slot's port never lands on a port browsers refuse or on 5000 and 7000, which macOS gives to AirPlay.
 
+A worktree removed by hand frees its slot, but its database and other resources stay behind; the script remembers them, warns when a new worktree gets that slot, and `--orphans` lists them with the cleanup command from `"cleanup"` (`"dropdb --if-exists {DATABASE_NAME}"`), which `--orphans --yes` runs.
+
 The installer offers a Claude Code `SessionStart` hook that runs it when a session starts (`--hook` mode), so each worktree has its slot before anything is launched and the agent is told its ports and database in one line (default on; `--no-worktree-hook` to skip). The hook never stops a session: outside git, or on any error, it says nothing.
 
 **Installed files:** `tools/worktree-slot.mjs`, `tools/worktree.json`.
@@ -481,6 +491,10 @@ The installer offers a Claude Code `SessionStart` hook that runs it when a sessi
 As a Claude Code `PreToolUse` hook, `node checks/checks.mjs hook` refuses `gh pr create`, a `gh api` call that creates a pull request, and any MCP `create_pull_request` from a commit with no stamp. It is the one block outside the guards: an opened pull request notifies reviewers and runs CI, and the way past it is one command with a reason. It does not replace CI, which proves the change on a clean machine; a pull request opened in the browser never passes through it. Add `node checks/checks.mjs pre-push` to a git `pre-push` hook (`.git/hooks/pre-push` or `.husky/pre-push`) to check every push as well: it reads the commits git is about to push, checks each one landing on a branch (not HEAD, so `git push origin HEAD:refs/heads/x` counts; tags and deletes do not), does nothing for a commit already stamped against the same base, and runs the checks without git's hook variables, so a check that runs `git init` in a temporary folder cannot rewrite the repository. When a check reads files another check's paths do not cover (a test that reads a config file), list those files in its `when`.
 
 A check with `when` runs whenever a changed file matches it, even a file `ignore` lists; a check without `when` runs when anything outside `ignore` changed. `tools/mermaid-check.mjs` comes with the group: it parses every `mermaid` block in the Markdown files (all, the ones given, or `--changed`) with the real Mermaid parser and fails with file, line, and message for a broken diagram. It needs the project's own `mermaid` and `jsdom` (`npm install -D mermaid jsdom`) and exits 2 without them; `checks/config.json` has it as an example check on `**/*.md`.
+
+`tools/rulers.mjs` checks conventions on the lines the change added, never the whole repository, so a convention can start today without a cleanup of old code. Rulers in `tools/rulers.json` refuse a pattern per added line or a comment block longer than a limit (starters: long comments, fixed waits in tests, `any` in TypeScript). Untracked files count as all added and renames are not new. A line opts out with the ruler's marker and a reason (`// ruler:allow-any — the SDK types this as any`); a marker without a reason fails. A file in a ruler's `"legacy"` list is tolerated until it complies, and then fails until it leaves the list, so the list only shrinks. A diff too wide to be one change gets no verdict. The checks pass `CHECKS_BASE` to every check, so the rulers measure against the same base.
+
+**Screenshots.** When the diff touches the files in `"screenshots.when"` (components, styles), the pull request hook also needs an image in the body (not inside the template's HTML comments) or `<!-- no-screenshot: <reason> -->`, and refuses a GitHub image linked by branch instead of a commit SHA.
 
 **Installed files:** `checks/checks.mjs`, `checks/config.json`, `tools/mermaid-check.mjs`.
 
@@ -520,9 +534,9 @@ A Claude Code output style, `.claude/output-styles/plain-answers.md`, turned on 
 
 **Purpose:** Write the product's interface rules once, short enough to check and with IDs stable enough to cite, so screens stop re-deciding them and defects stop coming back.
 
-`docs/design/RULES.md` starts with a routing table (what is being built, its paths, which groups to read) and starter rules by group: laws in priority order (never overflow, what needs action first, no bare numbers, color has a function, four states per action, small screens are a redesign, no dead controls, charts that do not lie, contrast by size), components, tokens, motion, data honesty, writing, permissions, accessibility, the verification to run before saying done, and `DONT`, the defects found in this product. `actions/design-rules.md` keeps it: rules written as checkable statements, IDs never renumbered, reasons in `docs/design/BEHAVIOR.md`, laws changed only with the user, and every UI defect a rule did not prevent added as a `DONT` entry. `uiux` follows and cites the rules, `ui-review` runs their verification and scans the defects, and the harness edit hook points to the groups that govern a path.
+`docs/design/RULES.md` starts with a routing table (what is being built, its paths, which groups to read) and starter rules by group: laws in priority order (never overflow, what needs action first, no bare numbers, color has a function, four states per action, small screens are a redesign, no dead controls, charts that do not lie, contrast by size), components, tokens, motion, data honesty, writing, permissions, accessibility, the verification to run before saying done, and `DONT`, the defects found in this product. `tools/palette-check.mjs` checks the chart palette from the project's own CSS custom properties in every theme (`tools/palette.json`): every series at 3:1 or more against every surface, no two series the same, every pair at least 15 apart in OKLab, and no pair that looks the same under simulated protanopia, deuteranopia, or tritanopia. `actions/design-rules.md` keeps the rules: rules written as checkable statements, IDs never renumbered, reasons in `docs/design/BEHAVIOR.md`, laws changed only with the user, and every UI defect a rule did not prevent added as a `DONT` entry. `uiux` follows and cites the rules, `ui-review` runs their verification and scans the defects, and the harness edit hook points to the groups that govern a path.
 
-**Installed files:** `actions/design-rules.md`, `docs/design/RULES.md`.
+**Installed files:** `actions/design-rules.md`, `docs/design/RULES.md`, `tools/palette-check.mjs`, `tools/palette.json`.
 
 ### 30. Cycle Metrics
 
@@ -532,7 +546,26 @@ A Claude Code output style, `.claude/output-styles/plain-answers.md`, turned on 
 
 **Installed files:** `tools/cycle-metrics.mjs`.
 
-### 31. Finish After the Merge
+### 31. Help for Anyone Working Here
+
+**Purpose:** Get a newcomer, or someone who is not a developer, from "I just cloned this" to working, through failures, and back from a change they do not like.
+
+- `tools/doctor.mjs` checks the machine from `tools/doctor.json` (a runtime version, dependencies installed, a settings file, a sign-in, access) and prints the fix command or the ready-to-send request for each problem. It only reads.
+- `actions/start-here.md`: a first session runs the doctor, fixes what one command can, shows the requests that depend on someone else, explains the project in five plain lines, and ends by asking what they want to do.
+- `actions/diagnose.md`: probe the real state before theorizing, match the symptom against `docs/diagnose.md` (the project's symptom, cause, and fix table, which grows with each new cause), fix what is code or one command, and say in one or two sentences what it was and what was done.
+- `actions/undo.md`: one step back at a time, recoverably (unsaved changes set aside with `git stash`, saved ones reversed with `git revert`, never `reset --hard`), confirmed with "no" as the default, and shown; it says plainly whether anything deployed changed.
+
+**Installed files:** `actions/start-here.md`, `actions/diagnose.md`, `actions/undo.md`, `tools/doctor.mjs`, `tools/doctor.json`.
+
+### 32. Kit Update Notice
+
+**Purpose:** Hear about a new version of the kit at the moment it matters: before the first request of a session.
+
+`tools/kit-update.mjs` runs as a Claude Code `SessionStart` hook (`--update-notice`, on by default). When a newer `skills-code-kit` is on npm than the version in `.skills-code-kit/lock.json`, it tells the agent, with the command that updates the same groups (`npx skills-code-kit@<new> install --groups <installed> --yes`). It asks npm at most once every 8 hours, never installs anything, and says nothing when offline. `node tools/kit-update.mjs --check` asks right away.
+
+**Installed files:** `tools/kit-update.mjs`.
+
+### 33. Finish After the Merge
 
 **Purpose:** Close out a merged change without losing work.
 
