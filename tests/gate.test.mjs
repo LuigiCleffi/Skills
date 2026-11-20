@@ -262,10 +262,12 @@ describe("tasks, qa, and story limits", () => {
     const project = makeProject(["harness"]);
     const gate = await importFrom(project, "harness/gate.mjs");
     const report = (verdict, row) =>
-      `# QA\n\n**Verdict:** ${verdict}\n\n## Scenarios\n\n| ID | Scenario | Source | How | Result | Evidence |\n|---|---|---|---|---|---|\n${row}\n`;
+      `# QA\n\n**Verdict:** ${verdict}\n\n## Change against the tasks\n\nMISSING CHANGE: none.\n\n## Scenarios\n\n| ID | Scenario | Source | How | Result | Evidence |\n|---|---|---|---|---|---|\n${row}\n`;
     write(project, "pass.md", report("PASS", "| QA-01 | x | US-1 | test | PASS | ok |"));
     write(project, "fail.md", report("FAIL", "| QA-01 | x | US-1 | test | FAIL | 500 |"));
     assert.equal(gate.stageProblem("qa", "done", "pass.md", gate.loadConfig()), null);
     assert.match(gate.stageProblem("qa", "done", "fail.md", gate.loadConfig()), /Verdict:\*\* PASS.*FAIL/);
+    write(project, "unchecked.md", report("PASS", "| QA-01 | x | US-1 | test | PASS | ok |").replace(/## Change against the tasks\n\nMISSING CHANGE: none.\n\n/, ""));
+    assert.match(gate.stageProblem("qa", "done", "unchecked.md", gate.loadConfig()), /Change against the tasks/);
   });
 });

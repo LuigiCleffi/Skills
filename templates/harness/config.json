@@ -171,6 +171,7 @@
     },
     "qa": {
       "headings": [
+        "Change against the tasks",
         "Scenarios"
       ],
       "require": [
