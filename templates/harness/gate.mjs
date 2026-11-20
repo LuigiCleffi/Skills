@@ -187,6 +187,29 @@ function readRecord(file) {
     .join("\n");
 }
 
+// The document without its fenced code blocks, which hold examples, not the
+// record's own content: an example "Open Questions: None." must not settle a
+// stage, and an example "| FAIL |" row must not fail one. A fence closes only
+// with the same character, at least as long as it opened (CommonMark); an
+// unclosed fence runs to the end.
+export function withoutFences(document) {
+  const kept = [];
+  let fence = null;
+  for (const line of document.split("\n")) {
+    const marker = /^ {0,3}(`{3,}|~{3,})/.exec(line)?.[1];
+    if (fence) {
+      if (marker && marker[0] === fence[0] && marker.length >= fence.length && line.trim() === marker) fence = null;
+      continue;
+    }
+    if (marker && !(marker[0] === "`" && line.slice(line.indexOf(marker) + marker.length).includes("`"))) {
+      fence = marker;
+      continue;
+    }
+    kept.push(line);
+  }
+  return kept.join("\n");
+}
+
 function countWords(document) {
   return document.split(/\s+/).filter(Boolean).length;
 }
@@ -233,7 +256,7 @@ export function recordProblems(config, stage, record) {
   const rules = config.records?.[stage];
   let document;
   try {
-    document = readRecord(file);
+    document = withoutFences(readRecord(file));
   } catch {
     return rules ? [`its record ${record} cannot be read as text`] : [];
   }

@@ -162,3 +162,35 @@ describe("harness scope", () => {
     assert.match(run(project, "harness/gate.mjs", ["scope", "--base", "main"]).stdout, /MISSING CHANGE: named in the run's records but not changed[^\n]*\n\s+- src\/billing\/api.ts/);
   });
 });
+
+describe("pre-push", () => {
+  it("reads the pushed commits from git's lines, ignoring tags and deletes", async () => {
+    const { pushedCommits, checkEnvironment } = await importFrom(makeProject(["checks"]), "checks/checks.mjs");
+    const zero = "0".repeat(40);
+    const a = "a".repeat(40);
+    const b = "b".repeat(40);
+    assert.deepEqual(
+      pushedCommits(`HEAD ${a} refs/heads/feature/x ${zero}\nrefs/tags/v1 ${b} refs/tags/v1 ${zero}\n(delete) ${zero} refs/heads/old ${a}\n`),
+      [{ sha: a, branch: "feature/x" }],
+    );
+    const environment = checkEnvironment({ GIT_DIR: "/repo/.git", GIT_INDEX_FILE: "x", PATH: "/bin" });
+    assert.deepEqual(environment, { PATH: "/bin" });
+  });
+
+  it("runs the checks for the pushed commit and refuses one it cannot check", () => {
+    const project = repo([{ name: "ok", command: "node -e \"0\"" }]);
+    commit(project, "src/a.js");
+    const head = git(project, "rev-parse", "HEAD");
+    const zero = "0".repeat(40);
+    const pushed = run(project, "checks/checks.mjs", ["pre-push"], `refs/heads/feature ${head} refs/heads/feature ${zero}\n`);
+    assert.equal(pushed.code, 0, pushed.stderr);
+    assert.match(run(project, "checks/checks.mjs", ["status"]).stdout, /passed ok/);
+
+    commit(project, "src/b.js");
+    const older = git(project, "rev-parse", "HEAD~1");
+    commit(project, "src/c.js");
+    const refused = run(project, "checks/checks.mjs", ["pre-push"], `HEAD~1 ${git(project, "rev-parse", "HEAD~1")} refs/heads/feature ${older}\n`);
+    assert.equal(refused.code, 1);
+    assert.match(refused.stderr, /not the checked-out commit/);
+  });
+});

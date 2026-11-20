@@ -271,3 +271,18 @@ describe("tasks, qa, and story limits", () => {
     assert.match(gate.stageProblem("qa", "done", "unchecked.md", gate.loadConfig()), /Change against the tasks/);
   });
 });
+
+describe("fenced examples in records", () => {
+  it("does not let a fenced example settle or fail a record", async () => {
+    const project = makeProject(["harness"]);
+    const gate = await importFrom(project, "harness/gate.mjs");
+    const config = gate.loadConfig();
+    const pass = "| QA-01 | x | US-1 | test | PASS | 12 passed |";
+    const report = (extra) => `# QA\n\n**Verdict:** PASS\n\n## Change against the tasks\n\nnone\n\n## Scenarios\n\n${pass}\n${extra}`;
+    write(project, "qa.md", report("\n```markdown\n| QA-09 | example | x | y | FAIL | z |\n```\n"));
+    assert.equal(gate.stageProblem("qa", "done", "qa.md", config), null);
+    write(project, "only-example.md", "# QA\n\n````md\n**Verdict:** PASS\n## Scenarios\n```\nstill inside\n````\n");
+    assert.match(gate.stageProblem("qa", "done", "only-example.md", config), /Verdict:\*\* PASS/);
+    assert.equal(gate.withoutFences("a\n~~~\nb\n~~~\nc"), "a\nc");
+  });
+});

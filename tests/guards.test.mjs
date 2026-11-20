@@ -172,3 +172,55 @@ describe("production cloud", () => {
     assert.equal(problem("kubectl get pods"), null);
   });
 });
+
+describe("cd inside a command", () => {
+  it("checks paths where the command really runs, and forgets a cd made in a subshell", async () => {
+    const project = makeProject(["guards"]);
+    const { guard, config } = await guardIn(project, { protectedPaths: ["db/migrations/**"] });
+    const input = (command) => ({ ...bash(command), cwd: project });
+    assert.match(guard.toolProblem(config, input("cd db/migrations && echo x > 003.sql")), /protected/);
+    assert.match(guard.toolProblem(config, input("cd db; cd migrations; rm 001.sql")), /protected/);
+    assert.match(guard.toolProblem(config, input("(cd db/migrations && touch 004.sql)")), /protected/);
+    assert.equal(guard.toolProblem(config, input("(cd db/migrations && ls) && echo x > notes.txt")), null);
+    assert.equal(guard.toolProblem(config, input("cd db/migrations && cat 001.sql")), null);
+  });
+});
+
+describe("protected branch edits", () => {
+  it("refuses edits and repository changes on a protected branch, not reads", async () => {
+    const project = makeProject(["guards"]);
+    git(project, "init", "-q", "-b", "main");
+    const { guard, config } = await guardIn(project, { protectedBranches: ["main"] });
+    assert.match(guard.toolProblem(config, { ...file("Write", `${project}/src/a.js`), cwd: project }), /protected; create a branch before editing/);
+    assert.equal(guard.toolProblem(config, { ...file("Read", `${project}/src/a.js`), cwd: project }), null);
+    const input = (command) => ({ ...bash(command), cwd: project });
+    assert.match(guard.toolProblem(config, input("echo x > src.txt")), /protected, and this writes/);
+    assert.match(guard.toolProblem(config, input("git merge feature/x")), /protected/);
+    assert.equal(guard.toolProblem(config, input("echo x > /tmp/outside.txt")), null);
+    assert.equal(guard.toolProblem(config, input("git checkout -b feature/y")), null);
+  });
+});
+
+describe("worktree isolation", () => {
+  it("refuses writing into another worktree of the repository, when turned on", async () => {
+    const project = makeProject(["guards"]);
+    git(project, "init", "-q", "-b", "main");
+    git(project, "config", "user.email", "t@example.com");
+    git(project, "config", "user.name", "T");
+    git(project, "add", "-A");
+    git(project, "commit", "-qm", "base");
+    const other = `${project}-other`;
+    git(project, "worktree", "add", "-q", "-b", "other", other);
+    try {
+      const off = await guardIn(project);
+      assert.equal(off.guard.toolProblem(off.config, { ...file("Write", `${other}/a.js`), cwd: project }), null);
+      const { guard, config } = await guardIn(project, { worktreeIsolation: true });
+      assert.match(guard.toolProblem(config, { ...file("Write", `${other}/a.js`), cwd: project }), /another worktree/);
+      assert.match(guard.toolProblem(config, { ...bash(`echo x > ${other}/a.js`), cwd: project }), /another worktree/);
+      assert.equal(guard.toolProblem(config, { ...file("Read", `${other}/a.js`), cwd: project }), null);
+      assert.equal(guard.toolProblem(config, { ...file("Write", `${project}/a.js`), cwd: project }), null);
+    } finally {
+      git(project, "worktree", "remove", "--force", other);
+    }
+  });
+});

@@ -92,6 +92,7 @@ export function parseCommand(command) {
     (match) => match.split("\n")[0].replace(/<<-?\s*(['"]?)\w+\1/, ""),
   );
   const segments = [];
+  let depth = 0;
   let words = [];
   let word = "";
   let quote = null;
@@ -109,9 +110,14 @@ export function parseCommand(command) {
     word = "";
     hasWord = false;
   };
+  // Each segment remembers its subshell depth (not enumerable, so it stays
+  // out of comparisons): a cd inside ( ) does not outlive the parentheses.
   const endSegment = () => {
     endWord();
-    if (words.length > 0) segments.push(words);
+    if (words.length > 0) {
+      Object.defineProperty(words, "depth", { value: depth, enumerable: false });
+      segments.push(words);
+    }
     words = [];
   };
 
@@ -133,6 +139,8 @@ export function parseCommand(command) {
       endWord();
     } else if (char === "\n" || char === ";" || char === "(" || char === ")") {
       endSegment();
+      if (char === "(") depth += 1;
+      if (char === ")") depth = Math.max(0, depth - 1);
     } else if (char === "&" || char === "|") {
       if (withoutHeredocs[i + 1] === ">") {
         endWord();
@@ -305,14 +313,67 @@ function productionReason(config, segment, name, args) {
   return null;
 }
 
+function gitLines(args, cwd) {
+  try {
+    return execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).split("\n").filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+function real(file) {
+  try {
+    return realpathSync(file);
+  } catch {
+    // A file about to be created: resolve its nearest existing folder.
+    const parent = path.dirname(file);
+    return parent === file ? file : path.join(real(parent), path.basename(file));
+  }
+}
+
+const inside = (file, folder) => file === folder || file.startsWith(folder.endsWith(path.sep) ? folder : folder + path.sep);
+
+// With "worktreeIsolation", a session works only in its own working tree:
+// writing into another worktree of the same repository (another session's
+// branch) is refused. The owner of a path is the deepest worktree holding it,
+// so worktrees nested inside the main checkout count as their own.
+export function otherWorktree(config, target, cwd) {
+  if (!config.worktreeIsolation) return null;
+  const trees = gitLines(["worktree", "list", "--porcelain"], cwd)
+    .filter((line) => line.startsWith("worktree "))
+    .map((line) => real(line.slice("worktree ".length)));
+  if (trees.length < 2) return null;
+  const owner = (file) => trees.filter((tree) => inside(file, tree)).sort((a, b) => b.length - a.length)[0] ?? null;
+  const here = owner(real(cwd));
+  const there = owner(real(path.resolve(cwd, target)));
+  return here && there && here !== there ? there : null;
+}
+
+const branchChanging = new Set(["commit", "push", "merge", "rebase", "cherry-pick", "revert", "am", "pull"]);
+
 // Returns why a shell command must not run, or null.
 export function bashProblem(config, command, cwd = projectDirectory) {
   const segments = parseCommand(command);
   const branch = (config.protectedBranches ?? []).length > 0 || config.dangerousCommands !== false ? currentBranch(cwd) : null;
+  const onProtected = branch && (config.protectedBranches ?? []).includes(branch);
+  // The working folder of each subshell depth, so "cd x && ..." and
+  // "(cd x && ...)" check paths where the command really runs.
+  const folders = [cwd];
 
   for (let index = 0; index < segments.length; index += 1) {
     const segment = segments[index];
+    const depth = segment.depth ?? 0;
+    folders.length = Math.min(folders.length, depth + 1);
+    while (folders.length < depth + 1) folders.push(folders[folders.length - 1]);
+    const here = folders[depth];
     const { name, args } = commandOf(segment);
+
+    if (name === "cd" || name === "pushd") {
+      const target = args.find((arg) => !arg.startsWith("-"));
+      if (target === undefined) folders[depth] = process.env.HOME ?? here;
+      else if (target !== "-") folders[depth] = path.resolve(here, target.replace(/^~(?=\/|$)/, process.env.HOME ?? "~"));
+      continue;
+    }
     const redirects = segment.filter((item) => typeof item === "object").map((item) => item.redirect);
     const words = fileWords(args);
 
@@ -329,7 +390,7 @@ export function bashProblem(config, command, cwd = projectDirectory) {
     }
 
     if (!harmlessWithSecrets.has(name)) {
-      const secret = [...words, ...redirects].find((word) => isSecret(config, word, cwd));
+      const secret = [...words, ...redirects].find((word) => isSecret(config, word, here));
       if (secret) return `${secret} holds secrets; read the .example file or ask the user for the value you need`;
     }
 
@@ -339,7 +400,7 @@ export function bashProblem(config, command, cwd = projectDirectory) {
       ...(writesArguments.has(name) ? words : []),
       ...((name === "sed" || name === "perl") && args.some((arg) => /^-[a-zA-Z]*i/.test(arg)) ? words : []),
     ];
-    const protectedTarget = writeTargets.find((word) => isProtected(config, word, cwd));
+    const protectedTarget = writeTargets.find((word) => isProtected(config, word, here));
     if (protectedTarget) return `${protectedTarget} is protected (guards/config.json "protectedPaths"); let the project's tool write it`;
 
     const production = productionReason(config, segment, name, args);
@@ -350,11 +411,16 @@ export function bashProblem(config, command, cwd = projectDirectory) {
       if (reason) return `${reason}; ask the user to run it themselves if it is really intended`;
     }
 
-    if (name === "git" && branch && (config.protectedBranches ?? []).includes(branch)) {
-      const sub = args.find((arg) => !arg.startsWith("-"));
-      if (sub === "commit" || sub === "push") {
+    const elsewhere = writeTargets.map((word) => otherWorktree(config, word, here)).find(Boolean);
+    if (elsewhere) return `${elsewhere} is another worktree (guards/config.json "worktreeIsolation"); work only in this session's own worktree`;
+
+    if (onProtected) {
+      const sub = name === "git" ? args.find((arg) => !arg.startsWith("-")) : null;
+      if (branchChanging.has(sub)) {
         return `the current branch is ${branch}, which is protected; create a branch first`;
       }
+      const write = writeTargets.find((word) => inside(real(path.resolve(here, word)), real(projectDirectory)));
+      if (write) return `the current branch is ${branch}, which is protected, and this writes ${write}; create a branch first`;
     }
   }
   return null;
@@ -376,8 +442,15 @@ export function toolProblem(config, input) {
   if (isSecret(config, target, cwd)) {
     return `${target} holds secrets; read the .example file or ask the user for the value you need`;
   }
-  if (tool !== "Read" && tool !== "Grep" && tool !== "Glob" && isProtected(config, target, cwd)) {
+  if (tool === "Read" || tool === "Grep" || tool === "Glob") return null;
+  if (isProtected(config, target, cwd)) {
     return `${target} is protected (guards/config.json "protectedPaths"); let the project's tool write it`;
+  }
+  const elsewhere = otherWorktree(config, target, cwd);
+  if (elsewhere) return `${elsewhere} is another worktree (guards/config.json "worktreeIsolation"); work only in this session's own worktree`;
+  const branch = (config.protectedBranches ?? []).length > 0 ? currentBranch(path.dirname(path.resolve(cwd, target))) ?? currentBranch(cwd) : null;
+  if (branch && config.protectedBranches.includes(branch)) {
+    return `the current branch is ${branch}, which is protected; create a branch before editing`;
   }
   return null;
 }
