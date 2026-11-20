@@ -1,8 +1,7 @@
 {
   "name": "skills-code-kit",
   "version": "1.2.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Installs agent instructions, a stage-gated harness, safety guards, and QA workflows into your project, for Claude Code, Codex, OpenCode, and any MCP client.",
   "scripts": {
     "build": "tsc",
     "skills-code-kit": "./dist/cli.js",
@@ -21,7 +20,20 @@
     "templates/",
     "README.md"
   ],
-  "keywords": [],
+  "keywords": [
+    "claude-code",
+    "codex",
+    "opencode",
+    "agents",
+    "AGENTS.md",
+    "ai-coding",
+    "mcp",
+    "skills",
+    "harness",
+    "code-review",
+    "tdd",
+    "bdd"
+  ],
   "author": "",
   "license": "ISC",
   "type": "module",

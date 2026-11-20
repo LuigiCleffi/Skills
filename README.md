@@ -28,6 +28,21 @@ Review the files to be installed and confirm before proceeding.
 
 > Run the command from your target project's root directory. The installer writes the selected instructions into the current working directory.
 
+### Without questions (agents and CI)
+
+Every question has a flag, and `--yes` takes the default for the ones left, so an AI agent or a CI job can install the kit without a terminal:
+
+```bash
+npx skills-code-kit install --groups dev,review,tdd,harness --yes
+```
+
+- `--all` or `--groups a,b` picks the groups (`npx skills-code-kit list` shows them and what each requires).
+- `--harness warn|block|none`, `--guards` / `--no-guards`, `--playwright` / `--no-playwright`, `--agents claude,codex,opencode`, and `--mcp claude,codex,opencode` answer the other questions (`none` for an empty list).
+- Under `--yes` the defaults are: the harness hook warns, the guards hook is on, Playwright only if it is configured, Scrum agents for the AI tools found in the project, no MCP server.
+- Files you edited since the last install are kept unless you add `--overwrite`.
+
+Without a terminal and without `--yes`, the installer stops with exit code 2 instead of waiting for an answer. `npx skills-code-kit --help` lists every command and option.
+
 ## Available instruction groups
 
 ### 1. Clean Code Standards
