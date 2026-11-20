@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { after, describe, it } from "node:test";
-import { cleanUp, importFrom, makeProject, run, write } from "./helpers.mjs";
+import { cleanUp, importFrom, makeProject, run, templateDirectory, write } from "./helpers.mjs";
 
 after(cleanUp);
 
@@ -375,5 +375,17 @@ describe("tasks, coverage, and the board", () => {
     assert.match(JSON.parse(warned.stdout).hookSpecificOutput.additionalContext, /no "Problem" heading/);
     assert.equal(run(project, "harness/gate.mjs", ["issue"], save("mcp__tracker__save_issue", "## Problem\nx\n## Acceptance criteria\n- y")).stdout, "");
     assert.equal(run(project, "harness/gate.mjs", ["issue"], save("mcp__tracker__get_issue", "Just do it")).stdout, "");
+  });
+});
+
+describe("design rules territory", () => {
+  it("reminds which rule groups govern a screen file", async () => {
+    const project = makeProject(["harness"]);
+    write(project, "docs/design/RULES.md", readFileSync(path.join(templateDirectory, "docs/design/RULES.md"), "utf8"));
+    const gate = await importFrom(project, "harness/gate.mjs");
+    assert.deepEqual(gate.territoryFor("src/orders/List.tsx"), [
+      "src/orders/List.tsx is governed by docs/design/RULES.md: read L, K, V, DONT before writing here.",
+    ]);
+    assert.deepEqual(gate.territoryFor("server/api.go"), []);
   });
 });

@@ -62,14 +62,14 @@ export function matchesAny(file, globs = []) {
   return globs.some((glob) => globToRegExp(glob).test(file));
 }
 
-// The checks the changed files reach, in config order. Files matching
-// "ignore" (docs, say) reach nothing; a check without "when" runs whenever
-// anything else changed.
+// The checks the changed files reach, in config order. A check with "when"
+// runs when a changed file matches it, even one "ignore" lists (a diagram
+// check on Markdown). A check without "when" runs when anything outside
+// "ignore" changed (docs, say, reach nothing).
 export function plannedChecks(config, files) {
   const relevant = files.filter((file) => !matchesAny(file, config.ignore ?? []));
-  if (relevant.length === 0) return [];
-  return (config.checks ?? []).filter(
-    (check) => !check.when || relevant.some((file) => matchesAny(file, check.when)),
+  return (config.checks ?? []).filter((check) =>
+    check.when ? files.some((file) => matchesAny(file, check.when)) : relevant.length > 0,
   );
 }
 

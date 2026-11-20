@@ -53,6 +53,10 @@ Run an automated scan (axe-core through Playwright, or the browser's tools). `se
 
 In the added lines of the diff, look for colors, font sizes, spacing, and radii written as literals where the project has tokens or a theme (`#3366ff`, `14px`, `margin: 12px`). Each is an **Improvement**: it drifts from the design system and breaks the dark theme.
 
+### 5b. The project's rules
+
+When `docs/design/RULES.md` exists, run its verification (`V`) and scan its defect list (`DONT`) against every screen in the diff, and cite the rule ID in each finding. A defect no rule covers goes to `actions/design-rules.md` as a new `DONT` entry.
+
 ### 6. Report
 
 Add to the QA report (or `docs/qa/reports/<report>/ui.md`):

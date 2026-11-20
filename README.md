@@ -419,7 +419,7 @@ Why warn by default: a hook that blocks needs irreversible damage on the other s
 
 **Brief.** The installer offers two hooks that only inform (`--harness-helpers`, on by default). At each prompt, `node harness/gate.mjs brief` tells the agent, once per session and state, the active run, the next stage and its workflow, and how far the tasks are, so it does not answer a request from memory while a stage is pending. When an issue is saved through any issue tracker's MCP (`save_issue`, `create_issue`, `update_issue`), `node harness/gate.mjs issue` checks its body against `records.issue` (by default a Problem and an Acceptance criteria section, under 600 words) and warns.
 
-**Territory.** Before a file is edited, the harness hook reminds the agent, once per session, of the knowledge and ADR gate rows whose `Paths` match it: "read BR-0003 before writing here".
+**Territory.** Before a file is edited, the harness hook reminds the agent, once per session, of the knowledge gate, ADR gate, and interface rules rows whose `Paths` match it: "read BR-0003 before writing here", "read L, K, V, DONT".
 
 **Coverage and the board.** `node harness/gate.mjs coverage [spec qa tasks]` checks that every criterion ID in the spec (`FR-001`, `US-1 AC-2`; `coverage.criteria` in the config) has a scenario in the QA report citing it, that the report cites nothing the spec lacks, and that no passed scenario has empty or placeholder evidence ("ok", "—"). Tasks must name files that exist (or are marked `(new)`), depend only on real tasks, and form no circle; the gate checks this once the tasks stage is done. `node harness/gate.mjs board` shows the tasks by status (`**Status:** todo | doing | done | blocked`) and the ones that can start now. Record checks ignore fenced code blocks, so an example in a record neither settles nor fails it.
 
@@ -480,7 +480,9 @@ The installer offers a Claude Code `SessionStart` hook that runs it when a sessi
 
 As a Claude Code `PreToolUse` hook, `node checks/checks.mjs hook` refuses `gh pr create`, a `gh api` call that creates a pull request, and any MCP `create_pull_request` from a commit with no stamp. It is the one block outside the guards: an opened pull request notifies reviewers and runs CI, and the way past it is one command with a reason. It does not replace CI, which proves the change on a clean machine; a pull request opened in the browser never passes through it. Add `node checks/checks.mjs pre-push` to a git `pre-push` hook (`.git/hooks/pre-push` or `.husky/pre-push`) to check every push as well: it reads the commits git is about to push, checks each one landing on a branch (not HEAD, so `git push origin HEAD:refs/heads/x` counts; tags and deletes do not), does nothing for a commit already stamped against the same base, and runs the checks without git's hook variables, so a check that runs `git init` in a temporary folder cannot rewrite the repository. When a check reads files another check's paths do not cover (a test that reads a config file), list those files in its `when`.
 
-**Installed files:** `checks/checks.mjs`, `checks/config.json`.
+A check with `when` runs whenever a changed file matches it, even a file `ignore` lists; a check without `when` runs when anything outside `ignore` changed. `tools/mermaid-check.mjs` comes with the group: it parses every `mermaid` block in the Markdown files (all, the ones given, or `--changed`) with the real Mermaid parser and fails with file, line, and message for a broken diagram. It needs the project's own `mermaid` and `jsdom` (`npm install -D mermaid jsdom`) and exits 2 without them; `checks/config.json` has it as an example check on `**/*.md`.
+
+**Installed files:** `checks/checks.mjs`, `checks/config.json`, `tools/mermaid-check.mjs`.
 
 ### 25. UI Review Gate
 
@@ -514,7 +516,23 @@ A Claude Code output style, `.claude/output-styles/plain-answers.md`, turned on 
 
 **Installed files:** `actions/explore.md`.
 
-### 29. Finish After the Merge
+### 29. Interface Rules With IDs
+
+**Purpose:** Write the product's interface rules once, short enough to check and with IDs stable enough to cite, so screens stop re-deciding them and defects stop coming back.
+
+`docs/design/RULES.md` starts with a routing table (what is being built, its paths, which groups to read) and starter rules by group: laws in priority order (never overflow, what needs action first, no bare numbers, color has a function, four states per action, small screens are a redesign, no dead controls, charts that do not lie, contrast by size), components, tokens, motion, data honesty, writing, permissions, accessibility, the verification to run before saying done, and `DONT`, the defects found in this product. `actions/design-rules.md` keeps it: rules written as checkable statements, IDs never renumbered, reasons in `docs/design/BEHAVIOR.md`, laws changed only with the user, and every UI defect a rule did not prevent added as a `DONT` entry. `uiux` follows and cites the rules, `ui-review` runs their verification and scans the defects, and the harness edit hook points to the groups that govern a path.
+
+**Installed files:** `actions/design-rules.md`, `docs/design/RULES.md`.
+
+### 30. Cycle Metrics
+
+**Purpose:** The numbers of a sprint, defined once, next to the previous sprint's.
+
+`node tools/cycle-metrics.mjs --since <start> --until <end> [--markdown]` reads git and GitHub (through `gh`) and reports, for the window and the window of the same length before it: pull requests merged, hours to merge (median and slowest 10%), hours to a first look by someone else (bots excluded), the share merged with nobody else looking, changed lines per pull request and the share over 400, CI runs that failed, reverts, releases, and escaped defects from the harness run records. A number it cannot read is `n/a` with the reason, never estimated. The Scrum sprint review uses the table, and the three numbers that got worst become questions for the retrospective.
+
+**Installed files:** `tools/cycle-metrics.mjs`.
+
+### 31. Finish After the Merge
 
 **Purpose:** Close out a merged change without losing work.
 
