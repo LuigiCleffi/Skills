@@ -211,7 +211,7 @@ const skills: Skill[] = [
     value: "review",
     name: "Code review",
     description: "Review standards and quality checks",
-    files: ["actions/review.md", "tools/review-context.mjs"],
+    files: ["actions/review.md", "tools/review-context.mjs", "tools/rules-check.mjs", "tools/rules-check.json"],
   },
   {
     value: "code-review",
@@ -703,7 +703,7 @@ drifts. Add a row when a review catches the same mistake twice.
 
 - **ID:** a prefix for the folder's level (\`ROOT\`, \`API\`, \`WEB\`) and two digits.
 - **Applies to:** globs relative to this file's folder; empty means the whole folder.
-- **Enforced by:** \`lint\`, \`test\`, \`hook\`, or \`review\`. A machine-enforced rule is not reviewed by hand.
+- **Enforced by:** \`lint\`, \`test\`, \`hook\`, \`check\`, \`ci\`, or \`review\`. A machine-enforced rule is not reviewed by hand.
 - **Checkable:** yes, partial, or no. A "yes" enforced by review is a candidate for a lint rule or test.
 - **Why:** one line, or a link to the doc that explains it.
 ${reviewInstalled ? "\nReviews run \`node tools/review-context.mjs\` to get the rules a diff reaches and cite them by ID.\n" : ""}
