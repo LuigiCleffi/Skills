@@ -117,3 +117,25 @@ describe("rerunning with fewer groups", () => {
     assert.deepEqual(lockOf(project).groups, ["bdd", "dev"]);
   });
 });
+
+describe("hooks for checks and worktrees", () => {
+  it("adds the checks PreToolUse hook and the worktree SessionStart hook once", () => {
+    const project = makeProject();
+    kit(project, "install", "--groups", "checks,worktrees", "--yes");
+    kit(project, "install", "--groups", "checks,worktrees", "--yes");
+    const hooks = JSON.parse(read(project, ".claude/settings.json")).hooks;
+    assert.deepEqual(hooks.PreToolUse, [
+      { matcher: "Bash|mcp__.*create_pull_request", hooks: [{ type: "command", command: 'node "$CLAUDE_PROJECT_DIR"/checks/checks.mjs hook' }] },
+    ]);
+    assert.equal(hooks.SessionStart.length, 1);
+    assert.equal(hooks.SessionStart[0].matcher, undefined);
+    assert.match(hooks.SessionStart[0].hooks[0].command, /worktree-slot\.mjs .*\|\| true$/);
+    assert.match(read(project, "AGENTS.md"), /node checks\/checks.mjs/);
+  });
+
+  it("leaves them out when told to", () => {
+    const project = makeProject();
+    kit(project, "install", "--groups", "checks,worktrees", "--yes", "--no-checks", "--no-worktree-hook");
+    assert.equal(existsSync(path.join(project, ".claude/settings.json")), false);
+  });
+});

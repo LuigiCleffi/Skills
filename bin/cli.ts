@@ -52,6 +52,8 @@ type InstallOptions = {
   agents?: string[];
   harness?: "warn" | "block" | "none";
   guards?: boolean;
+  checks?: boolean;
+  worktreeHook?: boolean;
   mcp?: string[];
   overwrite: boolean;
 };
@@ -72,12 +74,16 @@ Install options (each one answers its question; the rest are asked):
   --groups a,b             Install these groups (and the groups they require)
   --yes, -y                Do not ask: unanswered questions take their default
                            (Playwright only if configured, agents for the AI
-                           tools found, harness hook "warn", guards hook on,
+                           tools found, harness hook "warn", guards, checks
+                           and worktree hooks on,
                            no MCP server, never overwrite edited files)
   --playwright / --no-playwright
   --agents claude,opencode,codex   Scrum role agents for these tools ("none" for none)
   --harness warn|block|none        The harness gate hook in Claude Code
   --guards / --no-guards           The guards hook in Claude Code
+  --checks / --no-checks           The hook that refuses a pull request from an unchecked commit
+  --worktree-hook / --no-worktree-hook
+                                   Assign the worktree slot when a Claude Code session starts
   --mcp claude,opencode,codex      Register the MCP server with these clients ("none" for none)
   --overwrite              Overwrite files edited since install (default: keep them)
 
@@ -116,6 +122,10 @@ function parseInstallOptions(args: string[]): InstallOptions {
       harness: { type: "string" },
       guards: { type: "boolean" },
       "no-guards": { type: "boolean" },
+      checks: { type: "boolean" },
+      "no-checks": { type: "boolean" },
+      "worktree-hook": { type: "boolean" },
+      "no-worktree-hook": { type: "boolean" },
       mcp: { type: "string" },
       overwrite: { type: "boolean" },
     },
@@ -145,6 +155,8 @@ function parseInstallOptions(args: string[]): InstallOptions {
     agents,
     harness: harness as InstallOptions["harness"],
     guards: flag(values.guards, values["no-guards"]),
+    checks: flag(values.checks, values["no-checks"]),
+    worktreeHook: flag(values["worktree-hook"], values["no-worktree-hook"]),
     mcp,
     overwrite: values.overwrite ?? false,
   };
@@ -231,6 +243,12 @@ const skills: Skill[] = [
     name: "Worktree slots for parallel sessions",
     description: "Gives each git worktree its own ports and database name, so several agent sessions can run the app at once",
     files: ["tools/worktree-slot.mjs", "tools/worktree.json"],
+  },
+  {
+    value: "checks",
+    name: "Checks before a pull request",
+    description: "Runs the checks a commit's diff reaches and stamps the commit; a Claude Code hook refuses to open a pull request from a commit with no stamp",
+    files: ["checks/checks.mjs", "checks/config.json"],
   },
   {
     value: "guards",
@@ -562,9 +580,20 @@ database it names with the project's own tool.
 `
     : "";
 
-  const pullRequestSection = selectedValues.includes("pull-request")
+  const pullRequestSection = (selectedValues.includes("pull-request")
     ? generatePullRequestSection(usesPlaywright)
-    : "";
+    : "") + (selectedValues.includes("checks")
+    ? `## Checks Before a Pull Request
+
+Before opening a pull request, commit the work and run
+\`node checks/checks.mjs\`. It runs the checks the diff reaches, listed in
+\`checks/config.json\`, and stamps the commit when they pass; opening a pull
+request from a commit with no stamp is refused. Fix what fails and run it
+again. If the checks do not apply, \`node checks/checks.mjs --waive
+"<reason>"\` and repeat the reason in the pull request body.
+
+`
+    : "");
 
   const knowledgeSection = selectedValues.includes("knowledge")
     ? `## Business Knowledge
@@ -896,6 +925,14 @@ async function installSkills(selectedSkills: Skill[]): Promise<void> {
     await offerHarnessHook();
   }
 
+  if (selectedSkills.some((skill) => skill.value === "checks")) {
+    await offerChecksHook();
+  }
+
+  if (selectedSkills.some((skill) => skill.value === "worktrees")) {
+    await offerWorktreeHook();
+  }
+
   if (selectedSkills.some((skill) => skill.value === "guards")) {
     await offerGuardsHook();
   }
@@ -941,6 +978,9 @@ async function offerMcpServer(): Promise<void> {
 
 const harnessHookCommand = 'node "$CLAUDE_PROJECT_DIR"/harness/gate.mjs';
 const guardsHookCommand = 'node "$CLAUDE_PROJECT_DIR"/guards/guard.mjs';
+const checksHookCommand = 'node "$CLAUDE_PROJECT_DIR"/checks/checks.mjs hook';
+// A session must start even outside git or before the config exists.
+const worktreeHookCommand = 'node "$CLAUDE_PROJECT_DIR"/tools/worktree-slot.mjs >/dev/null 2>&1 || true';
 
 type HookEntry = { matcher?: string; hooks?: { type?: string; command?: string }[] };
 type ClaudeSettings = { hooks?: Record<string, HookEntry[]> } & Record<string, unknown>;
@@ -948,6 +988,10 @@ type ClaudeSettings = { hooks?: Record<string, HookEntry[]> } & Record<string, u
 // Adds a Claude Code PreToolUse hook, merged into any existing
 // .claude/settings.json without touching its other settings.
 async function addPreToolUseHook(command: string, matcher: string, name: string): Promise<void> {
+  await addHook("PreToolUse", command, matcher, name);
+}
+
+async function addHook(event: string, command: string, matcher: string | undefined, name: string): Promise<void> {
   const settingsPath = path.join(projectDirectory, ".claude", "settings.json");
   let settings: ClaudeSettings = {};
 
@@ -956,14 +1000,14 @@ async function addPreToolUseHook(command: string, matcher: string, name: string)
       settings = JSON.parse(await readFile(settingsPath, "utf8")) as ClaudeSettings;
     } catch {
       console.log(
-        `\n.claude/settings.json is not valid JSON, so it was left unchanged. Add this PreToolUse hook yourself (matcher "${matcher}"): ${command}\n`,
+        `\n.claude/settings.json is not valid JSON, so it was left unchanged. Add this ${event} hook yourself${matcher ? ` (matcher "${matcher}")` : ""}: ${command}\n`,
       );
       return;
     }
   }
 
-  const preToolUse = settings.hooks?.PreToolUse ?? [];
-  const installed = preToolUse.some((entry) =>
+  const entries = settings.hooks?.[event] ?? [];
+  const installed = entries.some((entry) =>
     entry.hooks?.some((hook) => hook.command === command),
   );
 
@@ -974,7 +1018,7 @@ async function addPreToolUseHook(command: string, matcher: string, name: string)
 
   settings.hooks = {
     ...settings.hooks,
-    PreToolUse: [...preToolUse, { matcher, hooks: [{ type: "command", command }] }],
+    [event]: [...entries, { ...(matcher ? { matcher } : {}), hooks: [{ type: "command", command }] }],
   };
 
   await mkdir(path.dirname(settingsPath), { recursive: true });
@@ -1028,6 +1072,36 @@ async function offerHarnessHook(): Promise<void> {
 
   await setHarnessEnforcement(choice as "warn" | "block");
   await addPreToolUseHook(harnessHookCommand, "Edit|Write|MultiEdit|NotebookEdit", "harness gate");
+}
+
+// Refusing a pull request is the one block outside the guards: an opened
+// pull request notifies reviewers and runs CI, and the way past it, a waiver
+// with its reason, is one command.
+async function offerChecksHook(): Promise<void> {
+  const enable = await answer("--checks or --no-checks", options.checks, () => true, () => confirm({
+    message:
+      "Refuse to open a pull request from a commit the checks have not passed? Adds a PreToolUse hook to .claude/settings.json.",
+    default: true,
+  }));
+
+  if (!enable) {
+    console.log("\nSkipped the checks hook. Run `node checks/checks.mjs` from a git pre-push hook instead.\n");
+    return;
+  }
+
+  await addPreToolUseHook(checksHookCommand, "Bash|mcp__.*create_pull_request", "checks");
+  console.log('List the commands that prove a change in checks/config.json "checks" ("when" limits one to the paths it covers). To run them on every push too, add `node checks/checks.mjs` to your git pre-push hook.\n');
+}
+
+async function offerWorktreeHook(): Promise<void> {
+  const enable = await answer("--worktree-hook or --no-worktree-hook", options.worktreeHook, () => true, () => confirm({
+    message:
+      "Assign the worktree slot (ports and database name) when a Claude Code session starts? Adds a SessionStart hook to .claude/settings.json.",
+    default: true,
+  }));
+
+  if (!enable) return;
+  await addHook("SessionStart", worktreeHookCommand, undefined, "worktree slot");
 }
 
 async function offerGuardsHook(): Promise<void> {

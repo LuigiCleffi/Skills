@@ -192,6 +192,7 @@ A run that the user stops is set to **Abandoned** with the reason, and `active.j
   - `node harness/gate.mjs check [paths...]` — reports any of the paths (default: the files staged in git) that is guarded while the run is not ready; it exits with an error only when `"enforce"` is `"block"`.
   - `node harness/gate.mjs validate <stage> <record>` — checks one record against the stage's checks.
   - `node harness/gate.mjs escapes` — escaped defects per month.
+  - `node harness/gate.mjs scope [--base origin/main]` — the modules (first two folders of a path; `scope.depth` in the config) the branch touched that no record of the run names. Run it before `review` and before the pull request: a module in the list is a question, not a failure. Claim it in the plan or tasks record, or move its change to its own pull request. A stray module usually comes from a merge resolved wrong or a fix committed to the wrong branch.
 
 ### Warn or block
 
