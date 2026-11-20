@@ -399,6 +399,51 @@ export function scopeProblem(config, target, cwd, sessionId) {
 
 const branchChanging = new Set(["commit", "push", "merge", "rebase", "cherry-pick", "revert", "am", "pull"]);
 
+// Database clients and how each takes the query on the command line.
+const queryClients = {
+  psql: ["-c", "--command"],
+  mysql: ["-e", "--execute"],
+  mariadb: ["-e", "--execute"],
+  mongosh: ["--eval"],
+  bq: ["query"],
+};
+
+// Whether SQL is one statement that only reads.
+export function readOnlyQuery(sql) {
+  const text = sql.replace(/--[^\n]*|\/\*[\s\S]*?\*\//g, " ").trim();
+  const statements = text.split(";").map((part) => part.trim()).filter(Boolean);
+  if (statements.length !== 1) return false;
+  if (!/^(select|with|explain|show|describe|desc)\b/i.test(statements[0])) return false;
+  return !/\b(insert|update|delete|merge|drop|alter|truncate|create|grant|revoke|replace|call|copy|vacuum)\b/i.test(statements[0]);
+}
+
+// Returns why a query against production must not run, or null. Against a
+// target named as production (guards/config.json "production.markers"), a
+// database client may run only one read-only statement given on the command
+// line; anything else (a write, several statements, a script file, an
+// interactive session) goes to the user.
+function queryReason(config, segment, name, args) {
+  const flags = queryClients[name];
+  const markers = (config.production?.markers ?? []).map((marker) => marker.toLowerCase());
+  if (!flags || markers.length === 0) return null;
+  const env = segment.filter((item) => typeof item === "string" && /^[A-Za-z_][A-Za-z0-9_]*=/.test(item));
+  if (!hasMarker([...args, ...env], markers)) return null;
+  let sql = null;
+  if (name === "bq") {
+    const index = args.indexOf("query");
+    if (index === -1) return null;
+    sql = args.slice(index + 1).filter((arg) => !arg.startsWith("-")).pop() ?? null;
+  } else {
+    for (let index = 0; index < args.length; index += 1) {
+      const arg = args[index];
+      const flag = flags.find((candidate) => arg === candidate || arg.startsWith(`${candidate}=`));
+      if (flag) sql = arg.includes("=") && arg.startsWith("--") ? arg.slice(arg.indexOf("=") + 1) : args[index + 1];
+    }
+  }
+  if (sql && readOnlyQuery(sql)) return null;
+  return `${name} against production may only run one read-only statement given on the command line (SELECT, WITH, EXPLAIN, SHOW); writes, scripts, and interactive sessions go to the user`;
+}
+
 // Returns why a shell command must not run, or null.
 export function bashProblem(config, command, cwd = projectDirectory, sessionId = null) {
   const segments = parseCommand(command);
@@ -451,7 +496,7 @@ export function bashProblem(config, command, cwd = projectDirectory, sessionId =
     const protectedTarget = writeTargets.find((word) => isProtected(config, word, here));
     if (protectedTarget) return `${protectedTarget} is protected (guards/config.json "protectedPaths"); let the project's tool write it`;
 
-    const production = productionReason(config, segment, name, args);
+    const production = productionReason(config, segment, name, args) ?? queryReason(config, segment, name, args);
     if (production) return production;
 
     if (config.dangerousCommands !== false) {

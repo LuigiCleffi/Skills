@@ -85,3 +85,37 @@ describe("worktree provisioning", () => {
     assert.deepEqual(run(outside, "tools/worktree-slot.mjs", ["--hook"]), { code: 0, stdout: "", stderr: "" });
   });
 });
+
+describe("orphaned slots", () => {
+  it("remembers a removed worktree's resources, warns when its slot is reused, and cleans up on --yes", async () => {
+    const slots = await importFrom(makeProject(["tools"]), "tools/worktree-slot.mjs");
+    const config = { ports: { PORT: 3000 }, variables: { DATABASE_NAME: "app{suffix}" } };
+    assert.deepEqual(slots.findOrphans({ "/main": 0, "/a": 1, "/b": 2 }, { "/main": 0, "/b": 2 }, config), {
+      "/a": { slot: 1, variables: { WORKTREE_SLOT: "1", PORT: "3010", DATABASE_NAME: "app_wt1" } },
+    });
+    assert.equal(slots.cleanupCommand("dropdb --if-exists {DATABASE_NAME}", { DATABASE_NAME: "app_wt1" }), "dropdb --if-exists app_wt1");
+
+    const project = makeProject(["tools"]);
+    writeFileSync(path.join(project, "tools/worktree.json"), JSON.stringify({ ...config, cleanup: "echo dropped {DATABASE_NAME} >> cleaned.txt" }));
+    git(project, "init", "-q", "-b", "main");
+    git(project, "add", "-A");
+    git(project, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", "start");
+    const first = `${project}-one`;
+    const second = `${project}-two`;
+    git(project, "worktree", "add", "-q", first);
+    run(first, "tools/worktree-slot.mjs");
+    git(project, "worktree", "remove", "--force", first);
+    git(project, "worktree", "add", "-q", second);
+    try {
+      const reused = run(second, "tools/worktree-slot.mjs");
+      assert.match(reused.stdout, /Slot 1 still has resources from a removed worktree \(PORT=3010, DATABASE_NAME=app_wt1\)/);
+      const dry = run(project, "tools/worktree-slot.mjs", ["--orphans"]);
+      assert.match(dry.stdout, /cleanup: echo dropped app_wt1 >> cleaned\.txt\n\nDry run/);
+      assert.equal(run(project, "tools/worktree-slot.mjs", ["--orphans", "--yes"]).code, 0);
+      assert.equal(readFileSync(path.join(project, "cleaned.txt"), "utf8"), "dropped app_wt1\n");
+      assert.match(run(project, "tools/worktree-slot.mjs", ["--orphans"]).stdout, /No orphaned slots/);
+    } finally {
+      git(project, "worktree", "remove", "--force", second);
+    }
+  });
+});

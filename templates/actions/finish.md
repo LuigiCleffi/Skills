@@ -38,7 +38,7 @@ git branch -d <branch>            # -d, not -D: refuses an unmerged branch
 git push origin --delete <branch> # only if the host did not delete it on merge
 ```
 
-With `tools/worktree-slot.mjs`, the slot is freed once git no longer lists the worktree; drop the worktree's database with the project's own tool if it had one. Never use `--force` or `-D` to get past a refusal: the refusal means work would be lost.
+With `tools/worktree-slot.mjs`, the slot is freed once git no longer lists the worktree, and its resources are remembered: `node tools/worktree-slot.mjs --orphans` lists them (the database name, the ports) and, with `"cleanup"` set in `tools/worktree.json` and `--yes`, drops them. Ask before running it. Never use `--force` or `-D` to get past a refusal: the refusal means work would be lost.
 
 ### 4. Keep what it taught
 

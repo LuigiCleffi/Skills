@@ -246,3 +246,20 @@ describe("session scope", () => {
     assert.equal(guard.toolProblem(config, other), null);
   });
 });
+
+describe("queries against production", () => {
+  it("lets one read-only statement through and refuses writes, scripts, and sessions", async () => {
+    const { guard, config } = await guardIn(makeProject(["guards"]), { production: { markers: ["prod"] } });
+    const problem = (command) => guard.toolProblem(config, bash(command));
+    assert.equal(problem(`psql "host=db-prod user=ro" -c "SELECT id FROM orders LIMIT 10"`), null);
+    assert.equal(problem(`bq query --project_id=acme-prod --use_legacy_sql=false 'WITH x AS (SELECT 1) SELECT * FROM x'`), null);
+    assert.equal(problem(`PGHOST=db-prod psql -c "EXPLAIN SELECT 1"`), null);
+    assert.match(problem(`psql "host=db-prod" -c "DELETE FROM orders"`), /read-only statement/);
+    assert.match(problem(`psql "host=db-prod" -c "SELECT 1; DROP TABLE x"`), /read-only statement/);
+    assert.match(problem(`mysql -h db-prod -e "UPDATE users SET admin = 1"`), /read-only statement/);
+    assert.match(problem(`psql "host=db-prod" -f fix.sql`), /read-only statement/);
+    assert.match(problem(`psql postgres://app@db-prod/app`), /read-only statement/);
+    assert.equal(problem(`psql "host=db-staging" -c "DELETE FROM orders"`), null);
+    assert.equal(guard.readOnlyQuery("with w as (delete from t returning *) select * from w"), false);
+  });
+});

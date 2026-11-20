@@ -2,6 +2,7 @@
   "output": ".worktree-slot.env",
   "include": ".worktreeinclude",
   "linkDependencies": [],
+  "cleanup": "",
   "portStep": 10,
   "ports": {
     "PORT": 3000
