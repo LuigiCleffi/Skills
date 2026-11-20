@@ -37,8 +37,8 @@ npx skills-code-kit install --groups dev,review,tdd,harness --yes
 ```
 
 - `--all` or `--groups a,b` picks the groups (`npx skills-code-kit list` shows them and what each requires).
-- `--harness warn|block|none`, `--harness-helpers` / `--no-harness-helpers`, `--guards` / `--no-guards`, `--checks` / `--no-checks`, `--worktree-hook` / `--no-worktree-hook`, `--playwright` / `--no-playwright`, `--agents claude,codex,opencode`, and `--mcp claude,codex,opencode` answer the other questions (`none` for an empty list).
-- Under `--yes` the defaults are: the harness hook warns, the harness helpers, guards, checks, and worktree hooks are on, Playwright only if it is configured, Scrum agents for the AI tools found in the project, no MCP server.
+- `--harness warn|block|none`, `--harness-helpers` / `--no-harness-helpers`, `--update-notice` / `--no-update-notice`, `--guards` / `--no-guards`, `--checks` / `--no-checks`, `--worktree-hook` / `--no-worktree-hook`, `--playwright` / `--no-playwright`, `--agents claude,codex,opencode`, and `--mcp claude,codex,opencode` answer the other questions (`none` for an empty list).
+- Under `--yes` the defaults are: the harness hook warns, the harness helpers, guards, checks, worktree, and update notice hooks are on, Playwright only if it is configured, Scrum agents for the AI tools found in the project, no MCP server.
 - Files you edited since the last install are kept unless you add `--overwrite`.
 
 Without a terminal and without `--yes`, the installer stops with exit code 2 instead of waiting for an answer. `npx skills-code-kit --help` lists every command and option.
@@ -440,6 +440,7 @@ Selecting this group also installs product definition, domain research, the know
 - **Destructive commands:** `rm -rf` on the root, home, or working folder, `git reset --hard`, `git clean -f`, a force push to main or master, piping a download into a shell, `chmod 777`, and `--no-verify` when the project has git hooks.
 - **Protected branches:** on the branches you list in `"protectedBranches"` (empty by default), edits to files and the git commands that change the branch (commit, push, merge, rebase, cherry-pick, revert, pull). Reading and creating a new branch are fine.
 - **Worktree isolation:** with `"worktreeIsolation": true`, a session may not write into another worktree of the same repository, which is another session's branch. Off by default.
+- **One area per session:** in a repository of several apps or packages, `"sessionScope": { "units": ["apps/*", "packages/*"] }` keeps a session in the first unit it writes in, so "fix the button in app A" never rewrites app B; the root and everything outside the units stay writable. Folders listed in `"templates"`, which every future unit starts from, are refused unless the user asked (`GUARDS_ALLOW_TEMPLATES=1`). Off by default.
 - **Production cloud:** a `gcloud`, `aws`, `az`, `kubectl`, `helm`, or `terraform` command that changes something, when its arguments or environment name production by one of your `"production.markers"` (`--project=acme-prod`, `--profile prod`, `-var-file=production.tfvars`). Reading production (list, describe, get, logs, plan) passes, and a verb the guard does not know counts as a change. Set `"requireNonProduction": true` with `"nonProductionMarkers"` (`staging`, `dev`) to go further: a change passes only when the command proves its target is not production, because a command that names no target goes wherever the CLI's current project or context points. Empty by default.
 
 It parses the command text, so it catches accidents, not an adversary. It follows `cd` and `pushd` inside a command, and forgets a `cd` made inside parentheses, so `cd db/migrations && echo x > m.sql` is checked where it runs. A heredoc body is treated as data, and a payload it cannot read is let through.
@@ -532,7 +533,26 @@ A Claude Code output style, `.claude/output-styles/plain-answers.md`, turned on 
 
 **Installed files:** `tools/cycle-metrics.mjs`.
 
-### 31. Finish After the Merge
+### 31. Help for Anyone Working Here
+
+**Purpose:** Get a newcomer, or someone who is not a developer, from "I just cloned this" to working, through failures, and back from a change they do not like.
+
+- `tools/doctor.mjs` checks the machine from `tools/doctor.json` (a runtime version, dependencies installed, a settings file, a sign-in, access) and prints the fix command or the ready-to-send request for each problem. It only reads.
+- `actions/start-here.md`: a first session runs the doctor, fixes what one command can, shows the requests that depend on someone else, explains the project in five plain lines, and ends by asking what they want to do.
+- `actions/diagnose.md`: probe the real state before theorizing, match the symptom against `docs/diagnose.md` (the project's symptom, cause, and fix table, which grows with each new cause), fix what is code or one command, and say in one or two sentences what it was and what was done.
+- `actions/undo.md`: one step back at a time, recoverably (unsaved changes set aside with `git stash`, saved ones reversed with `git revert`, never `reset --hard`), confirmed with "no" as the default, and shown; it says plainly whether anything deployed changed.
+
+**Installed files:** `actions/start-here.md`, `actions/diagnose.md`, `actions/undo.md`, `tools/doctor.mjs`, `tools/doctor.json`.
+
+### 32. Kit Update Notice
+
+**Purpose:** Hear about a new version of the kit at the moment it matters: before the first request of a session.
+
+`tools/kit-update.mjs` runs as a Claude Code `SessionStart` hook (`--update-notice`, on by default). When a newer `skills-code-kit` is on npm than the version in `.skills-code-kit/lock.json`, it tells the agent, with the command that updates the same groups (`npx skills-code-kit@<new> install --groups <installed> --yes`). It asks npm at most once every 8 hours, never installs anything, and says nothing when offline. `node tools/kit-update.mjs --check` asks right away.
+
+**Installed files:** `tools/kit-update.mjs`.
+
+### 33. Finish After the Merge
 
 **Purpose:** Close out a merged change without losing work.
 
