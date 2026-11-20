@@ -99,6 +99,21 @@ Mark a file the task creates with `(new)` after it; every other file must exist.
 
 Every task names its files, what changes and why (the requirement, rule, or decision it serves), and the command that proves it is done. A task without a command to prove it is not ready; find the check first. The task points to the spec, model, and ADRs; it does not repeat them. Then implement one task at a time and run its **Verify** before the next.
 
+### When the plan turns out wrong
+
+Building often shows that an earlier artifact is wrong. Route it instead of quietly coding around it:
+
+| What is wrong | Example | What to do |
+|---|---|---|
+| A slip that changes no behavior | a file path, a typo, a renamed function | Fix the artifact in place and go on. |
+| A task's plan | two tasks must swap, a file is missing from Files | Update the tasks record and go on. |
+| The spec, a model, or a scenario | the rule cannot work as written, a case is missing | Stop that slice and ask the user; record the answer in the spec. |
+| A confirmed rule or an accepted ADR | the decision no longer fits | Stop and ask; a change goes through `knowledge` or `adr`. |
+
+### Fix the class, not the line
+
+When a fix lands, search for the same mistake elsewhere (`git grep` the pattern, the call, the missing check) and fix every occurrence in scope, or list the ones out of scope for the user. When the base branch is merged into the branch, run every task's **Verify** command again: the merge can undo a task.
+
 ### 3. Select the implementation mode
 
 When a `uiux` handoff exists, use its recommended mode and slice order unless the user overrides them.

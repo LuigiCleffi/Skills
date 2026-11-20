@@ -243,13 +243,25 @@ const skills: Skill[] = [
     value: "qa",
     name: "QA that runs and proves",
     description: "One scenario per acceptance criterion and per applicable edge-case row, each run for real with evidence, in a report in docs/qa/reports/",
-    files: ["actions/qa.md", "docs/qa/edge-cases.md"],
+    files: ["actions/qa.md", "actions/test-guide.md", "docs/qa/edge-cases.md"],
   },
   {
     value: "worktrees",
     name: "Worktree slots for parallel sessions",
     description: "Gives each git worktree its own ports and database name, so several agent sessions can run the app at once",
     files: ["tools/worktree-slot.mjs", "tools/worktree.json"],
+  },
+  {
+    value: "ui-review",
+    name: "UI review gate",
+    description: "Every screen a change touches, seen in each state (full, empty, loading, error, no permission), at four widths, after a reload, with an accessibility scan and no hard-coded design values",
+    files: ["actions/ui-review.md"],
+  },
+  {
+    value: "pr-review",
+    name: "Pull request review assistant",
+    description: "Helps a person review someone else's pull request: a three-line summary, what no check covered, each decision walked through, and a drafted review published only on their OK",
+    files: ["actions/pr-review.md"],
   },
   {
     value: "explore",
@@ -357,9 +369,9 @@ const skills: Skill[] = [
   },
   {
     value: "pull-request",
-    name: "Pull request template",
-    description: "What was implemented, why, human test steps, and before and after screenshots taken with Playwright",
-    files: [".github/pull_request_template.md"],
+    name: "Pull requests",
+    description: "Open a pull request a person reviews in minutes: the template (what changed, why, human test steps, before and after screenshots), a QA script comment, CI watched until green, and review comments triaged",
+    files: ["actions/pr.md", ".github/pull_request_template.md"],
   },
   {
     value: "scrum",

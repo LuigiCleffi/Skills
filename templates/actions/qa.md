@@ -25,6 +25,14 @@ Write one scenario per acceptance criterion, with the criterion's ID as its sour
 
 Each scenario says what to do and what must happen, in the words a person testing the screen or the API would use.
 
+Before the battery, write the answers to three questions about this change in the report, and add a scenario for each answer that is not covered yet:
+
+1. **What is the worst value its input accepts?** For each field the change reads, shows, or stores: empty, the longest allowed, another language's characters, zero, negative, a date at the edge of a month or a time zone, a duplicate.
+2. **What changes between two runs?** The clock, the order of results, randomness, retries, two requests at once, a cache.
+3. **Who else goes through this code?** Other roles and tenants, another tab or device, and the consumers the diff does not touch: search the callers of what changed (`git grep -n "<function or endpoint>"`) and add a scenario for each one whose behavior could change.
+
+When time is short, order the scenarios by risk (money, permissions, data loss, other tenants' data first) and say which ones were not run.
+
 ### 2. Check the change against the tasks
 
 Before running anything, compare what changed with what was planned. With the harness, run `node harness/gate.mjs scope`; without it, compare `git diff --name-only <base>...HEAD` with the files the tasks name. Two lists come out:
@@ -44,6 +52,8 @@ Choose the most direct way that proves the behavior, in this order:
 4. **Exact manual steps** only when none of the above can run here: write them so a person can follow them, and mark the result `MANUAL` until someone does.
 
 Never mark a scenario passed because the code looks right. Never edit a test to make a scenario pass.
+
+A result says what the proof varied: not "ok", but "refunded on day 30 and refused on day 31". A passed scenario on something risky (authentication, permissions, another tenant's data, money, a migration, a deletion) must also be shown to **fail without the change**: run the same scenario on the base, in a separate worktree (`git worktree add ../base-check $(git merge-base origin/main HEAD)`), or with the change reverted in a scratch commit. A test that passes on both sides tests nothing; say so and fix the scenario.
 
 Put every command you ran, in order, in `docs/qa/reports/<report>/run.sh`, one comment line per scenario ID above its commands, so anyone can rerun the proof and get the same results:
 
@@ -67,6 +77,11 @@ Browser runs go in as the Playwright command that runs them. Manual steps stay i
 - `FAIL`: it does not. Write what happened instead, with the evidence, and send it to `dev`.
 - `BLOCKED`: it could not run (no seed data, a service down). Say what is missing.
 - `MANUAL`: it needs a person; the steps are in the report.
+- `NOT VERIFIED`: it was not run, for lack of time or access. Say why. Never round it up to `PASS`.
+
+When the diff touches screens, run `actions/ui-review.md` (when installed) and add its findings to the report; a Critical finding is a `FAIL`.
+
+Last, check that this is what was asked: give a fresh agent (a subagent with no memory of the work) only the original request or spec and the diff, and ask: "Does this change do what was asked, all of it and nothing else? List what is missing and what was not asked for." Put its answer in the report and resolve each point.
 
 ### 5. Write the report
 

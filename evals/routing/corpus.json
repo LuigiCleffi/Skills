@@ -144,6 +144,26 @@
     {
       "prompt": "The refund feature is merged, wrap it up and close the run",
       "expected": "actions/finish.md"
+    },
+    {
+      "prompt": "The branch is done, open the pull request",
+      "expected": "actions/pr.md"
+    },
+    {
+      "prompt": "Reviewers left comments on my PR, go through them",
+      "expected": "actions/pr.md"
+    },
+    {
+      "prompt": "Check the orders screen in every state and on mobile before we ship",
+      "expected": "actions/ui-review.md"
+    },
+    {
+      "prompt": "Help me review Ana's pull request #57",
+      "expected": "actions/pr-review.md"
+    },
+    {
+      "prompt": "Write the manual test steps for QA for the refund feature that was merged",
+      "expected": "actions/test-guide.md"
     }
   ]
 }
