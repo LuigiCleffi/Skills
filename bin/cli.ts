@@ -11,6 +11,7 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { parseArgs } from "node:util";
 import {
   type AgentTool,
   agentTools,
@@ -40,6 +41,132 @@ const currentDirectory = path.dirname(currentFile);
 const packageDirectory = path.resolve(currentDirectory, "..");
 const templateDirectory = path.join(packageDirectory, "templates");
 const projectDirectory = process.cwd();
+
+// Answers given on the command line. Each one replaces its question; with
+// --yes, every question left takes its default, so agents and CI can install
+// without a terminal.
+type InstallOptions = {
+  yes: boolean;
+  groups?: string[];
+  playwright?: boolean;
+  agents?: string[];
+  harness?: "warn" | "block" | "none";
+  guards?: boolean;
+  mcp?: string[];
+  overwrite: boolean;
+};
+
+let options: InstallOptions = { yes: false, overwrite: false };
+
+const usage = `Usage: npx skills-code-kit [command] [options]
+
+Commands:
+  install          Install instruction groups into this project (default)
+  list             List the instruction groups and what each requires
+  verify           Report installed files changed, deleted, or outdated since install
+  mcp              Serve the MCP server over stdio
+  help             Show this help
+
+Install options (each one answers its question; the rest are asked):
+  --all                    Install every group
+  --groups a,b             Install these groups (and the groups they require)
+  --yes, -y                Do not ask: unanswered questions take their default
+                           (Playwright only if configured, agents for the AI
+                           tools found, harness hook "warn", guards hook on,
+                           no MCP server, never overwrite edited files)
+  --playwright / --no-playwright
+  --agents claude,opencode,codex   Scrum role agents for these tools ("none" for none)
+  --harness warn|block|none        The harness gate hook in Claude Code
+  --guards / --no-guards           The guards hook in Claude Code
+  --mcp claude,opencode,codex      Register the MCP server with these clients ("none" for none)
+  --overwrite              Overwrite files edited since install (default: keep them)
+
+  --version, -v            Print the version
+
+Example (no questions asked):
+  npx skills-code-kit install --groups dev,review,tdd,harness --yes
+`;
+
+function list(value: string | undefined): string[] | undefined {
+  if (value === undefined) return undefined;
+  const items = value.split(",").map((item) => item.trim()).filter(Boolean);
+  return items.length === 1 && items[0] === "none" ? [] : items;
+}
+
+function checkValues(flag: string, values: string[] | undefined, known: string[]): void {
+  const unknown = (values ?? []).filter((value) => !known.includes(value));
+  if (unknown.length > 0) {
+    throw new UsageError(`Unknown ${flag}: ${unknown.join(", ")}. Choose from: ${known.join(", ")}.`);
+  }
+}
+
+class UsageError extends Error {}
+
+function parseInstallOptions(args: string[]): InstallOptions {
+  const { values } = parseArgs({
+    args,
+    allowPositionals: false,
+    options: {
+      all: { type: "boolean" },
+      groups: { type: "string" },
+      yes: { type: "boolean", short: "y" },
+      playwright: { type: "boolean" },
+      "no-playwright": { type: "boolean" },
+      agents: { type: "string" },
+      harness: { type: "string" },
+      guards: { type: "boolean" },
+      "no-guards": { type: "boolean" },
+      mcp: { type: "string" },
+      overwrite: { type: "boolean" },
+    },
+  });
+
+  if (values.all && values.groups) throw new UsageError("Use either --all or --groups, not both.");
+  const groups = values.all ? skills.map((skill) => skill.value) : list(values.groups);
+  checkValues("group", groups, skills.map((skill) => skill.value));
+  if (groups && groups.length === 0) throw new UsageError("--groups needs at least one group.");
+
+  const agents = list(values.agents);
+  checkValues("agent tool", agents, agentTools.map((tool) => tool.value));
+  const mcp = list(values.mcp);
+  checkValues("MCP client", mcp, mcpClients.map((client) => client.value));
+
+  const harness = values.harness;
+  if (harness !== undefined && !["warn", "block", "none"].includes(harness)) {
+    throw new UsageError(`--harness takes warn, block, or none, not "${harness}".`);
+  }
+
+  const flag = (on?: boolean, off?: boolean) => (on ? true : off ? false : undefined);
+
+  return {
+    yes: values.yes ?? false,
+    groups,
+    playwright: flag(values.playwright, values["no-playwright"]),
+    agents,
+    harness: harness as InstallOptions["harness"],
+    guards: flag(values.guards, values["no-guards"]),
+    mcp,
+    overwrite: values.overwrite ?? false,
+  };
+}
+
+// Returns the answer given on the command line, the default under --yes, or
+// asks. Without a terminal and without --yes it stops instead of hanging.
+async function answer<T>(
+  flag: string,
+  given: T | undefined,
+  fallback: () => T | Promise<T>,
+  ask: () => Promise<T>,
+): Promise<T> {
+  if (given !== undefined) return given;
+  if (options.yes) return fallback();
+  if (!process.stdin.isTTY) {
+    throw new UsageError(
+      `This needs an answer (${flag}) and there is no terminal to ask in. Pass ${flag}, or --yes to take the defaults.`,
+    );
+  }
+  return ask();
+}
 
 const skills: Skill[] = [
   {
@@ -89,7 +216,7 @@ const skills: Skill[] = [
   {
     value: "harness",
     name: "Spec-driven harness",
-    description: "Runs every stage in order with a run record in docs/harness/, and a gate script that blocks code edits until the pre-code stages are settled",
+    description: "Runs every stage in order with a run record in docs/harness/, and a gate that warns (or, if you choose, blocks) when code is edited before the pre-code stages are settled",
     files: ["actions/harness.md", "harness/gate.mjs", "harness/config.json"],
     requires: ["product", "research", "knowledge", "adr", "dev", "tdd", "review", "qa"],
   },
@@ -587,10 +714,10 @@ async function installFiles(
       "\nOverwriting these files may replace existing project instructions.",
     );
 
-    overwriteAll = await confirm({
+    overwriteAll = await answer("--overwrite", options.overwrite ? true : undefined, () => false, () => confirm({
       message: "Overwrite all existing files listed above?",
       default: false,
-    });
+    }));
   }
 
   const installed: string[] = [];
@@ -645,7 +772,16 @@ async function main(): Promise<void> {
 
   console.log(`Target project: ${projectDirectory}\n`);
 
-  const mode = await select({
+  if (options.groups) {
+    const selectedSkills = withRequiredSkills(skills.filter((skill) => options.groups?.includes(skill.value)));
+    return installSkills(selectedSkills);
+  }
+
+  if (options.yes) {
+    throw new UsageError("With --yes, name the groups: --all or --groups a,b (see `npx skills-code-kit list`).");
+  }
+
+  const mode = await answer<string>("--all or --groups", undefined, () => "all", () => select({
     message: "What would you like to install?",
     choices: [
       {
@@ -659,7 +795,7 @@ async function main(): Promise<void> {
         description: "Select only the instructions you need",
       },
     ],
-  });
+  }));
 
   let selectedSkills: Skill[];
 
@@ -681,6 +817,10 @@ async function main(): Promise<void> {
     );
   }
 
+  return installSkills(selectedSkills);
+}
+
+async function installSkills(selectedSkills: Skill[]): Promise<void> {
   if (selectedSkills.length === 0) {
     console.log("\nNo instruction groups selected. Installation cancelled.");
     return;
@@ -715,10 +855,10 @@ async function main(): Promise<void> {
     console.log(`  - ${file}`);
   }
 
-  const proceed = await confirm({
+  const proceed = await answer("--yes", options.groups ? true : undefined, () => true, () => confirm({
     message: "Continue with installation?",
     default: true,
-  });
+  }));
 
   if (!proceed) {
     console.log("\nInstallation cancelled.");
@@ -747,16 +887,16 @@ async function packageVersion(): Promise<string> {
 
 // Optional: registers the kit's MCP server with the AI tools the user picks.
 async function offerMcpServer(): Promise<void> {
-  const install = await confirm({
+  const install = await answer("--mcp", options.mcp ? options.mcp.length > 0 : undefined, () => false, () => confirm({
     message:
       "Also install the Skills Code Kit MCP server? It exposes the knowledge and ADR gates, rule capture, and harness runs as tools, and the installed workflows as prompts, to any MCP client.",
     default: false,
-  });
+  }));
 
   if (!install) return;
 
   const detected = await detectMcpClients(projectDirectory);
-  const selectedValues = await checkbox({
+  const selectedValues = await answer("--mcp", options.mcp, () => detected.map((client) => client.value), () => checkbox({
     message: "Register the MCP server with:",
     choices: mcpClients.map((client) => ({
       name: client.name,
@@ -764,7 +904,7 @@ async function offerMcpServer(): Promise<void> {
       checked: detected.includes(client),
       description: `Writes ${client.configFile}`,
     })),
-  });
+  }));
 
   const clients = mcpClients.filter((client) => selectedValues.includes(client.value));
   if (clients.length === 0) return;
@@ -833,7 +973,7 @@ async function setHarnessEnforcement(level: "warn" | "block"): Promise<void> {
 // The harness gate warns by default: skipping a stage is recoverable, and a
 // hook that blocks recoverable mistakes gets switched off.
 async function offerHarnessHook(): Promise<void> {
-  const choice = await select({
+  const choice = await answer<string>("--harness", options.harness, () => "warn", () => select({
     message: "How should the harness gate act in Claude Code when guarded code changes before the run is ready?",
     choices: [
       {
@@ -852,7 +992,7 @@ async function offerHarnessHook(): Promise<void> {
         description: "Use node harness/gate.mjs check from a git hook or CI instead",
       },
     ],
-  });
+  }));
 
   if (choice === "none") {
     console.log(
@@ -866,11 +1006,11 @@ async function offerHarnessHook(): Promise<void> {
 }
 
 async function offerGuardsHook(): Promise<void> {
-  const enable = await confirm({
+  const enable = await answer("--guards or --no-guards", options.guards, () => true, () => confirm({
     message:
       "Turn the guards on in Claude Code? Adds a PreToolUse hook to .claude/settings.json that blocks secrets, protected files, destructive commands, and commits to protected branches.",
     default: true,
-  });
+  }));
 
   if (!enable) {
     console.log("\nSkipped the guards hook. guards/guard.mjs reads the same hook JSON if you wire it into another tool.\n");
@@ -891,12 +1031,12 @@ async function choosePlaywright(): Promise<boolean> {
   );
   const configured = (await Promise.all(configChecks)).some(Boolean);
 
-  const usesPlaywright = await confirm({
+  const usesPlaywright = await answer("--playwright or --no-playwright", options.playwright, () => configured, () => confirm({
     message: configured
       ? "Playwright is configured. Use it for pull request test steps and screenshots?"
       : "Use Playwright for pull request test steps and screenshots? (it is not configured yet)",
     default: true,
-  });
+  }));
 
   if (usesPlaywright && !configured) {
     console.log(
@@ -924,7 +1064,7 @@ async function chooseAgentTools(): Promise<AgentTool[]> {
       : "\nNo AI tool configuration found in this project.",
   );
 
-  const selectedValues = await checkbox({
+  const selectedValues = await answer("--agents", options.agents, () => detected.map((tool) => tool.value), () => checkbox({
     message: "Install the Scrum role agents for:",
     choices: agentTools.map((tool) => ({
       name: tool.name,
@@ -932,7 +1072,7 @@ async function chooseAgentTools(): Promise<AgentTool[]> {
       checked: detected.includes(tool),
       description: `Detected by ${tool.markers.join(", ")}`,
     })),
-  });
+  }));
 
   return agentTools.filter((tool) => selectedValues.includes(tool.value));
 }
@@ -998,7 +1138,24 @@ async function runVerify(): Promise<number> {
 // `skills-code-kit mcp` serves the MCP server over stdio instead of
 // installing; stdout then belongs to the protocol, so nothing else prints.
 async function run(): Promise<void> {
-  const [command, ...args] = process.argv.slice(2);
+  const argv = process.argv.slice(2);
+  const command = argv[0] && !argv[0].startsWith("-") ? argv[0] : "install";
+  const args = argv[0] === command ? argv.slice(1) : argv;
+
+  if (command === "help" || args.includes("--help") || args.includes("-h")) {
+    console.log(usage);
+    return;
+  }
+
+  if (command === "version" || args.includes("--version") || args.includes("-v")) {
+    console.log(await packageVersion());
+    return;
+  }
+
+  if (command === "list") {
+    printGroups();
+    return;
+  }
 
   if (command === "verify") {
     process.exitCode = await runVerify();
@@ -1011,7 +1168,20 @@ async function run(): Promise<void> {
     return;
   }
 
+  if (command !== "install") {
+    throw new UsageError(`Unknown command "${command}".`);
+  }
+
+  options = parseInstallOptions(args);
   await main();
+}
+
+function printGroups(): void {
+  const width = Math.max(...skills.map((skill) => skill.value.length));
+  for (const skill of skills) {
+    const requires = skill.requires?.length ? ` (also installs ${skill.requires.join(", ")})` : "";
+    console.log(`${skill.value.padEnd(width)}  ${skill.description}${requires}`);
+  }
 }
 
 run().catch((error: unknown) => {
@@ -1023,6 +1193,12 @@ run().catch((error: unknown) => {
   ) {
     console.log("\nInstallation cancelled.");
     process.exitCode = 0;
+    return;
+  }
+
+  if (error instanceof UsageError || (error instanceof Error && "code" in error && String(error.code).startsWith("ERR_PARSE_ARGS"))) {
+    console.error(`${error.message}\n\nRun \`npx skills-code-kit --help\` for the commands and options.`);
+    process.exitCode = 2;
     return;
   }
 
