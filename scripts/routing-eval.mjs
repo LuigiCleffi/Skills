@@ -18,7 +18,7 @@
 // and costs one short request per case. Run it when a description changes or a
 // workflow is added; it is not part of npm test because it calls a model.
 //
-// The bar, from the Workfuse harness's routing eval: accuracy >= 0.90,
+// The bar: accuracy >= 0.90,
 // >= 0.80 on the cases that have a workflow, and no cross-fire (a request sent
 // to the wrong workflow). A drop of more than 0.05 from the baseline also fails.
 
