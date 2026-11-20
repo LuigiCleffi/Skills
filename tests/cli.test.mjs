@@ -167,3 +167,18 @@ describe("harness helpers", () => {
     assert.equal(JSON.parse(read(without, ".claude/settings.json")).hooks.UserPromptSubmit, undefined);
   });
 });
+
+describe("writing style", () => {
+  it("installs the output style and turns it on, but keeps a style the project chose", () => {
+    const project = makeProject();
+    kit(project, "install", "--groups", "writing-style", "--yes");
+    assert.match(read(project, ".claude/output-styles/plain-answers.md"), /^---\nname: Plain answers/);
+    assert.equal(JSON.parse(read(project, ".claude/settings.json")).outputStyle, "Plain answers");
+
+    const chosen = makeProject();
+    mkdirSync(path.join(chosen, ".claude"));
+    writeFileSync(path.join(chosen, ".claude/settings.json"), JSON.stringify({ outputStyle: "Explanatory" }));
+    assert.match(kit(chosen, "install", "--groups", "writing-style", "--yes").out, /already uses the output style "Explanatory"/);
+    assert.equal(JSON.parse(read(chosen, ".claude/settings.json")).outputStyle, "Explanatory");
+  });
+});

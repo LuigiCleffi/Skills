@@ -252,6 +252,12 @@ const skills: Skill[] = [
     files: ["tools/worktree-slot.mjs", "tools/worktree.json"],
   },
   {
+    value: "writing-style",
+    name: "Plain answers writing style",
+    description: "A Claude Code output style: answer first, behavior instead of internals, numbers instead of adjectives, what is not done stated plainly, size that follows the stakes",
+    files: [".claude/output-styles/plain-answers.md"],
+  },
+  {
     value: "ui-review",
     name: "UI review gate",
     description: "Every screen a change touches, seen in each state (full, empty, loading, error, no permission), at four widths, after a reload, with an accessibility scan and no hard-coded design values",
@@ -960,6 +966,10 @@ async function installSkills(selectedSkills: Skill[]): Promise<void> {
     await offerHarnessHelpers();
   }
 
+  if (selectedSkills.some((skill) => skill.value === "writing-style")) {
+    await useOutputStyle("Plain answers");
+  }
+
   if (selectedSkills.some((skill) => skill.value === "checks")) {
     await offerChecksHook();
   }
@@ -1109,6 +1119,30 @@ async function offerHarnessHook(): Promise<void> {
 
   await setHarnessEnforcement(choice as "warn" | "block");
   await addPreToolUseHook(harnessHookCommand, "Edit|Write|MultiEdit|NotebookEdit", "harness gate");
+}
+
+// Turns the installed output style on for the project, unless the project
+// already chose another one.
+async function useOutputStyle(name: string): Promise<void> {
+  const settingsPath = path.join(projectDirectory, ".claude", "settings.json");
+  let settings: ClaudeSettings = {};
+  if (await exists(settingsPath)) {
+    try {
+      settings = JSON.parse(await readFile(settingsPath, "utf8")) as ClaudeSettings;
+    } catch {
+      console.log(`\n.claude/settings.json is not valid JSON; set "outputStyle": "${name}" in it yourself.\n`);
+      return;
+    }
+  }
+  if (settings.outputStyle === name) return;
+  if (typeof settings.outputStyle === "string") {
+    console.log(`\nThe project already uses the output style "${settings.outputStyle}"; switch to "${name}" with /output-style if you want it.\n`);
+    return;
+  }
+  settings.outputStyle = name;
+  await mkdir(path.dirname(settingsPath), { recursive: true });
+  await writeFile(settingsPath, `${JSON.stringify(settings, null, 2)}\n`, "utf8");
+  console.log(`\n✓ Set the output style to "${name}" in .claude/settings.json\n`);
 }
 
 // Two hooks that only inform: the run's state and next stage at each prompt,
