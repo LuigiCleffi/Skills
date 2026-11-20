@@ -1,6 +1,6 @@
 ---
 name: ui-review
-description: "Gate a change to the screen before it reaches review: force every state of each screen it touches (full, empty, loading, error, no permission), check for horizontal overflow at four widths, check that a reload keeps the screen, its filters, and its tab, run an accessibility scan, and look for hard-coded colors, sizes, and spacing in the added lines. Reports findings as Critical, Improvement, or Suggestion with screenshots. Use from qa or dev whenever the diff touches UI files; or when the user says \"review the UI\", \"check the screen\", \"is this responsive\"."
+description: "Gate a change to the screen before it reaches review: force every state of each screen it touches (full, empty, loading, error, no permission), check for horizontal overflow at five widths and with side panels open, a short window, every theme, check that a reload keeps the screen, its filters, and its tab, run an accessibility scan and a keyboard pass, check reduced motion, click every new control (no dead, disabled, or fake controls), check the surface and components chosen, and look for hard-coded colors, sizes, and spacing in the added lines. Reports findings as Critical, Improvement, or Suggestion with screenshots. Use from qa or dev whenever the diff touches UI files; or when the user says \"review the UI\", \"check the screen\", \"is this responsive\"."
 ---
 
 # ui-review — Check the Screen in Every State
@@ -29,17 +29,25 @@ For each screen, reach each state and take a screenshot:
 
 A state the screen cannot be in is noted with the reason, not skipped silently.
 
-### 2. Widths
+### 2. Sizes and themes
 
-At 390, 820, 1180, and 1440 pixels wide, check that the page does not scroll sideways: `document.documentElement.scrollWidth === document.documentElement.clientWidth`. Any overflow is **Critical** on the widths the product supports. Look at the screenshots for clipped text, overlapping elements, and controls too small to tap.
+At 390, 820, 1180, 1440, and 2560 pixels wide, and again at 1440 with any side panel or chat the product opens beside the page, check that the page does not scroll sideways: `document.documentElement.scrollWidth === document.documentElement.clientWidth`. A side panel is where headings collapse to one word per line. Then check a short window (640 pixels tall) and every theme the product ships (light and dark at least): nothing reflows, nothing disappears, contrast holds. Any overflow is **Critical** on the sizes the product supports. Look at the screenshots for clipped text, overlapping elements, and controls too small to tap.
 
 ### 3. Reload
 
 Change filters, tabs, sorting, and pagination, then reload. The screen must come back the same (state in the URL or stored). Losing it is an **Improvement**, or **Critical** when it loses what the user typed.
 
-### 4. Accessibility
+### 4. Accessibility and motion
 
-Run an automated scan (axe-core through Playwright, or the browser's tools). `serious` and `critical` violations are **Critical**. Check by hand that every control is reachable and visible with the keyboard alone.
+Run an automated scan (axe-core through Playwright, or the browser's tools). `serious` and `critical` violations are **Critical**. Tab from the top to the end of the page: every control is reachable, in a sensible order, with visible focus. Turn on reduced motion (`prefers-reduced-motion: reduce`): nothing travels across the screen, only fades remain.
+
+### 4b. Honest controls and composition
+
+- Click every control the change adds: each one leads to a real screen or a dialog in context. A disabled button for a feature that does not exist yet, a greyed-out item the user has no permission for, or a save that does not save is **Critical**.
+- Destructive and bulk actions ask first and show their impact.
+- The surface fits what it asks of the user (dialog for a short answer, panel for work beside a list, page for a complex form): no dialog that scrolls, no navigation or pagination inside a panel, no dialog opened from a dialog. A mismatch is an **Improvement**.
+- Every component comes from the design system or the app's shared components; a second look for a job an existing component already does, or a shared component restyled for one screen, is an **Improvement** (**Critical** when it breaks another screen).
+- Interface text is label and value, short, on the reader's clock ("2 days late"), and never explains itself. Long explanatory lines in cells, tooltips, or empty states are an **Improvement**.
 
 ### 5. Hard-coded values
 
@@ -65,4 +73,4 @@ Add to the QA report (or `docs/qa/reports/<report>/ui.md`):
 
 ## Completion criteria
 
-`ui-review` is complete when every screen the diff reaches was seen in each state and at each width, after a reload, with an accessibility scan and the added lines checked, and every finding is in the report with its severity and evidence.
+`ui-review` is complete when every screen the diff reaches was seen in each state, at each width and height, in each theme, after a reload, with an accessibility scan, a keyboard pass, reduced motion, every new control clicked, and the added lines checked, and every finding is in the report with its severity and evidence.

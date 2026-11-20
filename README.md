@@ -204,6 +204,8 @@ The specification step splits before it writes: a request that names an area, ha
 
 `actions/uiux.md` sits between the specification and implementation. It reads the approved spec and checklist, inspects the existing design system, and writes `UIUXDecisions.md`: flows, screens and states, components, interaction rules, copy, accessibility target, layout and internationalization, the recommended TDD or direct mode and slice order for `dev`, and the UI acceptance checks `tdd` turns into tests. Product questions go back to the specification instead of being decided by design.
 
+Screens are assembled, not drawn: before any markup it writes an inventory with one line per need and the component that serves it (design system first, then the app's shared components, then the prototype kit), and a component that does not exist becomes a candidate for design review instead of a one-off. It picks the surface by what each step asks of the user (toast, dialog, side panel, own route, or a row expanded in place), sends complex forms to their own page, and keeps controls honest: nothing disabled for a feature that does not exist, hidden instead of greyed out without permission, no form that pretends to save, destructive and bulk actions confirmed with their impact. Every state has its pattern (skeleton, empty state in place with its action, inline retry, specific error toast), interface text is label and value on the reader's clock while only an assistant converses, color has a function and comes from tokens, and motion uses two durations and stops traveling under reduced motion.
+
 `UIUX/README.md` routes to one skill per section of the *UI/UX Design Guide* (Joel Parker Henderson, ed.), which `uiux` consults: foundations, design thinking, task analysis, ideation, product design, modeling diagrams, design systems, affordance and accessibility, implementation, internationalization, AI, testing, principles, and soft skills.
 
 **Installed files:**
@@ -484,7 +486,7 @@ As a Claude Code `PreToolUse` hook, `node checks/checks.mjs hook` refuses `gh pr
 
 **Purpose:** Open the states nobody opens while building.
 
-`actions/ui-review.md` runs from `qa` or `dev` when a diff touches screens: each screen in every state (full with the longest real values, empty, loading, error, no permission), at 390, 820, 1180, and 1440 pixels with no sideways scroll, after a reload (filters, tabs, and typed text must survive), with an accessibility scan (`serious` and `critical` count as Critical), and with the added lines checked for hard-coded colors, sizes, and spacing where the project has tokens. Findings are Critical (blocks the pull request), Improvement, or Suggestion, with screenshots.
+`actions/ui-review.md` runs from `qa` or `dev` when a diff touches screens: each screen in every state (full with the longest real values, empty, loading, error, no permission), at 390, 820, 1180, 1440, and 2560 pixels and with side panels open with no sideways scroll, in a short window and every theme, after a reload (filters, tabs, and typed text must survive), with an accessibility scan (`serious` and `critical` count as Critical), a keyboard pass, reduced motion, every new control clicked (no dead, disabled, or fake controls), the surface and components checked against `uiux`, and the added lines checked for hard-coded colors, sizes, and spacing where the project has tokens. Findings are Critical (blocks the pull request), Improvement, or Suggestion, with screenshots.
 
 **Installed files:** `actions/ui-review.md`.
 

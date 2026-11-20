@@ -1,6 +1,6 @@
 ---
 name: uiux
-description: Turn an approved specification into explicit UI/UX decisions and hand dev and tdd the approach to follow — flows, screens and states, components from the design system, interaction and feedback rules, copy, accessibility target, responsive and internationalization strategy, implementation mode and slice order, and the UI acceptance checks to test. Use after spec-checklist and before dev or tdd whenever a change adds or alters a user-facing surface.
+description: Turn an approved specification into explicit UI/UX decisions and hand dev and tdd the approach to follow — flows, screens and states, the surface each step uses (page, panel, dialog, toast), components assembled from the design system with an inventory before any markup, honest controls, interaction and feedback rules, copy, accessibility target, responsive and internationalization strategy, implementation mode and slice order, and the UI acceptance checks to test. Use after spec-checklist and before dev or tdd whenever a change adds or alters a user-facing surface.
 ---
 
 # uiux — UI/UX Decisions and Design Handoff
@@ -71,7 +71,27 @@ List the requirement and user-story IDs with a user-facing effect. Confirm the c
 
 ### 2. Inspect the existing interface
 
-Find what already exists before deciding anything new: components that fit, tokens for color, spacing, and type, layout and navigation patterns, form and validation conventions, empty and error state patterns, translation keys and locale setup, accessibility linting, and how tests select elements. Consistency with the existing product beats local novelty. Reuse first; extend second; create new components only when nothing fits, and say why.
+Find what already exists before deciding anything new: components that fit, tokens for color, spacing, and type, layout and navigation patterns, form and validation conventions, empty and error state patterns, translation keys and locale setup, accessibility linting, and how tests select elements. Consistency with the existing product beats local novelty.
+
+**Assemble screens; do not draw them.** Before any markup, write an inventory with one line per need: `need → component (path or package@version)`. Search in this order, and stop at the first that has it:
+
+1. The design system package or shared UI library.
+2. The app's shared components and layout shell (page, header, toolbar, table, pagination, form).
+3. The project's prototype or component kit, as visual reference.
+4. Nothing fits: the need becomes a **candidate component**.
+
+```bash
+ls <design-system>/src  <app>/src/components
+git grep -n "<LikelyName" -- '*.tsx' '*.vue' '*.svelte' | head
+```
+
+Rules for the inventory:
+
+- A component that almost fits is the one to use, with different content. Never a second look for the same job.
+- Only content changes from screen to screen: text, data, how many rows. Never restyle a shared component for one case with local classes or inline styles; a new variant is added to the component only when it serves every screen.
+- A candidate component is built where it belongs (the module that needs it, or the design system), judged in a local copy of the real screen next to its neighbors, and proposed in a pull request with before and after images for design review. Until it is approved, the official screen uses the closest approved component, or waits. Never approve a candidate yourself.
+
+Then write a short **screen block** before the code: route, who uses it and when, the blocks in order with their exact titles, and the one primary action.
 
 ### 3. Map users, tasks, and flows
 
@@ -96,10 +116,43 @@ For every screen or component in scope, decide:
 - Interaction rules: what triggers what, when validation runs, how feedback appears, focus movement, confirmation for destructive actions, and undo where it is cheaper than confirmation.
 - Content: labels, help text, empty-state text, error messages that say what happened and how to fix it, in the product's voice. Use translation keys when the project is localized.
 
+**Who the screen answers.** Someone who reviews or operates many records (staff, back office, a manager) needs density: open with what needs action now, then the queue, then context, never with a decorative chart. Someone asking about their own situation (a customer, a student, a patient) needs the answer first: the title answers the question that brought them, the first block is the number or status with its reference, and problems come before what is fine. The audience changes the composition, not the components.
+
+**Choose the surface by what it asks of the user.**
+
+| It asks for | Surface |
+|---|---|
+| nothing; it only informs | toast |
+| one short answer: acknowledge, confirm, pick from a few, fits without scrolling (about six fields at most) | modal dialog |
+| work while the list behind stays relevant: read a record, edit it, compare | side panel (drawer), most of the width on desktop, full width on small screens |
+| an object with a life of its own, worth sharing by link | its own route, with breadcrumbs |
+| one row read in place | expand the row |
+
+Ties: if it needs scrolling, it is not a modal; a modal is a gesture (seconds), a panel is a stay (minutes). Small screens do not change the choice.
+
+- **A complex form is a page.** Sections to navigate, steps, more than one screen of scrolling, or something people leave and come back to: give it its own route with breadcrumbs and an exit guard. A panel holds no inner navigation, no pagination, and no panel on top of it; needing those means a route. Content tabs in a detail view are fine; tabs that split a form are the sign it needs a page.
+- **Stacking.** A confirmation may open over a panel. Never a panel over a dialog, never a dialog from a dialog. Escape and clicking outside close through the same guard.
+- **Exit guard only where something can be lost.** Closing a surface with unsaved changes never discards silently: the actions stay in view and "Discard changes" is offered. A surface with nothing to lose closes at once.
+
+**Honest controls.** Every control leads to a real screen or a dialog in context. A feature not built yet is a non-clickable label ("coming soon"), never a disabled button. Without permission, the control is hidden, not greyed out. Never a form that pretends to save: when the user cannot change the data, the action says what happens instead ("Request sent to support"). A bulk action shows who may run it, previews its impact, and leaves a receipt. Destructive actions are never one click. A submit button is never born disabled: clicking it validates and points to the field to fix.
+
+**A pattern for every state.** Loading: a skeleton shaped like the content, not a generic spinner; a batch shows the real status of each item. Empty: the empty state takes the table's place, says why it is empty, and carries the action that fills it. A failed read: inline, with "Try again". A failed write: a toast with a specific message. No permission: the item is not there. A form the system can prefill arrives prefilled for the person to check.
+
+**Two voices in the text.** Name who is speaking before writing any string:
+
+| Who speaks | Where | How |
+|---|---|---|
+| The interface | labels, cells, tooltips, statuses, buttons, section titles, empty states, toasts | label and value, short fragments ("Last login: 12+ days ago"), six words or fewer where possible; the interface never explains itself or talks about itself |
+| An assistant or agent, when the product has one | its messages and chat | plain conversational sentences, one idea each, keeping the facts and numbers; it speaks only when it has something useful |
+
+State time on the reader's clock ("2 days late", "due today"), not the database's ("Pending", "In progress"). A list of tasks is a list component, never squeezed into an assistant's message.
+
 ### 5. Decide cross-cutting qualities
 
 - **Accessibility target.** Use the level the product or spec set. If none is set, propose WCAG 2.2 AA and confirm it with the user; do not settle it silently. Record per-component requirements: keyboard operation, visible focus, accessible names, roles and ARIA only where native HTML is not enough, contrast, text resizing, reduced motion, and screen reader announcements for dynamic changes.
 - **Devices and layout.** Use the target devices and platforms from the product plan to choose mobile-first or desktop-first, breakpoints, touch target sizes, and whether progressive enhancement is required (core task works without JavaScript or on poor networks).
+- **Visual.** Color has a function: state colors only for state, the accent only for the primary action and links, everything from tokens. Check contrast in every state of a control (hover, focus, selected, disabled), in every theme the product ships. A customer's or tenant's brand enters through one set of tokens, never per screen.
+- **Motion.** Movement only when it explains something: where a surface came from, that work is happening, what changed. Two durations are enough (a short one, about 150 to 200 ms, for feedback; a longer one, about 250 to 350 ms, for surfaces entering), one easing for entering and one for leaving, and exits faster than entrances. Nothing moves that the user did not cause, except a live indicator. With reduced motion requested, nothing travels: keep only fades.
 - **Internationalization.** Use the locales from the plan. Decide formatting of dates, numbers, and currency, text expansion allowance, pluralization, and right-to-left support.
 - **Measurement.** Add analytics events, experiments, or heatmaps only when the spec's success criteria require them, and respect the spec's privacy and consent rules.
 - **AI-assisted behavior.** When the spec includes it, decide how AI output is labeled, reviewed, corrected, and declined by the user.
@@ -141,7 +194,9 @@ Screens, components, and channels in scope; explicitly out of scope.
 One flow per user story (list or Mermaid), including failure paths.
 
 ## 3. Screens and Components
-| Screen / component | Requirements | Component (reuse / extend / new) | States | Notes |
+| Screen / component | Requirements | Surface (page, route, panel, dialog, toast, expand) | Component (reuse / extend / candidate) | States | Notes |
+
+Inventory: one line per need, `need → component (path or package@version)`; candidates listed with who approves them.
 
 ## 4. Interaction and Feedback Rules
 UX-01 ... each a testable rule: trigger, response, feedback, focus.
