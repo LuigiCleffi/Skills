@@ -187,6 +187,29 @@ function readRecord(file) {
     .join("\n");
 }
 
+// The document without its fenced code blocks, which hold examples, not the
+// record's own content: an example "Open Questions: None." must not settle a
+// stage, and an example "| FAIL |" row must not fail one. A fence closes only
+// with the same character, at least as long as it opened (CommonMark); an
+// unclosed fence runs to the end.
+export function withoutFences(document) {
+  const kept = [];
+  let fence = null;
+  for (const line of document.split("\n")) {
+    const marker = /^ {0,3}(`{3,}|~{3,})/.exec(line)?.[1];
+    if (fence) {
+      if (marker && marker[0] === fence[0] && marker.length >= fence.length && line.trim() === marker) fence = null;
+      continue;
+    }
+    if (marker && !(marker[0] === "`" && line.slice(line.indexOf(marker) + marker.length).includes("`"))) {
+      fence = marker;
+      continue;
+    }
+    kept.push(line);
+  }
+  return kept.join("\n");
+}
+
 function countWords(document) {
   return document.split(/\s+/).filter(Boolean).length;
 }
@@ -233,11 +256,16 @@ export function recordProblems(config, stage, record) {
   const rules = config.records?.[stage];
   let document;
   try {
-    document = readRecord(file);
+    document = withoutFences(readRecord(file));
   } catch {
     return rules ? [`its record ${record} cannot be read as text`] : [];
   }
 
+  return textProblems(rules, document, record);
+}
+
+// The checks of one record's rules against its text (fences already removed).
+export function textProblems(rules, document, record) {
   const problems = [];
   for (const placeholder of placeholders) {
     if (document.includes(placeholder)) problems.push(`${record} still has the placeholder ${placeholder}`);
@@ -326,6 +354,10 @@ export function evaluateRun(config, touched = []) {
   const problems = required
     .map((stage) => stageProblem(stage, state.stages?.[stage], state.records?.[stage], config))
     .filter(Boolean);
+  if (state.stages?.tasks === "done" && state.records?.tasks) {
+    const text = readRecordText(state.records.tasks);
+    if (text) problems.push(...taskProblems(parseTasks(text)).map((problem) => `tasks: ${problem}`));
+  }
 
   const undeclared = [...new Set(touched.flatMap((file) => triggersFor(config, file)))].filter(
     (trigger) => !declared.includes(trigger),
@@ -405,10 +437,22 @@ function runHook(config, level) {
   const target = input.tool_input?.file_path ?? input.tool_input?.notebook_path;
   if (typeof target !== "string") return 0;
   const relative = projectRelative(target);
-  if (relative === null || !isGuarded(config, relative)) return 0;
+  if (relative === null) return 0;
+
+  const reminders = territoryFor(relative).filter((reminder) => firstTimeInSession(input.session_id, reminder));
+  const tell = (context, systemMessage) =>
+    console.log(JSON.stringify({ ...(systemMessage ? { systemMessage } : {}), hookSpecificOutput: { hookEventName: "PreToolUse", additionalContext: context } }));
+
+  if (!isGuarded(config, relative)) {
+    if (reminders.length > 0) tell(reminders.join("\n"));
+    return 0;
+  }
 
   const run = evaluateRun(config, [relative]);
-  if (run.ready) return 0;
+  if (run.ready) {
+    if (reminders.length > 0) tell(reminders.join("\n"));
+    return 0;
+  }
 
   if (level === "block") {
     console.error(problemMessage([relative], run, "block"));
@@ -418,12 +462,9 @@ function runHook(config, level) {
   const message = problemMessage([relative], run, "warn");
   if (firstTimeInSession(input.session_id, message)) {
     // additionalContext reaches the model; systemMessage reaches the person.
-    console.log(
-      JSON.stringify({
-        systemMessage: `Harness gate: ${relative} changed before the run is ready (${run.problems.length} pending).`,
-        hookSpecificOutput: { hookEventName: "PreToolUse", additionalContext: message },
-      }),
-    );
+    tell([message, ...reminders].join("\n"), `Harness gate: ${relative} changed before the run is ready (${run.problems.length} pending).`);
+  } else if (reminders.length > 0) {
+    tell(reminders.join("\n"));
   }
   return 0;
 }
@@ -551,6 +592,15 @@ export function undeclaredModules(touched, declared, depth = 2) {
   return [...modules.entries()].map(([module, files]) => ({ module, files }));
 }
 
+// Files the records name that the change never touched: a task that may not
+// be done. Only guarded files count, so commands, docs, and globs stay out.
+export function missingChanges(touched, declared, isCode = () => true) {
+  const changed = new Set(touched);
+  return [...new Set(declared)].filter(
+    (file) => !file.includes("*") && /\.[a-z0-9]+$/i.test(file) && isCode(file) && !changed.has(file),
+  );
+}
+
 function runScope(config, args) {
   const { state } = readState(config);
   if (!state) {
@@ -579,16 +629,316 @@ function runScope(config, args) {
 
   const depth = config.scope?.depth ?? 2;
   const foreign = undeclaredModules(touched, declared, depth);
+  const missing = missingChanges(touched, declared, (file) => isGuarded(config, file));
   console.log(`${touched.length} guarded file(s) changed since ${base}; ${declared.length} path(s) named in the run's records.`);
+
   if (foreign.length === 0) {
-    console.log("Every touched module is named in the run's records.");
+    console.log("UNEXPECTED CHANGE: none. Every touched module is named in the run's records.");
+  } else {
+    console.log("UNEXPECTED CHANGE: touched but not named in the run's records (is this ours?):");
+    for (const { module, files } of foreign) {
+      console.log(`  - ${module} (${files.length} file${files.length === 1 ? "" : "s"}: ${files.slice(0, 3).join(", ")}${files.length > 3 ? ", ..." : ""})`);
+    }
+    console.log("  Claim each one in the plan or tasks record, or move its change to its own pull request.");
+  }
+
+  if (missing.length === 0) {
+    console.log("MISSING CHANGE: none. Every code file the records name was changed.");
+  } else {
+    console.log("MISSING CHANGE: named in the run's records but not changed (is a task undone?):");
+    for (const file of missing) console.log(`  - ${file}`);
+    console.log("  Finish the task, or update the record if the plan changed.");
+  }
+  return 0;
+}
+
+// ── Tasks, coverage, and the board ─────────────────────────────────────────
+
+// The tasks of a tasks record: id, title, files, depends, status. A task is
+// a block that starts with a "TASK-n" heading; "**Status:**" is todo, doing,
+// done, or blocked (todo when missing).
+export function parseTasks(document) {
+  const lines = withoutFences(document).split("\n");
+  const tasks = [];
+  let current = null;
+  for (const line of lines) {
+    const heading = /^#{2,4}\s+(TASK-\d+)\b\s*(.*)$/.exec(line);
+    if (heading) {
+      current = { id: heading[1], title: heading[2].trim(), files: [], depends: [], status: "todo" };
+      tasks.push(current);
+      continue;
+    }
+    if (!current) continue;
+    const field = /^\s*[-*]?\s*\*\*(Files|Depends|Status):\*\*\s*(.*)$/.exec(line);
+    if (!field) continue;
+    if (field[1] === "Files") current.files = [...field[2].matchAll(/`([^`]+)`(\s*\(new\))?/g)].map((m) => ({ path: m[1], isNew: Boolean(m[2]) }));
+    if (field[1] === "Depends") current.depends = [...field[2].matchAll(/TASK-\d+/g)].map((m) => m[0]);
+    if (field[1] === "Status") current.status = field[2].trim().toLowerCase().split(/\s/)[0] || "todo";
+  }
+  return tasks;
+}
+
+// The first dependency cycle among the tasks, as a list of ids, or null.
+export function dependencyCycle(tasks) {
+  const byId = new Map(tasks.map((task) => [task.id, task]));
+  const state = new Map();
+  const stack = [];
+  const visit = (id) => {
+    if (state.get(id) === "done") return null;
+    if (state.get(id) === "open") return [...stack.slice(stack.indexOf(id)), id];
+    state.set(id, "open");
+    stack.push(id);
+    for (const next of byId.get(id)?.depends ?? []) {
+      const cycle = byId.has(next) ? visit(next) : null;
+      if (cycle) return cycle;
+    }
+    stack.pop();
+    state.set(id, "done");
+    return null;
+  };
+  for (const task of tasks) {
+    const cycle = visit(task.id);
+    if (cycle) return cycle;
+  }
+  return null;
+}
+
+export function taskProblems(tasks, exists = (file) => existsSync(path.resolve(projectDirectory, file))) {
+  const problems = [];
+  const ids = new Set(tasks.map((task) => task.id));
+  for (const task of tasks) {
+    for (const file of task.files) {
+      if (!file.isNew && !file.path.includes("*") && !exists(file.path)) {
+        problems.push(`${task.id} names ${file.path}, which does not exist; mark it "(new)" if the task creates it`);
+      }
+    }
+    for (const dependency of task.depends) {
+      if (!ids.has(dependency)) problems.push(`${task.id} depends on ${dependency}, which is not a task`);
+    }
+  }
+  const cycle = dependencyCycle(tasks);
+  if (cycle) problems.push(`the tasks depend on each other in a circle: ${cycle.join(" → ")}`);
+  return problems;
+}
+
+const emptyEvidence = new Set(["", "-", "—", "–", "ok", "n/a", "na", "tbd", "todo", "?", "yes", "passed"]);
+
+// Every acceptance criterion the spec names has a scenario in the QA report
+// citing it, the report cites no criterion the spec lacks, and no passed
+// scenario has empty or placeholder evidence. Criterion IDs are found with
+// config.coverage.criteria (a regex).
+export function coverageProblems(config, specText, qaText) {
+  const pattern = new RegExp(config.coverage?.criteria ?? "\\b(?:FR-\\d+|US-\\d+(?: AC-\\d+)?|SC-\\d+)\\b", "g");
+  const spec = new Set(withoutFences(specText).match(pattern) ?? []);
+  const rows = withoutFences(qaText)
+    .split("\n")
+    .filter((line) => /^\s*\|/.test(line) && !/^\s*\|[\s|:-]+\|\s*$/.test(line))
+    .map((line) => line.trim().replace(/^\||\|$/g, "").split("|").map((cell) => cell.trim()))
+    .filter((cells) => cells.some((cell) => /^(PASS|FAIL|BLOCKED|MANUAL)$/.test(cell)));
+
+  const cited = new Set();
+  const problems = [];
+  for (const cells of rows) {
+    const ids = cells.join(" ").match(pattern) ?? [];
+    for (const id of ids) {
+      cited.add(id);
+      if (!spec.has(id)) problems.push(`${cells[0]} cites ${id}, which the spec does not name`);
+    }
+    const result = cells.find((cell) => /^(PASS|FAIL|BLOCKED|MANUAL)$/.test(cell));
+    const evidence = cells[cells.length - 1];
+    if (result === "PASS" && emptyEvidence.has(evidence.toLowerCase())) {
+      problems.push(`${cells[0]} passed with no evidence ("${evidence}"): say what was run and what it showed`);
+    }
+  }
+  for (const id of spec) {
+    if (!cited.has(id)) problems.push(`${id} has no scenario in the QA report`);
+  }
+  return problems;
+}
+
+function readRecordText(record) {
+  try {
+    return readRecord(path.resolve(projectDirectory, record));
+  } catch {
+    return null;
+  }
+}
+
+// Coverage and task problems of the active run, from its spec, qa, and
+// tasks records. Empty when the records are not there yet.
+export function runCoverageProblems(config, state) {
+  const problems = [];
+  const spec = state?.records?.spec ? readRecordText(state.records.spec) : null;
+  const qa = state?.records?.qa ? readRecordText(state.records.qa) : null;
+  const tasks = state?.records?.tasks ? readRecordText(state.records.tasks) : null;
+  if (spec && qa) problems.push(...coverageProblems(config, spec, qa));
+  if (tasks) problems.push(...taskProblems(parseTasks(tasks)));
+  return problems;
+}
+
+function runCoverage(config, args) {
+  const { state } = readState(config);
+  const [specPath, qaPath, tasksPath] = args;
+  const records = specPath ? { spec: specPath, qa: qaPath, tasks: tasksPath } : state?.records ?? {};
+  const problems = runCoverageProblems(config, { records });
+  if (problems.length === 0) {
+    console.log("Coverage: every criterion has a scenario with evidence, and the tasks hold together.");
     return 0;
   }
-  console.log("Touched but not named in the run's records (is this ours?):");
-  for (const { module, files } of foreign) {
-    console.log(`  - ${module} (${files.length} file${files.length === 1 ? "" : "s"}: ${files.slice(0, 3).join(", ")}${files.length > 3 ? ", ..." : ""})`);
+  console.error("Coverage problems:");
+  for (const problem of problems) console.error(`  - ${problem}`);
+  return 1;
+}
+
+// The tasks by status, and the frontier: tasks not done whose dependencies
+// are all done, which can start now.
+export function boardOf(tasks) {
+  const done = new Set(tasks.filter((task) => task.status === "done").map((task) => task.id));
+  const counts = {};
+  for (const task of tasks) counts[task.status] = (counts[task.status] ?? 0) + 1;
+  const frontier = tasks.filter((task) => task.status !== "done" && task.depends.every((id) => done.has(id)));
+  return { counts, frontier, total: tasks.length, done: done.size };
+}
+
+function runBoard(config, args) {
+  const { state } = readState(config);
+  const record = args[0] ?? state?.records?.tasks;
+  const text = record ? readRecordText(record) : null;
+  if (!text) {
+    console.log("No tasks record: pass its path, or record the tasks stage in the run.");
+    return 1;
   }
-  console.log("Claim each one in the plan or tasks record, or move its change to its own pull request.");
+  const board = boardOf(parseTasks(text));
+  console.log(`${board.done}/${board.total} tasks done (${Object.entries(board.counts).map(([status, n]) => `${status} ${n}`).join(", ")}).`);
+  console.log(board.frontier.length === 0 ? "Nothing can start now." : "Can start now:");
+  for (const task of board.frontier) console.log(`  - ${task.id} ${task.title}${task.status !== "todo" ? ` (${task.status})` : ""}`);
+  return 0;
+}
+
+// ── Brief: the run's state at each prompt ──────────────────────────────────
+
+const stageWorkflows = {
+  plan: "ProductDefinition/plan.md",
+  research: "actions/research.md",
+  spec: "ProductDefinition/specs/spec-definition.md",
+  "spec-checklist": "ProductDefinition/specs/spec-checklist.md",
+  reproduce: "actions/tdd.md",
+  strategy: "actions/strategy.md",
+  ddd: "actions/ddd.md",
+  bdd: "actions/bdd.md",
+  uiux: "actions/uiux.md",
+  "knowledge-gate": "actions/knowledge.md",
+  "adr-gate": "actions/adr.md",
+  tasks: "actions/dev.md (Plan the tasks)",
+  dev: "actions/dev.md",
+  review: "actions/review.md",
+  qa: "actions/qa.md",
+  "code-review": "actions/code-review.md",
+};
+
+// What the agent needs before it acts on a prompt: the run, the next stage
+// and its workflow, and how far the tasks are. Null without an active run.
+export function briefOf(config) {
+  const { state } = readState(config);
+  if (!state) return null;
+  const declared = Array.isArray(state.triggers) ? state.triggers : [];
+  const stages = [...(requiredStages(config, state.mode, declared) ?? []), ...postCodeStages(config, state.mode)];
+  const next = stages.find((stage) => stageProblem(stage, state.stages?.[stage], state.records?.[stage], config) !== null);
+  const lines = [`Harness run ${state.run ?? "(no run record)"}: mode ${state.mode}${declared.length ? `, triggers ${declared.join(", ")}` : ""}.`];
+  if (next) {
+    lines.push(`Next stage: ${next}, following ${stageWorkflows[next] ?? `actions/${next}.md`}. Skipping it loses what that stage checks; record it done or "skipped: <reason>".`);
+  } else {
+    lines.push("Every stage is settled; close the run with its result (actions/finish.md after the merge).");
+  }
+  const tasks = state.records?.tasks ? readRecordText(state.records.tasks) : null;
+  if (tasks) {
+    const board = boardOf(parseTasks(tasks));
+    lines.push(`Tasks: ${board.done}/${board.total} done${board.frontier.length ? `; can start: ${board.frontier.map((task) => task.id).join(", ")}` : ""}.`);
+  }
+  return lines.join("\n");
+}
+
+function postCodeStages(config, mode) {
+  const all = ["dev", "review", "qa", "code-review"];
+  const configured = config.modes?.[mode]?.postCode;
+  if (Array.isArray(configured)) return configured;
+  return mode === "chore" ? ["dev", "review"] : all;
+}
+
+function runBrief(config) {
+  let input = {};
+  try {
+    input = JSON.parse(readStdin() || "{}");
+  } catch {}
+  try {
+    const brief = briefOf(config);
+    if (!brief || !firstTimeInSession(input.session_id, brief)) return 0;
+    console.log(JSON.stringify({ hookSpecificOutput: { hookEventName: "UserPromptSubmit", additionalContext: brief } }));
+  } catch {
+    // A briefing must never stop a prompt.
+  }
+  return 0;
+}
+
+// ── Territory: what to read before writing here ────────────────────────────
+
+// The rows of the knowledge and ADR gates whose "Paths" match a file: before
+// writing there, the agent reads what the row points to.
+export function territoryFor(relative, gates = ["docs/knowledge/README.md", "docs/adr/README.md"]) {
+  const reminders = [];
+  for (const gate of gates) {
+    const text = readRecordText(gate);
+    if (!text) continue;
+    let pathsColumn = -1;
+    let readColumn = -1;
+    for (const line of withoutFences(text).split("\n")) {
+      if (!/^\s*\|/.test(line)) continue;
+      const cells = line.trim().replace(/^\||\|$/g, "").split("|").map((cell) => cell.trim());
+      if (cells.includes("Paths")) {
+        pathsColumn = cells.indexOf("Paths");
+        readColumn = cells.findIndex((cell) => /^(Read|Agent)$/.test(cell));
+        continue;
+      }
+      if (pathsColumn < 0 || /^[\s:-]+$/.test(cells.join(""))) continue;
+      const globs = [...(cells[pathsColumn] ?? "").matchAll(/`([^`]+)`/g)].map((m) => m[1]);
+      if (globs.length && matchesAny(relative, globs)) {
+        const read = (cells[readColumn] ?? "").replace(/\[([^\]]+)\]\([^)]*\)/g, "$1");
+        reminders.push(`${relative} is governed by ${gate}: read ${read || "the row's files"} before writing here.`);
+      }
+    }
+  }
+  return reminders;
+}
+
+// ── Issues: the format of an issue an agent writes ─────────────────────────
+
+// Checks the body of an issue a tool is about to save (any issue-tracker MCP
+// whose tool name matches config.issues.tools) against records.issue. It
+// warns; it never blocks, since an issue is easy to edit.
+export function issueProblems(config, toolName, toolInput) {
+  const settings = config.issues ?? {};
+  const tools = new RegExp(settings.tools ?? "^mcp__.*__(save_issue|create_issue|update_issue)$");
+  if (!tools.test(toolName ?? "")) return [];
+  const fields = settings.bodyFields ?? ["description", "body"];
+  const body = fields.map((field) => toolInput?.[field]).find((value) => typeof value === "string");
+  if (body === undefined) return [];
+  return textProblems(config.records?.issue, withoutFences(body), "the issue");
+}
+
+function runIssueHook(config) {
+  let input;
+  try {
+    input = JSON.parse(readStdin() || "{}");
+  } catch {
+    return 0;
+  }
+  const problems = issueProblems(config, input.tool_name, input.tool_input);
+  if (problems.length === 0) return 0;
+  const message = `The issue does not follow the project's format (harness/config.json records.issue):\n${problems.map((problem) => `  - ${problem}`).join("\n")}\nFix the body before saving, or save it and fix it next.`;
+  console.log(JSON.stringify({
+    systemMessage: `Issue format: ${problems.length} problem(s).`,
+    hookSpecificOutput: { hookEventName: "PreToolUse", additionalContext: message },
+  }));
   return 0;
 }
 
@@ -629,6 +979,10 @@ function main() {
   if (command === "validate") return runValidate(config, args);
   if (command === "escapes") return runEscapes();
   if (command === "scope") return runScope(config, args);
+  if (command === "coverage") return runCoverage(config, args);
+  if (command === "board") return runBoard(config, args);
+  if (command === "brief") return runBrief(config);
+  if (command === "issue") return runIssueHook(config);
   if (level === "off") return 0;
   if (command === "check") return runCheck(config, level, args);
   return runHook(config, level);

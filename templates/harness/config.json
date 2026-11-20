@@ -171,6 +171,7 @@
     },
     "qa": {
       "headings": [
+        "Change against the tasks",
         "Scenarios"
       ],
       "require": [
@@ -179,6 +180,26 @@
       "forbid": [
         "| FAIL |"
       ]
+    },
+    "issue": {
+      "headings": [
+        "Problem",
+        "Acceptance criteria"
+      ],
+      "forbid": [
+        "[NEEDS CLARIFICATION]"
+      ],
+      "maxWords": 600
     }
+  },
+  "coverage": {
+    "criteria": "\\b(?:FR-\\d+|US-\\d+(?: AC-\\d+)?|SC-\\d+)\\b"
+  },
+  "issues": {
+    "tools": "^mcp__.*__(save_issue|create_issue|update_issue)$",
+    "bodyFields": [
+      "description",
+      "body"
+    ]
   }
 }

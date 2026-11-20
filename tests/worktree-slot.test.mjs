@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
-import { readFileSync, realpathSync } from "node:fs";
+import { lstatSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { after, describe, it } from "node:test";
-import { cleanUp, git, importFrom, makeProject, run } from "./helpers.mjs";
+import { cleanUp, git, importFrom, makeProject, run, write } from "./helpers.mjs";
 
 after(cleanUp);
 
@@ -44,5 +44,44 @@ describe("worktree slots", () => {
     } finally {
       git(project, "worktree", "remove", "--force", realpathSync(other));
     }
+  });
+});
+
+describe("worktree provisioning", () => {
+  it("keeps ports off the ones browsers and macOS refuse, inside the slot's block", async () => {
+    const slots = await importFrom(makeProject(["tools"]), "tools/worktree-slot.mjs");
+    assert.equal(slots.portFor(4990, 1, 10), 5001);
+    assert.equal(slots.portFor(6990, 1, 10), 7001);
+    assert.equal(slots.portFor(3000, 2, 10), 3020);
+  });
+
+  it("copies listed untracked files and links dependencies into a new worktree, and prints one line as a hook", () => {
+    const project = makeProject(["tools"]);
+    write(project, ".gitignore", ".env.local\nnode_modules\n.worktree-slot.env\nconfig/*.local.json\n");
+    write(project, ".worktreeinclude", "# untracked files a worktree needs\n.env.local\nconfig/*.local.json\n");
+    write(project, ".env.local", "TOKEN=dev\n");
+    write(project, "config/db.local.json", "{}");
+    write(project, "node_modules/x/index.js", "");
+    writeFileSync(path.join(project, "tools/worktree.json"), JSON.stringify({ ports: { PORT: 3000 }, include: ".worktreeinclude", linkDependencies: ["node_modules"] }));
+    git(project, "init", "-q", "-b", "main");
+    git(project, "add", "-A");
+    git(project, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", "start");
+    const other = `${project}-wt`;
+    git(project, "worktree", "add", "-q", other);
+    try {
+      const hook = run(other, "tools/worktree-slot.mjs", ["--hook"]);
+      assert.equal(hook.code, 0, hook.stderr);
+      assert.match(hook.stdout, /^Worktree slot 1: PORT=3010 \(in \.worktree-slot\.env\); copied \.env\.local, config\/db\.local\.json; linked node_modules\.\n$/);
+      assert.equal(readFileSync(path.join(other, ".env.local"), "utf8"), "TOKEN=dev\n");
+      assert.ok(lstatSync(path.join(other, "node_modules")).isSymbolicLink());
+
+      writeFileSync(path.join(other, ".env.local"), "TOKEN=mine\n");
+      run(other, "tools/worktree-slot.mjs", ["--hook"]);
+      assert.equal(readFileSync(path.join(other, ".env.local"), "utf8"), "TOKEN=mine\n");
+    } finally {
+      git(project, "worktree", "remove", "--force", other);
+    }
+    const outside = makeProject(["tools"]);
+    assert.deepEqual(run(outside, "tools/worktree-slot.mjs", ["--hook"]), { code: 0, stdout: "", stderr: "" });
   });
 });

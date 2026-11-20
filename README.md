@@ -37,8 +37,8 @@ npx skills-code-kit install --groups dev,review,tdd,harness --yes
 ```
 
 - `--all` or `--groups a,b` picks the groups (`npx skills-code-kit list` shows them and what each requires).
-- `--harness warn|block|none`, `--guards` / `--no-guards`, `--checks` / `--no-checks`, `--worktree-hook` / `--no-worktree-hook`, `--playwright` / `--no-playwright`, `--agents claude,codex,opencode`, and `--mcp claude,codex,opencode` answer the other questions (`none` for an empty list).
-- Under `--yes` the defaults are: the harness hook warns, the guards, checks, and worktree hooks are on, Playwright only if it is configured, Scrum agents for the AI tools found in the project, no MCP server.
+- `--harness warn|block|none`, `--harness-helpers` / `--no-harness-helpers`, `--guards` / `--no-guards`, `--checks` / `--no-checks`, `--worktree-hook` / `--no-worktree-hook`, `--playwright` / `--no-playwright`, `--agents claude,codex,opencode`, and `--mcp claude,codex,opencode` answer the other questions (`none` for an empty list).
+- Under `--yes` the defaults are: the harness hook warns, the harness helpers, guards, checks, and worktree hooks are on, Playwright only if it is configured, Scrum agents for the AI tools found in the project, no MCP server.
 - Files you edited since the last install are kept unless you add `--overwrite`.
 
 Without a terminal and without `--yes`, the installer stops with exit code 2 instead of waiting for an answer. `npx skills-code-kit --help` lists every command and option.
@@ -204,6 +204,8 @@ The specification step splits before it writes: a request that names an area, ha
 
 `actions/uiux.md` sits between the specification and implementation. It reads the approved spec and checklist, inspects the existing design system, and writes `UIUXDecisions.md`: flows, screens and states, components, interaction rules, copy, accessibility target, layout and internationalization, the recommended TDD or direct mode and slice order for `dev`, and the UI acceptance checks `tdd` turns into tests. Product questions go back to the specification instead of being decided by design.
 
+Screens are assembled, not drawn: before any markup it writes an inventory with one line per need and the component that serves it (design system first, then the app's shared components, then the prototype kit), and a component that does not exist becomes a candidate for design review instead of a one-off. It picks the surface by what each step asks of the user (toast, dialog, side panel, own route, or a row expanded in place), sends complex forms to their own page, and keeps controls honest: nothing disabled for a feature that does not exist, hidden instead of greyed out without permission, no form that pretends to save, destructive and bulk actions confirmed with their impact. Every state has its pattern (skeleton, empty state in place with its action, inline retry, specific error toast), interface text is label and value on the reader's clock while only an assistant converses, color has a function and comes from tokens, and motion uses two durations and stops traveling under reduced motion.
+
 `UIUX/README.md` routes to one skill per section of the *UI/UX Design Guide* (Joel Parker Henderson, ed.), which `uiux` consults: foundations, design thinking, task analysis, ideation, product design, modeling diagrams, design systems, affordance and accessibility, implementation, internationalization, AI, testing, principles, and soft skills.
 
 **Installed files:**
@@ -353,9 +355,11 @@ Selecting this group also installs the workflows it routes to: product definitio
 
 An existing `CLAUDE.md` is never replaced; the installer asks you to add `@AGENTS.md` to it when it does not mention `AGENTS.md`.
 
-### 17. Pull Request Template
+### 17. Pull Requests
 
-**Purpose:** Give every pull request the same shape, so a reviewer sees what changed, why, how to try it, and what it looked like before and after.
+**Purpose:** Give every pull request the same shape, so a reviewer sees what changed, why, how to try it, and what it looked like before and after, and make it arrive green.
+
+`actions/pr.md` opens the pull request: it compares the change with its plan (`harness/gate.mjs scope`), runs the checks, writes the body from the template in the user's words (no process story, no terminal commands in the test steps, screenshots linked by commit SHA so they survive the branch's deletion, anything not done stated plainly), posts a **QA script** comment with what to run, watches CI until it settles and fixes failures from their logs, sorts review comments into change requests, suggestions, and questions, and checks the conditions before a merge, which stays the user's call.
 
 The template has five sections: **What was implemented**, **Why**, **How to test it?** (the steps a person would follow in the browser), **How it was**, and **How it is** (one screenshot per test step).
 
@@ -368,7 +372,7 @@ The Scrum team installs this group, and the Tech Lead uses it when opening the s
 
 **Installed files:**
 
-`.github/pull_request_template.md`
+`actions/pr.md`, `.github/pull_request_template.md`
 
 ### 18. Business Knowledge Base
 
@@ -413,6 +417,12 @@ Why warn by default: a hook that blocks needs irreversible damage on the other s
 
 **Escaped defects teach the battery.** A fix run opened for a defect that reached a user or QA records what shipped it, and closes only once `docs/qa/edge-cases.md` has the case that would have caught it. `node harness/gate.mjs escapes` counts them per month.
 
+**Brief.** The installer offers two hooks that only inform (`--harness-helpers`, on by default). At each prompt, `node harness/gate.mjs brief` tells the agent, once per session and state, the active run, the next stage and its workflow, and how far the tasks are, so it does not answer a request from memory while a stage is pending. When an issue is saved through any issue tracker's MCP (`save_issue`, `create_issue`, `update_issue`), `node harness/gate.mjs issue` checks its body against `records.issue` (by default a Problem and an Acceptance criteria section, under 600 words) and warns.
+
+**Territory.** Before a file is edited, the harness hook reminds the agent, once per session, of the knowledge and ADR gate rows whose `Paths` match it: "read BR-0003 before writing here".
+
+**Coverage and the board.** `node harness/gate.mjs coverage [spec qa tasks]` checks that every criterion ID in the spec (`FR-001`, `US-1 AC-2`; `coverage.criteria` in the config) has a scenario in the QA report citing it, that the report cites nothing the spec lacks, and that no passed scenario has empty or placeholder evidence ("ok", "—"). Tasks must name files that exist (or are marked `(new)`), depend only on real tasks, and form no circle; the gate checks this once the tasks stage is done. `node harness/gate.mjs board` shows the tasks by status (`**Status:** todo | doing | done | blocked`) and the ones that can start now. Record checks ignore fenced code blocks, so an example in a record neither settles nor fails it.
+
 **Scope.** `node harness/gate.mjs scope` lists the modules (the first two folders of a path) the branch touched that no record of the run names. A stray module usually comes from a merge resolved wrong or a fix committed to the wrong branch; it is a question, not a failure, so the command reports and exits 0. `node harness/gate.mjs status` also reads git, so code changed while the run was not ready shows up even if `active.json` says otherwise.
 
 Selecting this group also installs product definition, domain research, the knowledge base, ADR, development, TDD, review, and QA. With the Scrum team installed, Sprint Planning opens one run per backlog item.
@@ -428,10 +438,11 @@ Selecting this group also installs product definition, domain research, the know
 - **Secrets:** reading, copying, or sending `.env` files, keys, and credential files, by tool or in the shell (`cat .env`, `curl -d @.env`), and dumping the environment. `.env.example` and its kin stay readable.
 - **Protected paths:** writing the folders your tools must own, such as migrations or generated code (`"protectedPaths": ["prisma/migrations/**"]`), by tool, redirect, copy, or in-place edit. Reading them is fine.
 - **Destructive commands:** `rm -rf` on the root, home, or working folder, `git reset --hard`, `git clean -f`, a force push to main or master, piping a download into a shell, `chmod 777`, and `--no-verify` when the project has git hooks.
-- **Protected branches:** commits and pushes on the branches you list in `"protectedBranches"` (empty by default).
+- **Protected branches:** on the branches you list in `"protectedBranches"` (empty by default), edits to files and the git commands that change the branch (commit, push, merge, rebase, cherry-pick, revert, pull). Reading and creating a new branch are fine.
+- **Worktree isolation:** with `"worktreeIsolation": true`, a session may not write into another worktree of the same repository, which is another session's branch. Off by default.
 - **Production cloud:** a `gcloud`, `aws`, `az`, `kubectl`, `helm`, or `terraform` command that changes something, when its arguments or environment name production by one of your `"production.markers"` (`--project=acme-prod`, `--profile prod`, `-var-file=production.tfvars`). Reading production (list, describe, get, logs, plan) passes, and a verb the guard does not know counts as a change. Set `"requireNonProduction": true` with `"nonProductionMarkers"` (`staging`, `dev`) to go further: a change passes only when the command proves its target is not production, because a command that names no target goes wherever the CLI's current project or context points. Empty by default.
 
-It parses the command text, so it catches accidents, not an adversary; a heredoc body is treated as data, and a payload it cannot read is let through.
+It parses the command text, so it catches accidents, not an adversary. It follows `cd` and `pushd` inside a command, and forgets a `cd` made inside parentheses, so `cd db/migrations && echo x > m.sql` is checked where it runs. A heredoc body is treated as data, and a payload it cannot read is let through.
 
 **Installed files:** `guards/guard.mjs`, `guards/config.json`.
 
@@ -441,7 +452,13 @@ It parses the command text, so it catches accidents, not an adversary; a heredoc
 
 `actions/qa.md` writes one scenario per acceptance criterion (from the spec, the feature files, or the UI acceptance checks) plus one per applicable row of the edge-case battery, then runs each for real: an existing test, a Playwright or browser run with a screenshot, an API call, or, only when nothing else can run, exact manual steps for a person. The report in `docs/qa/reports/` gives each scenario its result and evidence and an overall verdict; a failure goes back to `dev`. It never edits code or tests to make a scenario pass. A QA person can run it on a branch to get the scenarios to check by hand.
 
-**Installed files:** `actions/qa.md`, `docs/qa/edge-cases.md`.
+Before running anything, it checks the change against the tasks: MISSING CHANGE (a file a task names that the branch never changed) and UNEXPECTED CHANGE (a module the branch changed that no task names), from `node harness/gate.mjs scope` when the harness is installed. Every command it ran goes into `docs/qa/reports/<report>/run.sh`, so anyone can rerun the proof; the harness accepts a QA record only with its "Change against the tasks" section.
+
+Before the battery it answers three questions about the change (the worst value its input accepts, what changes between runs, who else goes through the code, including callers the diff does not touch). A passed scenario on something risky (permissions, another tenant's data, money, a migration, a deletion) must also be shown to fail on the base. Results say what the proof varied, a scenario not run is `NOT VERIFIED`, never `PASS`, and a fresh agent that saw only the request and the diff checks that the change is what was asked. When the diff touches screens, it runs the UI review gate.
+
+`actions/test-guide.md` writes manual test steps for a merged change in `docs/qa/guides/`, with the exact labels the screens show (read from the code), for the developer to approve before it is shared.
+
+**Installed files:** `actions/qa.md`, `actions/test-guide.md`, `docs/qa/edge-cases.md`.
 
 ### 23. Worktree Slots for Parallel Sessions
 
@@ -449,7 +466,9 @@ It parses the command text, so it catches accidents, not an adversary; a heredoc
 
 `node tools/worktree-slot.mjs`, run inside a worktree, gives it a slot that stays the same while it exists (the main checkout is 0; a new worktree takes the lowest free number) and writes `.worktree-slot.env` with its ports (base + slot × step) and names such as `DATABASE_NAME=app_wt2`, from `tools/worktree.json`. `--print` shows the values, `--list` the slots of every worktree. It creates no database and starts nothing; the generated `AGENTS.md` tells agents to use the file.
 
-The installer offers a Claude Code `SessionStart` hook that runs it when a session starts, so each worktree has its slot before anything is launched (default on; `--no-worktree-hook` to skip). The hook never stops a session: outside git, or on any error, it does nothing.
+In `tools/worktree.json`, `"include"` names a file in the main checkout (`.worktreeinclude`) listing the untracked files a new worktree needs, such as `.env.local` (one per line, `*` within a folder); they are copied when missing and never overwritten. `"linkDependencies"` lists folders such as `node_modules` to link from the main checkout instead of installing again (off by default: a dependency change on the branch then needs its own install). A slot's port never lands on a port browsers refuse or on 5000 and 7000, which macOS gives to AirPlay.
+
+The installer offers a Claude Code `SessionStart` hook that runs it when a session starts (`--hook` mode), so each worktree has its slot before anything is launched and the agent is told its ports and database in one line (default on; `--no-worktree-hook` to skip). The hook never stops a session: outside git, or on any error, it says nothing.
 
 **Installed files:** `tools/worktree-slot.mjs`, `tools/worktree.json`.
 
@@ -457,11 +476,51 @@ The installer offers a Claude Code `SessionStart` hook that runs it when a sessi
 
 **Purpose:** Make "the checks passed on this commit" something a hook can verify, so an agent does not open a pull request it would see go red.
 
-`node checks/checks.mjs` compares the branch with its base (`origin/main` by default), runs the checks in `checks/config.json` that the changed files reach (a check with `when` runs only for the paths it lists; files matching `ignore`, such as docs, reach nothing), and when they all pass, stamps the commit in the git directory. It refuses to stamp uncommitted work, and a new commit needs a new run. `--waive "<reason>"` stamps without running, with the reason in the stamp for the pull request body to repeat; `status` says whether `HEAD` is stamped.
+`node checks/checks.mjs` compares the branch with its base (`origin/main` by default), runs the checks in `checks/config.json` that the changed files reach (a check with `when` runs only for the paths it lists; files matching `ignore`, such as docs, reach nothing), and when they all pass, stamps the commit in the git directory. It refuses to stamp uncommitted work, and a new commit needs a new run. A stamp stands only while the branch starts from the same point of the base: after a rebase or a merge of the base into the branch, the same commit sits on different code and the checks run again. `--waive "<reason>"` stamps without running, with the reason in the stamp for the pull request body to repeat; `status` says whether `HEAD` is stamped.
 
-As a Claude Code `PreToolUse` hook, `node checks/checks.mjs hook` refuses `gh pr create`, a `gh api` call that creates a pull request, and any MCP `create_pull_request` from a commit with no stamp. It is the one block outside the guards: an opened pull request notifies reviewers and runs CI, and the way past it is one command with a reason. It does not replace CI, which proves the change on a clean machine; a pull request opened in the browser never passes through it. Add `node checks/checks.mjs` to a git `pre-push` hook to run the checks on every push as well (it does nothing when the commit is already stamped).
+As a Claude Code `PreToolUse` hook, `node checks/checks.mjs hook` refuses `gh pr create`, a `gh api` call that creates a pull request, and any MCP `create_pull_request` from a commit with no stamp. It is the one block outside the guards: an opened pull request notifies reviewers and runs CI, and the way past it is one command with a reason. It does not replace CI, which proves the change on a clean machine; a pull request opened in the browser never passes through it. Add `node checks/checks.mjs pre-push` to a git `pre-push` hook (`.git/hooks/pre-push` or `.husky/pre-push`) to check every push as well: it reads the commits git is about to push, checks each one landing on a branch (not HEAD, so `git push origin HEAD:refs/heads/x` counts; tags and deletes do not), does nothing for a commit already stamped against the same base, and runs the checks without git's hook variables, so a check that runs `git init` in a temporary folder cannot rewrite the repository. When a check reads files another check's paths do not cover (a test that reads a config file), list those files in its `when`.
 
 **Installed files:** `checks/checks.mjs`, `checks/config.json`.
+
+### 25. UI Review Gate
+
+**Purpose:** Open the states nobody opens while building.
+
+`actions/ui-review.md` runs from `qa` or `dev` when a diff touches screens: each screen in every state (full with the longest real values, empty, loading, error, no permission), at 390, 820, 1180, 1440, and 2560 pixels and with side panels open with no sideways scroll, in a short window and every theme, after a reload (filters, tabs, and typed text must survive), with an accessibility scan (`serious` and `critical` count as Critical), a keyboard pass, reduced motion, every new control clicked (no dead, disabled, or fake controls), the surface and components checked against `uiux`, and the added lines checked for hard-coded colors, sizes, and spacing where the project has tokens. Findings are Critical (blocks the pull request), Improvement, or Suggestion, with screenshots.
+
+**Installed files:** `actions/ui-review.md`.
+
+### 26. Pull Request Review Assistant
+
+**Purpose:** Save a human reviewer's time for the decisions only a person can judge.
+
+`actions/pr-review.md` summarizes someone else's pull request in three lines (with a diagram when a flow changed), points to the commits and files no automated check covered, walks the reviewer through each decision one at a time (file and line, the test that proves it, the command to try it), turns their notes into change requests, suggestions, and questions, drops what a written rule already decides, and drafts the review. It publishes only what the reviewer approves.
+
+**Installed files:** `actions/pr-review.md`.
+
+### 27. Plain Answers Writing Style
+
+**Purpose:** Replies a busy person can act on.
+
+A Claude Code output style, `.claude/output-styles/plain-answers.md`, turned on in `.claude/settings.json` unless the project already chose another style: answer first, behavior instead of internals, a number instead of an adjective, the result instead of the diary, what is not done stated plainly, size that follows the stakes, one question at a time, and a form chosen by what the reader will do with the reply. It keeps Claude Code's coding instructions.
+
+**Installed files:** `.claude/output-styles/plain-answers.md`.
+
+### 28. Explore an Idea
+
+**Purpose:** Question an idea before it becomes a plan.
+
+`actions/explore.md` reads what the repository, the knowledge base, and the ADRs already say, finds the problem behind the idea, raises the honest objection, and lays out two or three options (always including the smallest one, and "do nothing" when that is honest) with their cost, risk, and what each leaves out. It writes no plan, spec, or code, and ends in a decision: go ahead with an option, wait, or drop it.
+
+**Installed files:** `actions/explore.md`.
+
+### 29. Finish After the Merge
+
+**Purpose:** Close out a merged change without losing work.
+
+`actions/finish.md` proves the merge reached the base branch (including squash merges) before deleting anything, closes the harness run with its result, removes the worktree (freeing its slot) and the merged branches without ever forcing, captures what the change taught (a knowledge rule, a battery case, a check, a routing case), and suggests a version tag for the user to push.
+
+**Installed files:** `actions/finish.md`.
 
 ## Optional MCP server
 
@@ -486,6 +545,7 @@ The server reads the project from its working directory, or from `--project <dir
 
 When the workflow groups are installed together, a feature moves through them in this order, and the generated `AGENTS.md` lists the installed stages:
 
+0. Exploration: `actions/explore.md`, when the request is still an idea; it ends in a decision to go ahead, wait, or drop it.
 1. Product plan: `plan.md`.
 2. Domain research: `actions/research.md`, when the domain is unfamiliar, regulated, or rule-heavy.
 3. Specification: `spec-definition.md`, then `spec-checklist.md`.
@@ -494,7 +554,11 @@ When the workflow groups are installed together, a feature moves through them in
 6. Examples and scenarios: `actions/bdd.md`, when the change has business behavior to illustrate.
 7. UI/UX decisions: `actions/uiux.md`, when the change has a user-facing surface.
 8. Implementation: `actions/dev.md`, with BDD scenarios as the outer loop and `actions/tdd.md` as the inner loop, or in direct mode, as `uiux` recommends.
-9. Review: `actions/review.md`, then `actions/code-review.md` on the committed diff from a fresh session.
+9. Review: `actions/review.md`.
+10. QA: `actions/qa.md`, with `actions/ui-review.md` when screens changed.
+11. Code review: `actions/code-review.md` on the committed diff from a fresh session.
+12. Pull request: `actions/pr.md`, after `checks/checks.mjs` stamps the commit.
+13. After the merge: `actions/finish.md`, and `actions/test-guide.md` when people test by hand.
 
 Architecture decision records run alongside every stage: `ddd`, `uiux`, and `dev` pass the ADR gate (`docs/adr/README.md`) before deciding and record each new architectural decision through `actions/adr.md`, and both reviews check the diff against the ADRs the gate routes to.
 

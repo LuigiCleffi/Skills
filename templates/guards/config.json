@@ -30,6 +30,7 @@
   },
   "protectedPaths": [],
   "protectedBranches": [],
+  "worktreeIsolation": false,
   "dangerousCommands": true,
   "production": {
     "markers": [],

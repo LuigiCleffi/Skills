@@ -14,12 +14,19 @@
 //   node tools/worktree-slot.mjs           # assign or reuse this worktree's slot and write the file
 //   node tools/worktree-slot.mjs --print   # print the variables without writing
 //   node tools/worktree-slot.mjs --list    # list every worktree and its slot
+//   node tools/worktree-slot.mjs --hook    # as a SessionStart hook: one line for the agent, never fails
+//
+// In tools/worktree.json, "include" names a file in the main checkout that
+// lists untracked files a new worktree needs (.env.local, say), copied when
+// missing; "linkDependencies" lists folders (node_modules) linked from the
+// main checkout instead of installed again. Ports never land on a port
+// browsers refuse or on macOS's AirPlay ports (5000, 7000).
 //
 // It does not create databases or start anything: create the database named
 // in the file with the project's own tool. No dependencies beyond Node.js 20.
 
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, symlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -66,12 +73,31 @@ export function assignSlots(worktrees, previous = {}) {
   return slots;
 }
 
+// Ports browsers refuse to open (the Fetch standard's "bad ports"), and 5000
+// and 7000, which macOS gives to AirPlay. A slot's port never lands on one.
+const unusablePorts = new Set([
+  1, 7, 9, 11, 13, 15, 17, 19, 20, 21, 22, 23, 25, 37, 42, 43, 53, 69, 77, 79, 87, 95, 101, 102, 103, 104, 109, 110,
+  111, 113, 115, 117, 119, 123, 135, 137, 139, 143, 161, 179, 389, 427, 465, 512, 513, 514, 515, 526, 530, 531, 532,
+  540, 548, 554, 556, 563, 587, 601, 636, 989, 990, 993, 995, 1719, 1720, 1723, 2049, 3659, 4045, 4190, 5000, 5060,
+  5061, 6000, 6566, 6665, 6666, 6667, 6668, 6669, 6679, 6697, 7000, 10080,
+]);
+
+// The port for a slot: base + slot * step, moved up within the slot's own
+// block when it lands on an unusable port, so it never meets another slot's.
+export function portFor(base, slot, step) {
+  const start = Number(base) + slot * step;
+  for (let port = start; port < start + step; port += 1) {
+    if (!unusablePorts.has(port)) return port;
+  }
+  return start;
+}
+
 // The variables for one slot, from the config.
 export function variablesFor(config, slot) {
   const suffix = slot === 0 ? "" : `_wt${slot}`;
   const step = config.portStep ?? 10;
   const variables = { WORKTREE_SLOT: String(slot) };
-  for (const [name, base] of Object.entries(config.ports ?? {})) variables[name] = String(Number(base) + slot * step);
+  for (const [name, base] of Object.entries(config.ports ?? {})) variables[name] = String(portFor(base, slot, step));
   for (const [name, template] of Object.entries(config.variables ?? {})) {
     variables[name] = String(template).replaceAll("{slot}", String(slot)).replaceAll("{suffix}", suffix);
   }
@@ -89,6 +115,54 @@ function readSlots(file) {
   } catch {
     return {};
   }
+}
+
+// The untracked files a fresh worktree needs from the main checkout (local
+// env files, say), listed one per line in the include file; "*" matches
+// within one folder. Copied only when missing here: never overwritten.
+export function provisionFiles(main, here, includeFile) {
+  const list = path.join(main, includeFile);
+  if (main === here || !existsSync(list)) return [];
+  const copied = [];
+  for (const raw of readFileSync(list, "utf8").split("\n")) {
+    const entry = raw.trim();
+    if (!entry || entry.startsWith("#")) continue;
+    const folder = path.dirname(entry);
+    const name = path.basename(entry);
+    const pattern = new RegExp(`^${name.replace(/[.+^${}()|[\]\\]/g, "\\$&").replaceAll("*", "[^/]*")}$`);
+    let names = [];
+    try {
+      names = name.includes("*") ? readdirSync(path.join(main, folder)).filter((file) => pattern.test(file)) : [name];
+    } catch {
+      continue;
+    }
+    for (const file of names) {
+      const relative = path.join(folder, file);
+      const source = path.join(main, relative);
+      const target = path.join(here, relative);
+      if (!existsSync(source) || existsSync(target)) continue;
+      mkdirSync(path.dirname(target), { recursive: true });
+      copyFileSync(source, target);
+      copied.push(relative);
+    }
+  }
+  return copied;
+}
+
+// Folders shared from the main checkout by a link (node_modules, say), so a
+// new worktree runs without a fresh install. Opt-in: a dependency change on
+// the worktree's branch then needs its own install.
+export function linkDependencies(main, here, folders = []) {
+  const linked = [];
+  if (main === here) return linked;
+  for (const folder of folders) {
+    const source = path.join(main, folder);
+    const target = path.join(here, folder);
+    if (!existsSync(source) || existsSync(target)) continue;
+    symlinkSync(source, target, "dir");
+    linked.push(folder);
+  }
+  return linked;
 }
 
 function main() {
@@ -117,7 +191,20 @@ function main() {
 
   const output = path.join(here, config.output ?? ".worktree-slot.env");
   writeFileSync(output, `# Written by tools/worktree-slot.mjs for slot ${slot}. Do not commit.\n${body}\n`, "utf8");
+  const mainCheckout = listWorktrees(cwd)[0];
+  const copied = config.include ? provisionFiles(mainCheckout, here, config.include) : [];
+  const linked = linkDependencies(mainCheckout, here, config.linkDependencies ?? []);
+
+  // As a session hook, one short line the agent reads: where to run the app.
+  if (args.includes("--hook")) {
+    const extras = [copied.length ? `copied ${copied.join(", ")}` : "", linked.length ? `linked ${linked.join(", ")}` : ""].filter(Boolean);
+    console.log(`Worktree slot ${slot}: ${Object.entries(variables).filter(([name]) => name !== "WORKTREE_SLOT").map(([name, value]) => `${name}=${value}`).join(", ")} (in ${path.relative(here, output)})${extras.length ? `; ${extras.join("; ")}` : ""}.`);
+    return 0;
+  }
+
   console.log(`Slot ${slot}: wrote ${path.relative(here, output)}\n${body}`);
+  if (copied.length > 0) console.log(`Copied from the main checkout: ${copied.join(", ")}`);
+  if (linked.length > 0) console.log(`Linked from the main checkout: ${linked.join(", ")}`);
 
   const ignore = path.join(here, ".gitignore");
   const ignored = existsSync(ignore) && readFileSync(ignore, "utf8").split("\n").includes(config.output ?? ".worktree-slot.env");
@@ -137,7 +224,12 @@ if (isEntryPoint()) {
   try {
     process.exitCode = main();
   } catch (error) {
-    console.error(`worktree-slot: ${error.message}`);
-    process.exitCode = 1;
+    // As a session hook it never stops the session: outside git, it says nothing.
+    if (process.argv.includes("--hook")) {
+      process.exitCode = 0;
+    } else {
+      console.error(`worktree-slot: ${error.message}`);
+      process.exitCode = 1;
+    }
   }
 }

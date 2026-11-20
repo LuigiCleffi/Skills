@@ -16,6 +16,8 @@ Each workflow in this kit is good on its own. Without something that runs them i
 
 `harness` owns `docs/harness/` and `harness/config.json`. It does not write specs, models, scenarios, decisions, or code itself; the stage workflows do.
 
+An idea that is not yet a clear request goes through `actions/explore.md` first, when installed; the run opens once the person decides to go ahead. After the pull request is merged, `actions/finish.md` closes the run and cleans up.
+
 ## The stages
 
 | # | Stage | Workflow | Produces | Feature | Fix | Chore |

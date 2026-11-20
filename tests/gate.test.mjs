@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { after, describe, it } from "node:test";
 import { cleanUp, importFrom, makeProject, run, write } from "./helpers.mjs";
 
@@ -262,10 +264,116 @@ describe("tasks, qa, and story limits", () => {
     const project = makeProject(["harness"]);
     const gate = await importFrom(project, "harness/gate.mjs");
     const report = (verdict, row) =>
-      `# QA\n\n**Verdict:** ${verdict}\n\n## Scenarios\n\n| ID | Scenario | Source | How | Result | Evidence |\n|---|---|---|---|---|---|\n${row}\n`;
+      `# QA\n\n**Verdict:** ${verdict}\n\n## Change against the tasks\n\nMISSING CHANGE: none.\n\n## Scenarios\n\n| ID | Scenario | Source | How | Result | Evidence |\n|---|---|---|---|---|---|\n${row}\n`;
     write(project, "pass.md", report("PASS", "| QA-01 | x | US-1 | test | PASS | ok |"));
     write(project, "fail.md", report("FAIL", "| QA-01 | x | US-1 | test | FAIL | 500 |"));
     assert.equal(gate.stageProblem("qa", "done", "pass.md", gate.loadConfig()), null);
     assert.match(gate.stageProblem("qa", "done", "fail.md", gate.loadConfig()), /Verdict:\*\* PASS.*FAIL/);
+    write(project, "unchecked.md", report("PASS", "| QA-01 | x | US-1 | test | PASS | ok |").replace(/## Change against the tasks\n\nMISSING CHANGE: none.\n\n/, ""));
+    assert.match(gate.stageProblem("qa", "done", "unchecked.md", gate.loadConfig()), /Change against the tasks/);
+  });
+});
+
+describe("fenced examples in records", () => {
+  it("does not let a fenced example settle or fail a record", async () => {
+    const project = makeProject(["harness"]);
+    const gate = await importFrom(project, "harness/gate.mjs");
+    const config = gate.loadConfig();
+    const pass = "| QA-01 | x | US-1 | test | PASS | 12 passed |";
+    const report = (extra) => `# QA\n\n**Verdict:** PASS\n\n## Change against the tasks\n\nnone\n\n## Scenarios\n\n${pass}\n${extra}`;
+    write(project, "qa.md", report("\n```markdown\n| QA-09 | example | x | y | FAIL | z |\n```\n"));
+    assert.equal(gate.stageProblem("qa", "done", "qa.md", config), null);
+    write(project, "only-example.md", "# QA\n\n````md\n**Verdict:** PASS\n## Scenarios\n```\nstill inside\n````\n");
+    assert.match(gate.stageProblem("qa", "done", "only-example.md", config), /Verdict:\*\* PASS/);
+    assert.equal(gate.withoutFences("a\n~~~\nb\n~~~\nc"), "a\nc");
+  });
+});
+
+describe("tasks, coverage, and the board", () => {
+  const tasksText = [
+    "### TASK-01 Window",
+    "**Files:** `db/m.sql` (new), `src/order.ts`",
+    "**Depends:** none",
+    "**Status:** done",
+    "### TASK-02 API",
+    "**Files:** `src/api.ts`",
+    "**Depends:** TASK-01",
+    "### TASK-03 UI",
+    "**Files:** `src/ui.ts` (new)",
+    "**Depends:** TASK-02, TASK-09",
+    "**Status:** doing",
+  ].join("\n");
+
+  it("reads tasks, finds missing files, unknown dependencies, and circles", async () => {
+    const gate = await importFrom(makeProject(["harness"]), "harness/gate.mjs");
+    const tasks = gate.parseTasks(tasksText);
+    assert.deepEqual(tasks.map((task) => [task.id, task.status, task.depends]), [
+      ["TASK-01", "done", []],
+      ["TASK-02", "todo", ["TASK-01"]],
+      ["TASK-03", "doing", ["TASK-02", "TASK-09"]],
+    ]);
+    const exists = (file) => file === "src/order.ts";
+    assert.deepEqual(gate.taskProblems(tasks, exists), [
+      'TASK-02 names src/api.ts, which does not exist; mark it "(new)" if the task creates it',
+      "TASK-03 depends on TASK-09, which is not a task",
+    ]);
+    const circle = gate.parseTasks("### TASK-1 a\n**Depends:** TASK-2\n### TASK-2 b\n**Depends:** TASK-1\n");
+    assert.deepEqual(gate.dependencyCycle(circle), ["TASK-1", "TASK-2", "TASK-1"]);
+    assert.deepEqual(gate.boardOf(tasks).frontier.map((task) => task.id), ["TASK-02"]);
+  });
+
+  it("checks that every criterion has a scenario with evidence", async () => {
+    const project = makeProject(["harness"]);
+    const gate = await importFrom(project, "harness/gate.mjs");
+    const spec = "- **FR-001:** refunds within 30 days\n- **FR-002:** refund once\n```\nFR-099 is an example\n```\n";
+    const qa = [
+      "| ID | Scenario | Source | How | Result | Evidence |",
+      "|---|---|---|---|---|---|",
+      "| QA-01 | within 30 days | FR-001 | npm test | PASS | 12 passed |",
+      "| QA-02 | twice | FR-003 | Playwright | PASS | ok |",
+    ].join("\n");
+    assert.deepEqual(gate.coverageProblems(gate.loadConfig(), spec, qa), [
+      "QA-02 cites FR-003, which the spec does not name",
+      'QA-02 passed with no evidence ("ok"): say what was run and what it showed',
+      "FR-002 has no scenario in the QA report",
+    ]);
+    write(project, "spec.md", spec);
+    write(project, "qa.md", qa);
+    assert.equal(run(project, "harness/gate.mjs", ["coverage", "spec.md", "qa.md"]).code, 1);
+  });
+
+  it("briefs the agent on the run once per session, and stays silent without a run", () => {
+    const project = makeProject(["harness"]);
+    const prompt = JSON.stringify({ session_id: `s-${Date.now()}-${Math.random()}`, prompt: "go" });
+    assert.equal(run(project, "harness/gate.mjs", ["brief"], prompt).stdout, "");
+    write(project, "docs/harness/tasks.md", tasksText);
+    write(project, "docs/harness/active.json", JSON.stringify({ run: "docs/harness/runs/x.md", mode: "fix", stages: { reproduce: "done" }, records: { tasks: "docs/harness/tasks.md" } }));
+    const first = run(project, "harness/gate.mjs", ["brief"], prompt);
+    const context = JSON.parse(first.stdout).hookSpecificOutput.additionalContext;
+    assert.match(context, /mode fix/);
+    assert.match(context, /Next stage: knowledge-gate, following actions\/knowledge\.md/);
+    assert.match(context, /Tasks: 1\/3 done; can start: TASK-02/);
+    assert.equal(run(project, "harness/gate.mjs", ["brief"], prompt).stdout, "");
+  });
+
+  it("reminds what governs a path before it is edited", () => {
+    const project = makeProject(["harness"]);
+    write(project, "docs/knowledge/README.md", "| About… | Keywords | Paths | Read |\n|---|---|---|---|\n| Refunds | refund | `src/billing/**` | [BR-0003](rules/BR-0003.md) |\n");
+    write(project, "harness/config.json", JSON.stringify({ ...JSON.parse(readFileSync(path.join(project, "harness/config.json"), "utf8")), enforce: "warn" }));
+    const edit = (file) => JSON.stringify({ session_id: `s-${Math.random()}`, tool_name: "Edit", tool_input: { file_path: path.join(project, file) } });
+    const reminded = run(project, "harness/gate.mjs", [], edit("docs/billing-notes.md"));
+    assert.equal(reminded.stdout, "");
+    const billing = JSON.parse(run(project, "harness/gate.mjs", [], edit("src/billing/refund.ts")).stdout);
+    assert.match(billing.hookSpecificOutput.additionalContext, /src\/billing\/refund\.ts is governed by docs\/knowledge\/README\.md: read BR-0003/);
+  });
+
+  it("warns about an issue that does not follow the format, and only for issue tools", () => {
+    const project = makeProject(["harness"]);
+    const save = (tool, description) => JSON.stringify({ tool_name: tool, tool_input: { title: "x", description } });
+    const warned = run(project, "harness/gate.mjs", ["issue"], save("mcp__tracker__save_issue", "Just do it"));
+    assert.equal(warned.code, 0);
+    assert.match(JSON.parse(warned.stdout).hookSpecificOutput.additionalContext, /no "Problem" heading/);
+    assert.equal(run(project, "harness/gate.mjs", ["issue"], save("mcp__tracker__save_issue", "## Problem\nx\n## Acceptance criteria\n- y")).stdout, "");
+    assert.equal(run(project, "harness/gate.mjs", ["issue"], save("mcp__tracker__get_issue", "Just do it")).stdout, "");
   });
 });

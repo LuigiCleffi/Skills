@@ -54,6 +54,7 @@ type InstallOptions = {
   guards?: boolean;
   checks?: boolean;
   worktreeHook?: boolean;
+  harnessHelpers?: boolean;
   mcp?: string[];
   overwrite: boolean;
 };
@@ -74,13 +75,16 @@ Install options (each one answers its question; the rest are asked):
   --groups a,b             Install these groups (and the groups they require)
   --yes, -y                Do not ask: unanswered questions take their default
                            (Playwright only if configured, agents for the AI
-                           tools found, harness hook "warn", guards, checks
-                           and worktree hooks on,
+                           tools found, harness hook "warn", harness helpers,
+                           guards, checks and worktree hooks on,
                            no MCP server, never overwrite edited files)
   --playwright / --no-playwright
   --agents claude,opencode,codex   Scrum role agents for these tools ("none" for none)
   --harness warn|block|none        The harness gate hook in Claude Code
   --guards / --no-guards           The guards hook in Claude Code
+  --harness-helpers / --no-harness-helpers
+                                   Brief the agent on the run at each prompt, and check
+                                   the format of issues it saves through a tracker's MCP
   --checks / --no-checks           The hook that refuses a pull request from an unchecked commit
   --worktree-hook / --no-worktree-hook
                                    Assign the worktree slot when a Claude Code session starts
@@ -125,6 +129,8 @@ function parseInstallOptions(args: string[]): InstallOptions {
       checks: { type: "boolean" },
       "no-checks": { type: "boolean" },
       "worktree-hook": { type: "boolean" },
+      "harness-helpers": { type: "boolean" },
+      "no-harness-helpers": { type: "boolean" },
       "no-worktree-hook": { type: "boolean" },
       mcp: { type: "string" },
       overwrite: { type: "boolean" },
@@ -157,6 +163,7 @@ function parseInstallOptions(args: string[]): InstallOptions {
     guards: flag(values.guards, values["no-guards"]),
     checks: flag(values.checks, values["no-checks"]),
     worktreeHook: flag(values["worktree-hook"], values["no-worktree-hook"]),
+    harnessHelpers: flag(values["harness-helpers"], values["no-harness-helpers"]),
     mcp,
     overwrite: values.overwrite ?? false,
   };
@@ -236,13 +243,43 @@ const skills: Skill[] = [
     value: "qa",
     name: "QA that runs and proves",
     description: "One scenario per acceptance criterion and per applicable edge-case row, each run for real with evidence, in a report in docs/qa/reports/",
-    files: ["actions/qa.md", "docs/qa/edge-cases.md"],
+    files: ["actions/qa.md", "actions/test-guide.md", "docs/qa/edge-cases.md"],
   },
   {
     value: "worktrees",
     name: "Worktree slots for parallel sessions",
     description: "Gives each git worktree its own ports and database name, so several agent sessions can run the app at once",
     files: ["tools/worktree-slot.mjs", "tools/worktree.json"],
+  },
+  {
+    value: "writing-style",
+    name: "Plain answers writing style",
+    description: "A Claude Code output style: answer first, behavior instead of internals, numbers instead of adjectives, what is not done stated plainly, size that follows the stakes",
+    files: [".claude/output-styles/plain-answers.md"],
+  },
+  {
+    value: "ui-review",
+    name: "UI review gate",
+    description: "Every screen a change touches, seen in each state (full, empty, loading, error, no permission), at four widths, after a reload, with an accessibility scan and no hard-coded design values",
+    files: ["actions/ui-review.md"],
+  },
+  {
+    value: "pr-review",
+    name: "Pull request review assistant",
+    description: "Helps a person review someone else's pull request: a three-line summary, what no check covered, each decision walked through, and a drafted review published only on their OK",
+    files: ["actions/pr-review.md"],
+  },
+  {
+    value: "explore",
+    name: "Explore an idea",
+    description: "Think an idea through before any plan: the real problem, an honest objection, two or three options with their cost, and a decision to go ahead, wait, or drop it",
+    files: ["actions/explore.md"],
+  },
+  {
+    value: "finish",
+    name: "Finish after the merge",
+    description: "After a merge: prove it landed, close the harness run, remove the worktree and merged branches, keep the lessons, and suggest a tag",
+    files: ["actions/finish.md"],
   },
   {
     value: "checks",
@@ -338,9 +375,9 @@ const skills: Skill[] = [
   },
   {
     value: "pull-request",
-    name: "Pull request template",
-    description: "What was implemented, why, human test steps, and before and after screenshots taken with Playwright",
-    files: [".github/pull_request_template.md"],
+    name: "Pull requests",
+    description: "Open a pull request a person reviews in minutes: the template (what changed, why, human test steps, before and after screenshots), a QA script comment, CI watched until green, and review comments triaged",
+    files: ["actions/pr.md", ".github/pull_request_template.md"],
   },
   {
     value: "scrum",
@@ -925,6 +962,14 @@ async function installSkills(selectedSkills: Skill[]): Promise<void> {
     await offerHarnessHook();
   }
 
+  if (selectedSkills.some((skill) => skill.value === "harness")) {
+    await offerHarnessHelpers();
+  }
+
+  if (selectedSkills.some((skill) => skill.value === "writing-style")) {
+    await useOutputStyle("Plain answers");
+  }
+
   if (selectedSkills.some((skill) => skill.value === "checks")) {
     await offerChecksHook();
   }
@@ -978,9 +1023,11 @@ async function offerMcpServer(): Promise<void> {
 
 const harnessHookCommand = 'node "$CLAUDE_PROJECT_DIR"/harness/gate.mjs';
 const guardsHookCommand = 'node "$CLAUDE_PROJECT_DIR"/guards/guard.mjs';
+const briefHookCommand = 'node "$CLAUDE_PROJECT_DIR"/harness/gate.mjs brief';
+const issueHookCommand = 'node "$CLAUDE_PROJECT_DIR"/harness/gate.mjs issue';
 const checksHookCommand = 'node "$CLAUDE_PROJECT_DIR"/checks/checks.mjs hook';
 // A session must start even outside git or before the config exists.
-const worktreeHookCommand = 'node "$CLAUDE_PROJECT_DIR"/tools/worktree-slot.mjs >/dev/null 2>&1 || true';
+const worktreeHookCommand = 'node "$CLAUDE_PROJECT_DIR"/tools/worktree-slot.mjs --hook';
 
 type HookEntry = { matcher?: string; hooks?: { type?: string; command?: string }[] };
 type ClaudeSettings = { hooks?: Record<string, HookEntry[]> } & Record<string, unknown>;
@@ -1072,6 +1119,43 @@ async function offerHarnessHook(): Promise<void> {
 
   await setHarnessEnforcement(choice as "warn" | "block");
   await addPreToolUseHook(harnessHookCommand, "Edit|Write|MultiEdit|NotebookEdit", "harness gate");
+}
+
+// Turns the installed output style on for the project, unless the project
+// already chose another one.
+async function useOutputStyle(name: string): Promise<void> {
+  const settingsPath = path.join(projectDirectory, ".claude", "settings.json");
+  let settings: ClaudeSettings = {};
+  if (await exists(settingsPath)) {
+    try {
+      settings = JSON.parse(await readFile(settingsPath, "utf8")) as ClaudeSettings;
+    } catch {
+      console.log(`\n.claude/settings.json is not valid JSON; set "outputStyle": "${name}" in it yourself.\n`);
+      return;
+    }
+  }
+  if (settings.outputStyle === name) return;
+  if (typeof settings.outputStyle === "string") {
+    console.log(`\nThe project already uses the output style "${settings.outputStyle}"; switch to "${name}" with /output-style if you want it.\n`);
+    return;
+  }
+  settings.outputStyle = name;
+  await mkdir(path.dirname(settingsPath), { recursive: true });
+  await writeFile(settingsPath, `${JSON.stringify(settings, null, 2)}\n`, "utf8");
+  console.log(`\n✓ Set the output style to "${name}" in .claude/settings.json\n`);
+}
+
+// Two hooks that only inform: the run's state and next stage at each prompt,
+// and the format of an issue saved through an issue tracker's MCP.
+async function offerHarnessHelpers(): Promise<void> {
+  const enable = await answer("--harness-helpers or --no-harness-helpers", options.harnessHelpers, () => true, () => confirm({
+    message:
+      "Brief the agent on the harness run at each prompt, and check the format of issues it saves through an issue tracker? Adds a UserPromptSubmit and a PreToolUse hook; neither blocks.",
+    default: true,
+  }));
+  if (!enable) return;
+  await addHook("UserPromptSubmit", briefHookCommand, undefined, "harness brief");
+  await addPreToolUseHook(issueHookCommand, "mcp__.*__(save_issue|create_issue|update_issue)", "issue format");
 }
 
 // Refusing a pull request is the one block outside the guards: an opened

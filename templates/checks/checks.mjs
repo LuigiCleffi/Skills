@@ -17,9 +17,13 @@
 //   node checks/checks.mjs --waive "reason"       stamp HEAD without running; repeat the reason in the PR
 //   node checks/checks.mjs status                 say whether HEAD is stamped
 //   node checks/checks.mjs hook                   PreToolUse hook (reads the hook JSON; exit 2 refuses)
+//   node checks/checks.mjs pre-push               git pre-push hook: reads git's ref lines on stdin
 //
-// In a git pre-push hook, `node checks/checks.mjs` runs only when the commit
-// is not stamped yet. No dependencies beyond Node.js 20.
+// As a git pre-push hook (.git/hooks/pre-push or .husky/pre-push):
+//   node checks/checks.mjs pre-push
+// It checks each commit being pushed to a branch, not HEAD, and does nothing
+// for a commit already stamped against the same base. No dependencies beyond
+// Node.js 20.
 
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
@@ -104,6 +108,35 @@ function writeStamp(sha, stamp) {
   writeFileSync(file, `${JSON.stringify({ sha, at: new Date().toISOString(), ...stamp }, null, 2)}\n`);
 }
 
+// Whether a stamp still certifies the commit. A waiver always stands. A run
+// stands while the branch still starts where the checks measured it from:
+// once the base moved (a rebase, or a merge of main into the branch changes
+// the merge base), the same commit sits on different code, so it is checked
+// again. When the base cannot be read here (not fetched), the stamp stands:
+// the hook is a safety net, and CI still runs.
+export function stampStands(stamp, currentBaseSha) {
+  if (!stamp) return false;
+  if (stamp.waived) return true;
+  if (!stamp.baseSha || !currentBaseSha) return true;
+  return stamp.baseSha === currentBaseSha;
+}
+
+function currentBaseSha(sha, base, cwd = projectDirectory) {
+  try {
+    return git(["merge-base", base, sha], cwd);
+  } catch {
+    return null;
+  }
+}
+
+function configuredBase(cwd = projectDirectory) {
+  try {
+    return JSON.parse(readFileSync(path.join(cwd, "checks", "config.json"), "utf8")).base ?? "origin/main";
+  } catch {
+    return loadConfig().base ?? "origin/main";
+  }
+}
+
 // The commit a PR would open from: the MCP call names its head branch;
 // otherwise HEAD.
 function headSha(cwd, toolInput) {
@@ -127,17 +160,50 @@ export function hookProblem(input) {
   } catch {
     return null;
   }
-  if (readStamp(sha, input.cwd || projectDirectory)) return null;
+  const cwd = input.cwd || projectDirectory;
+  const stamp = readStamp(sha, cwd);
+  if (stampStands(stamp, stamp ? currentBaseSha(sha, stamp.base ?? configuredBase(cwd), cwd) : null)) return null;
+  const why = stamp
+    ? `the base moved since the checks ran on commit ${sha.slice(0, 9)} (a rebase or a merge of ${stamp.base}), so they run again`
+    : `the checks have not passed on commit ${sha.slice(0, 9)}`;
   return (
-    `Checks: the checks have not passed on commit ${sha.slice(0, 9)}, so the pull request does not open. ` +
+    `Checks: ${why}; the pull request does not open. ` +
     "Run `node checks/checks.mjs` and fix what fails. If the checks do not apply, " +
     '`node checks/checks.mjs --waive "<reason>"` and repeat the reason in the pull request body.'
   );
 }
 
-function changedFiles(base) {
-  const mergeBase = git(["merge-base", base, "HEAD"]);
-  return { baseSha: mergeBase, files: git(["diff", "--name-only", `${mergeBase}..HEAD`]).split("\n").filter(Boolean) };
+function changedFiles(base, sha = "HEAD") {
+  const mergeBase = git(["merge-base", base, sha]);
+  return { baseSha: mergeBase, files: git(["diff", "--name-only", `${mergeBase}..${sha}`]).split("\n").filter(Boolean) };
+}
+
+// Inside a git hook, git sets variables (GIT_DIR, GIT_INDEX_FILE, ...) that
+// point every git command at this repository. A check that runs git in a
+// temporary folder (a test fixture's git init) would then rewrite this
+// repository instead, so the checks run without them.
+const hookGitVariables = [
+  "GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_PREFIX", "GIT_QUARANTINE_PATH",
+  "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_COMMON_DIR",
+];
+
+export function checkEnvironment(environment = process.env) {
+  const clean = { ...environment };
+  for (const name of hookGitVariables) delete clean[name];
+  return clean;
+}
+
+// The pushes git announces on a pre-push hook's stdin, one line per ref:
+// "<local ref> <local sha> <remote ref> <remote sha>". Only pushes that put a
+// commit on a branch count: deleting a ref and pushing a tag do not. Decided
+// by the destination, since the local side is the refspec as typed (HEAD, a
+// sha), so "git push origin HEAD:refs/heads/x" is checked too.
+export function pushedCommits(stdin) {
+  return stdin
+    .split("\n")
+    .map((line) => line.trim().split(/\s+/))
+    .filter(([, localSha, remoteRef]) => remoteRef?.startsWith("refs/heads/") && localSha && !/^0+$/.test(localSha))
+    .map(([, localSha, remoteRef]) => ({ sha: localSha, branch: remoteRef.slice("refs/heads/".length) }));
 }
 
 function option(args, name) {
@@ -150,6 +216,10 @@ function runStatus() {
   const stamp = readStamp(sha);
   if (!stamp) {
     console.log(`${sha.slice(0, 9)}: not stamped. Run node checks/checks.mjs.`);
+    return 1;
+  }
+  if (!stampStands(stamp, currentBaseSha(sha, stamp.base ?? configuredBase()))) {
+    console.log(`${sha.slice(0, 9)}: stamped against an older ${stamp.base}; the base moved, so run node checks/checks.mjs again.`);
     return 1;
   }
   console.log(
@@ -174,9 +244,25 @@ function runChecks(config, args) {
     return 0;
   }
 
-  if (readStamp(sha)) {
-    console.log(`Checks already passed on ${sha.slice(0, 9)}.`);
+  return checkCommit(config, sha, option(args, "--base") ?? config.base ?? "origin/main");
+}
+
+// Runs the checks for one commit, which must be the checked-out one (the
+// checks run on the working tree), and stamps it when they pass.
+function checkCommit(config, sha, base) {
+  const previous = readStamp(sha);
+  if (previous?.waived) {
+    console.log(`Checks waived on ${sha.slice(0, 9)}: ${previous.waived}`);
     return 0;
+  }
+  if (previous && stampStands(previous, currentBaseSha(sha, base))) {
+    console.log(`Checks already passed on ${sha.slice(0, 9)} against ${previous.base}.`);
+    return 0;
+  }
+
+  if (git(["rev-parse", "HEAD"]) !== sha) {
+    console.error(`checks: ${sha.slice(0, 9)} is not the checked-out commit, and the checks run on the working tree. Check it out and run node checks/checks.mjs, then push again.`);
+    return 1;
   }
 
   // A stamp certifies a commit, so the work must be in it.
@@ -185,10 +271,9 @@ function runChecks(config, args) {
     return 1;
   }
 
-  const base = option(args, "--base") ?? config.base ?? "origin/main";
   let diff;
   try {
-    diff = changedFiles(base);
+    diff = changedFiles(base, sha);
   } catch {
     console.error(`checks: cannot find ${base} to compare with. Fetch it, or pass --base <branch>.`);
     return 1;
@@ -200,7 +285,7 @@ function runChecks(config, args) {
   const results = [];
   for (const check of planned) {
     console.log(`\n▶ ${check.name}: ${check.command}`);
-    const result = spawnSync(check.command, { cwd: projectDirectory, shell: true, stdio: "inherit" });
+    const result = spawnSync(check.command, { cwd: projectDirectory, shell: true, stdio: "inherit", env: checkEnvironment() });
     results.push({ name: check.name, command: check.command, ok: result.status === 0 });
     if (result.status !== 0) {
       console.error(`\n✗ ${check.name} failed. Fix it, commit, and run the checks again.`);
@@ -226,9 +311,26 @@ function runHook() {
   return REFUSED;
 }
 
+// As a git pre-push hook: every commit about to land on a branch must carry a
+// standing stamp, or be the checked-out commit so the checks can run now.
+function runPrePush(config) {
+  let stdin = "";
+  try {
+    stdin = readFileSync(0, "utf8");
+  } catch {}
+  const base = config.base ?? "origin/main";
+  for (const { sha, branch } of pushedCommits(stdin)) {
+    console.log(`checks: pushing ${sha.slice(0, 9)} to ${branch}`);
+    const code = checkCommit(config, sha, base);
+    if (code !== 0) return code;
+  }
+  return 0;
+}
+
 function main() {
   const args = process.argv.slice(2);
   if (args[0] === "hook") return runHook();
+  if (args[0] === "pre-push") return runPrePush(loadConfig());
   if (args[0] === "status") return runStatus();
   return runChecks(loadConfig(), args);
 }

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { after, describe, it } from "node:test";
 import { cleanUp, git, importFrom, makeProject, run, write } from "./helpers.mjs";
@@ -87,6 +87,29 @@ describe("the checks run", () => {
     assert.match(run(project, "checks/checks.mjs", ["hook"], prCreate(project)).stderr, /have not passed on commit/);
   });
 
+  it("runs again when the base moves under the same commit", () => {
+    const project = repo([{ name: "ok", command: "node -e \"0\"" }]);
+    commit(project, "src/a.js");
+    run(project, "checks/checks.mjs");
+    assert.equal(run(project, "checks/checks.mjs", ["hook"], prCreate(project)).code, 0);
+
+    git(project, "checkout", "-q", "main");
+    commit(project, "src/other.js");
+    git(project, "checkout", "-q", "feature");
+    git(project, "rebase", "-q", "main");
+    const head = git(project, "rev-parse", "HEAD");
+    // The rebase made a new commit; stamp the old one's verdict on it to stand in for a stale stamp.
+    const stampDirectory = path.join(project, ".git", "skills-code-kit-checks");
+    const [old] = readdirSync(stampDirectory);
+    const stale = JSON.parse(readFileSync(path.join(stampDirectory, old), "utf8"));
+    writeFileSync(path.join(stampDirectory, `${head}.json`), JSON.stringify({ ...stale, sha: head }));
+
+    assert.match(run(project, "checks/checks.mjs", ["hook"], prCreate(project)).stderr, /the base moved/);
+    assert.match(run(project, "checks/checks.mjs", ["status"]).stdout, /base moved/);
+    assert.match(run(project, "checks/checks.mjs").stdout, /stamped/);
+    assert.equal(run(project, "checks/checks.mjs", ["hook"], prCreate(project)).code, 0);
+  });
+
   it("stamps a waiver only with its reason", () => {
     const project = repo([{ name: "fails", command: "node -e \"process.exit(1)\"" }]);
     commit(project, "src/a.js");
@@ -133,5 +156,41 @@ describe("harness scope", () => {
     assert.equal(code, 0);
     assert.match(stdout, /src\/essay \(1 file: src\/essay\/fix.ts\)/);
     assert.doesNotMatch(stdout, /src\/billing \(/);
+    assert.match(stdout, /MISSING CHANGE: none/);
+
+    write(project, "docs/harness/tasks.md", "### TASK-1\n- **Files:** `src/billing/refund.ts`, `src/billing/api.ts`\n");
+    assert.match(run(project, "harness/gate.mjs", ["scope", "--base", "main"]).stdout, /MISSING CHANGE: named in the run's records but not changed[^\n]*\n\s+- src\/billing\/api.ts/);
+  });
+});
+
+describe("pre-push", () => {
+  it("reads the pushed commits from git's lines, ignoring tags and deletes", async () => {
+    const { pushedCommits, checkEnvironment } = await importFrom(makeProject(["checks"]), "checks/checks.mjs");
+    const zero = "0".repeat(40);
+    const a = "a".repeat(40);
+    const b = "b".repeat(40);
+    assert.deepEqual(
+      pushedCommits(`HEAD ${a} refs/heads/feature/x ${zero}\nrefs/tags/v1 ${b} refs/tags/v1 ${zero}\n(delete) ${zero} refs/heads/old ${a}\n`),
+      [{ sha: a, branch: "feature/x" }],
+    );
+    const environment = checkEnvironment({ GIT_DIR: "/repo/.git", GIT_INDEX_FILE: "x", PATH: "/bin" });
+    assert.deepEqual(environment, { PATH: "/bin" });
+  });
+
+  it("runs the checks for the pushed commit and refuses one it cannot check", () => {
+    const project = repo([{ name: "ok", command: "node -e \"0\"" }]);
+    commit(project, "src/a.js");
+    const head = git(project, "rev-parse", "HEAD");
+    const zero = "0".repeat(40);
+    const pushed = run(project, "checks/checks.mjs", ["pre-push"], `refs/heads/feature ${head} refs/heads/feature ${zero}\n`);
+    assert.equal(pushed.code, 0, pushed.stderr);
+    assert.match(run(project, "checks/checks.mjs", ["status"]).stdout, /passed ok/);
+
+    commit(project, "src/b.js");
+    const older = git(project, "rev-parse", "HEAD~1");
+    commit(project, "src/c.js");
+    const refused = run(project, "checks/checks.mjs", ["pre-push"], `HEAD~1 ${git(project, "rev-parse", "HEAD~1")} refs/heads/feature ${older}\n`);
+    assert.equal(refused.code, 1);
+    assert.match(refused.stderr, /not the checked-out commit/);
   });
 });
