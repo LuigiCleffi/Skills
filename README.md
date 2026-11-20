@@ -37,8 +37,8 @@ npx skills-code-kit install --groups dev,review,tdd,harness --yes
 ```
 
 - `--all` or `--groups a,b` picks the groups (`npx skills-code-kit list` shows them and what each requires).
-- `--harness warn|block|none`, `--guards` / `--no-guards`, `--playwright` / `--no-playwright`, `--agents claude,codex,opencode`, and `--mcp claude,codex,opencode` answer the other questions (`none` for an empty list).
-- Under `--yes` the defaults are: the harness hook warns, the guards hook is on, Playwright only if it is configured, Scrum agents for the AI tools found in the project, no MCP server.
+- `--harness warn|block|none`, `--guards` / `--no-guards`, `--checks` / `--no-checks`, `--worktree-hook` / `--no-worktree-hook`, `--playwright` / `--no-playwright`, `--agents claude,codex,opencode`, and `--mcp claude,codex,opencode` answer the other questions (`none` for an empty list).
+- Under `--yes` the defaults are: the harness hook warns, the guards, checks, and worktree hooks are on, Playwright only if it is configured, Scrum agents for the AI tools found in the project, no MCP server.
 - Files you edited since the last install are kept unless you add `--overwrite`.
 
 Without a terminal and without `--yes`, the installer stops with exit code 2 instead of waiting for an answer. `npx skills-code-kit --help` lists every command and option.
@@ -411,7 +411,9 @@ Why warn by default: a hook that blocks needs irreversible damage on the other s
 
 **Risky changes become tasks; finished ones get QA.** With a trigger, the run adds a `tasks` stage before code: one task per object that changes, each with its files, its change, and the command that proves it, checked by the gate. After review, `qa` runs every acceptance criterion and applicable edge case for real and records the evidence; the gate accepts only a report whose verdict is PASS. A spec with more than three user stories is refused: split it.
 
-**Escaped defects teach the battery.** A fix run opened for a defect that reached a user or QA records what shipped it, and closes only once `docs/qa/edge-cases.md` has the case that would have caught it. `node harness/gate.mjs escapes` counts them per month. `node harness/gate.mjs status` also reads git, so code changed while the run was not ready shows up even if `active.json` says otherwise.
+**Escaped defects teach the battery.** A fix run opened for a defect that reached a user or QA records what shipped it, and closes only once `docs/qa/edge-cases.md` has the case that would have caught it. `node harness/gate.mjs escapes` counts them per month.
+
+**Scope.** `node harness/gate.mjs scope` lists the modules (the first two folders of a path) the branch touched that no record of the run names. A stray module usually comes from a merge resolved wrong or a fix committed to the wrong branch; it is a question, not a failure, so the command reports and exits 0. `node harness/gate.mjs status` also reads git, so code changed while the run was not ready shows up even if `active.json` says otherwise.
 
 Selecting this group also installs product definition, domain research, the knowledge base, ADR, development, TDD, review, and QA. With the Scrum team installed, Sprint Planning opens one run per backlog item.
 
@@ -447,7 +449,19 @@ It parses the command text, so it catches accidents, not an adversary; a heredoc
 
 `node tools/worktree-slot.mjs`, run inside a worktree, gives it a slot that stays the same while it exists (the main checkout is 0; a new worktree takes the lowest free number) and writes `.worktree-slot.env` with its ports (base + slot × step) and names such as `DATABASE_NAME=app_wt2`, from `tools/worktree.json`. `--print` shows the values, `--list` the slots of every worktree. It creates no database and starts nothing; the generated `AGENTS.md` tells agents to use the file.
 
+The installer offers a Claude Code `SessionStart` hook that runs it when a session starts, so each worktree has its slot before anything is launched (default on; `--no-worktree-hook` to skip). The hook never stops a session: outside git, or on any error, it does nothing.
+
 **Installed files:** `tools/worktree-slot.mjs`, `tools/worktree.json`.
+
+### 24. Checks Before a Pull Request
+
+**Purpose:** Make "the checks passed on this commit" something a hook can verify, so an agent does not open a pull request it would see go red.
+
+`node checks/checks.mjs` compares the branch with its base (`origin/main` by default), runs the checks in `checks/config.json` that the changed files reach (a check with `when` runs only for the paths it lists; files matching `ignore`, such as docs, reach nothing), and when they all pass, stamps the commit in the git directory. It refuses to stamp uncommitted work, and a new commit needs a new run. `--waive "<reason>"` stamps without running, with the reason in the stamp for the pull request body to repeat; `status` says whether `HEAD` is stamped.
+
+As a Claude Code `PreToolUse` hook, `node checks/checks.mjs hook` refuses `gh pr create`, a `gh api` call that creates a pull request, and any MCP `create_pull_request` from a commit with no stamp. It is the one block outside the guards: an opened pull request notifies reviewers and runs CI, and the way past it is one command with a reason. It does not replace CI, which proves the change on a clean machine; a pull request opened in the browser never passes through it. Add `node checks/checks.mjs` to a git `pre-push` hook to run the checks on every push as well (it does nothing when the commit is already stamped).
+
+**Installed files:** `checks/checks.mjs`, `checks/config.json`.
 
 ## Optional MCP server
 

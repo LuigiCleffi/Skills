@@ -1,0 +1,12 @@
+{
+  "base": "origin/main",
+  "ignore": ["**/*.md", "docs/**"],
+  "checks": [
+    { "name": "tests", "command": "npm test" }
+  ],
+  "examples": [
+    { "name": "typecheck", "command": "npx tsc --noEmit", "when": ["**/*.ts", "**/*.tsx"] },
+    { "name": "lint", "command": "npm run lint", "when": ["src/**"] },
+    { "name": "api tests", "command": "npm --prefix api test", "when": ["api/**"] }
+  ]
+}

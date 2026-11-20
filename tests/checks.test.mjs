@@ -1,0 +1,137 @@
+import assert from "node:assert/strict";
+import { readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { after, describe, it } from "node:test";
+import { cleanUp, git, importFrom, makeProject, run, write } from "./helpers.mjs";
+
+after(cleanUp);
+
+// A project on main with one commit, then a feature branch, so the checks
+// have a base to measure the diff against.
+function repo(checks) {
+  const project = makeProject(["checks"]);
+  const configFile = path.join(project, "checks/config.json");
+  const config = { ...JSON.parse(readFileSync(configFile, "utf8")), base: "main", checks };
+  writeFileSync(configFile, JSON.stringify(config));
+  git(project, "init", "-q", "-b", "main");
+  git(project, "config", "user.email", "test@example.com");
+  git(project, "config", "user.name", "Test");
+  git(project, "add", "-A");
+  git(project, "commit", "-qm", "base");
+  git(project, "checkout", "-qb", "feature");
+  return project;
+}
+
+function commit(project, file, content = "x\n") {
+  write(project, file, content);
+  git(project, "add", "-A");
+  git(project, "commit", "-qm", `change ${file}`);
+}
+
+const prCreate = (project) => JSON.stringify({ tool_name: "Bash", tool_input: { command: "gh pr create --fill" }, cwd: project });
+
+describe("plannedChecks", () => {
+  it("runs a check when a changed file reaches it, and nothing for ignored files", async () => {
+    const { plannedChecks } = await importFrom(makeProject(["checks"]), "checks/checks.mjs");
+    const config = {
+      ignore: ["**/*.md"],
+      checks: [{ name: "all", command: "a" }, { name: "ts", command: "b", when: ["**/*.ts"] }],
+    };
+    assert.deepEqual(plannedChecks(config, ["src/a.js"]).map((check) => check.name), ["all"]);
+    assert.deepEqual(plannedChecks(config, ["src/a.ts"]).map((check) => check.name), ["all", "ts"]);
+    assert.deepEqual(plannedChecks(config, ["README.md"]), []);
+  });
+});
+
+describe("opensPullRequest", () => {
+  it("knows the ways an agent opens a pull request, and nothing else", async () => {
+    const { opensPullRequest } = await importFrom(makeProject(["checks"]), "checks/checks.mjs");
+    const bash = (command) => ["Bash", { command }];
+    assert.ok(opensPullRequest(...bash("gh pr create --fill")));
+    assert.ok(opensPullRequest(...bash("gh api repos/acme/app/pulls -f title=x -f head=b -f base=main")));
+    assert.ok(opensPullRequest("mcp__github__create_pull_request", {}));
+    assert.equal(opensPullRequest(...bash("gh pr view 3")), false);
+    assert.equal(opensPullRequest(...bash("gh api repos/acme/app/pulls")), false);
+    assert.equal(opensPullRequest("Edit", { file_path: "x" }), false);
+  });
+});
+
+describe("the checks run", () => {
+  it("stamps the commit when the checks pass, and the hook then lets the pull request open", () => {
+    const project = repo([{ name: "ok", command: "node -e \"process.exit(0)\"" }]);
+    commit(project, "src/a.js");
+    assert.equal(run(project, "checks/checks.mjs", ["hook"], prCreate(project)).code, 2);
+
+    const checked = run(project, "checks/checks.mjs");
+    assert.equal(checked.code, 0, checked.stderr);
+    assert.match(checked.stdout, /stamped/);
+    assert.equal(run(project, "checks/checks.mjs", ["hook"], prCreate(project)).code, 0);
+    assert.match(run(project, "checks/checks.mjs").stdout, /already passed/);
+  });
+
+  it("does not stamp a failing commit, nor a commit with uncommitted work", () => {
+    const project = repo([{ name: "fails", command: "node -e \"process.exit(3)\"" }]);
+    commit(project, "src/a.js");
+    assert.equal(run(project, "checks/checks.mjs").code, 1);
+    assert.equal(run(project, "checks/checks.mjs", ["status"]).code, 1);
+
+    write(project, "checks/config.json", JSON.stringify({ base: "main", checks: [] }));
+    assert.match(run(project, "checks/checks.mjs").stderr, /commit or stash/);
+  });
+
+  it("is refused again after a new commit", () => {
+    const project = repo([{ name: "ok", command: "node -e \"0\"" }]);
+    commit(project, "src/a.js");
+    run(project, "checks/checks.mjs");
+    commit(project, "src/b.js");
+    assert.match(run(project, "checks/checks.mjs", ["hook"], prCreate(project)).stderr, /have not passed on commit/);
+  });
+
+  it("stamps a waiver only with its reason", () => {
+    const project = repo([{ name: "fails", command: "node -e \"process.exit(1)\"" }]);
+    commit(project, "src/a.js");
+    assert.equal(run(project, "checks/checks.mjs", ["--waive", "no"]).code, 1);
+    assert.equal(run(project, "checks/checks.mjs", ["--waive", "docs-only change to the release notes"]).code, 0);
+    assert.match(run(project, "checks/checks.mjs", ["status"]).stdout, /waived — docs-only/);
+    assert.equal(run(project, "checks/checks.mjs", ["hook"], prCreate(project)).code, 0);
+  });
+
+  it("lets everything else through, and fails open on input it cannot read", () => {
+    const project = repo([]);
+    const other = JSON.stringify({ tool_name: "Bash", tool_input: { command: "git push" }, cwd: project });
+    assert.equal(run(project, "checks/checks.mjs", ["hook"], other).code, 0);
+    assert.equal(run(project, "checks/checks.mjs", ["hook"], "not json").code, 0);
+  });
+});
+
+describe("harness scope", () => {
+  it("names the touched modules no record of the run claims", async () => {
+    const project = makeProject(["harness"]);
+    const { declaredPaths, undeclaredModules } = await importFrom(project, "harness/gate.mjs");
+    const declared = declaredPaths("### TASK-1\n- **Files:** `src/billing/refund.ts`, `./src/billing/api.ts`\nRun `npm test`.");
+    assert.deepEqual(declared, ["src/billing/refund.ts", "src/billing/api.ts"]);
+    assert.deepEqual(
+      undeclaredModules(["src/billing/refund.ts", "src/billing/new.ts", "src/essay/fix.ts", "src/essay/b.ts"], declared),
+      [{ module: "src/essay", files: ["src/essay/fix.ts", "src/essay/b.ts"] }],
+    );
+  });
+
+  it("reports from the active run and the branch, and exits 0", () => {
+    const project = makeProject(["harness"]);
+    git(project, "init", "-q", "-b", "main");
+    git(project, "config", "user.email", "test@example.com");
+    git(project, "config", "user.name", "Test");
+    git(project, "add", "-A");
+    git(project, "commit", "-qm", "base");
+    git(project, "checkout", "-qb", "feature");
+    write(project, "docs/harness/tasks.md", "### TASK-1\n- **Files:** `src/billing/refund.ts`\n");
+    write(project, "docs/harness/active.json", JSON.stringify({ mode: "fix", records: { tasks: "docs/harness/tasks.md" } }));
+    write(project, "src/billing/refund.ts", "x");
+    write(project, "src/essay/fix.ts", "x");
+
+    const { code, stdout } = run(project, "harness/gate.mjs", ["scope", "--base", "main"]);
+    assert.equal(code, 0);
+    assert.match(stdout, /src\/essay \(1 file: src\/essay\/fix.ts\)/);
+    assert.doesNotMatch(stdout, /src\/billing \(/);
+  });
+});
