@@ -129,7 +129,7 @@ describe("hooks for checks and worktrees", () => {
     ]);
     assert.equal(hooks.SessionStart.length, 1);
     assert.equal(hooks.SessionStart[0].matcher, undefined);
-    assert.match(hooks.SessionStart[0].hooks[0].command, /worktree-slot\.mjs .*\|\| true$/);
+    assert.match(hooks.SessionStart[0].hooks[0].command, /worktree-slot\.mjs --hook$/);
     assert.match(read(project, "AGENTS.md"), /node checks\/checks.mjs/);
   });
 

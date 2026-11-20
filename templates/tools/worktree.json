@@ -1,5 +1,7 @@
 {
   "output": ".worktree-slot.env",
+  "include": ".worktreeinclude",
+  "linkDependencies": [],
   "portStep": 10,
   "ports": {
     "PORT": 3000

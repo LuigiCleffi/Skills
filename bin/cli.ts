@@ -992,7 +992,7 @@ const harnessHookCommand = 'node "$CLAUDE_PROJECT_DIR"/harness/gate.mjs';
 const guardsHookCommand = 'node "$CLAUDE_PROJECT_DIR"/guards/guard.mjs';
 const checksHookCommand = 'node "$CLAUDE_PROJECT_DIR"/checks/checks.mjs hook';
 // A session must start even outside git or before the config exists.
-const worktreeHookCommand = 'node "$CLAUDE_PROJECT_DIR"/tools/worktree-slot.mjs >/dev/null 2>&1 || true';
+const worktreeHookCommand = 'node "$CLAUDE_PROJECT_DIR"/tools/worktree-slot.mjs --hook';
 
 type HookEntry = { matcher?: string; hooks?: { type?: string; command?: string }[] };
 type ClaudeSettings = { hooks?: Record<string, HookEntry[]> } & Record<string, unknown>;
