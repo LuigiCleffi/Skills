@@ -252,6 +252,18 @@ const skills: Skill[] = [
     files: ["tools/worktree-slot.mjs", "tools/worktree.json"],
   },
   {
+    value: "cycle-metrics",
+    name: "Cycle metrics",
+    description: "tools/cycle-metrics.mjs: the numbers of a sprint or any window from git and GitHub (merged pull requests, time to merge and to a first look, reviewless merges, size, CI failures, reverts, releases, escaped defects), each next to the previous window, with fixed definitions",
+    files: ["tools/cycle-metrics.mjs"],
+  },
+  {
+    value: "design-rules",
+    name: "Interface rules with IDs",
+    description: "docs/design/RULES.md: the product's interface rules with stable IDs (laws, components, tokens, motion, data, writing, permissions, accessibility, verification) and the defects that must not come back, routed by what is being built",
+    files: ["actions/design-rules.md", "docs/design/RULES.md"],
+  },
+  {
     value: "writing-style",
     name: "Plain answers writing style",
     description: "A Claude Code output style: answer first, behavior instead of internals, numbers instead of adjectives, what is not done stated plainly, size that follows the stakes",
@@ -285,7 +297,7 @@ const skills: Skill[] = [
     value: "checks",
     name: "Checks before a pull request",
     description: "Runs the checks a commit's diff reaches and stamps the commit; a Claude Code hook refuses to open a pull request from a commit with no stamp",
-    files: ["checks/checks.mjs", "checks/config.json"],
+    files: ["checks/checks.mjs", "checks/config.json", "tools/mermaid-check.mjs"],
   },
   {
     value: "guards",

@@ -24,6 +24,10 @@ Show the user what the sprint built, working, and decide together what happens n
 1. **[Tech Lead] Confirm Done.** Every item shown must meet `docs/scrum/definition-of-done.md`. Items that do not are listed as not done; they are not demoed.
 2. **[DevOps] Run the increment.** Start the application from the sprint branch the way the project runs it. If it does not start, that is the first finding of the review.
 
+### Numbers of the sprint
+
+When `tools/cycle-metrics.mjs` is installed, the PM runs `node tools/cycle-metrics.mjs --since <sprint start> --until <sprint end> --markdown` and adds the table to the sprint record: pull requests merged, time to merge, time to a first look, pull requests nobody else looked at, size, CI failures, reverts, releases, and escaped defects, each next to the previous sprint of the same length. Every number in the review comes from that table; a number it could not read stays "n/a" and is never estimated. The three that got worst become questions for the retrospective.
+
 ### Demo and accept
 
 3. **[Dev, DBA, DevOps] Demo.** For each Done item, walk its acceptance criteria one by one in the running application: the action and the observed result. Use the browser or API, not a description of the code. The DBA shows migrations forward and back when an item changed the schema.

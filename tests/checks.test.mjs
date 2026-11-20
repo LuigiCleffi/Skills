@@ -40,6 +40,8 @@ describe("plannedChecks", () => {
     assert.deepEqual(plannedChecks(config, ["src/a.js"]).map((check) => check.name), ["all"]);
     assert.deepEqual(plannedChecks(config, ["src/a.ts"]).map((check) => check.name), ["all", "ts"]);
     assert.deepEqual(plannedChecks(config, ["README.md"]), []);
+    const diagrams = { ignore: ["**/*.md"], checks: [{ name: "all", command: "a" }, { name: "diagrams", command: "d", when: ["**/*.md"] }] };
+    assert.deepEqual(plannedChecks(diagrams, ["docs/flow.md"]).map((check) => check.name), ["diagrams"]);
   });
 });
 

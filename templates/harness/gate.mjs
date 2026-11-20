@@ -884,7 +884,7 @@ function runBrief(config) {
 
 // The rows of the knowledge and ADR gates whose "Paths" match a file: before
 // writing there, the agent reads what the row points to.
-export function territoryFor(relative, gates = ["docs/knowledge/README.md", "docs/adr/README.md"]) {
+export function territoryFor(relative, gates = ["docs/knowledge/README.md", "docs/adr/README.md", "docs/design/RULES.md"]) {
   const reminders = [];
   for (const gate of gates) {
     const text = readRecordText(gate);

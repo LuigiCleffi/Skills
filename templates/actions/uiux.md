@@ -71,6 +71,8 @@ List the requirement and user-story IDs with a user-facing effect. Confirm the c
 
 ### 2. Inspect the existing interface
 
+When `docs/design/RULES.md` exists, read the laws and the groups its routing table points to before deciding anything, follow them, and cite their IDs in the decisions ("UX-04 follows L07"). A decision that should hold for every screen goes to `actions/design-rules.md` as a new rule.
+
 Find what already exists before deciding anything new: components that fit, tokens for color, spacing, and type, layout and navigation patterns, form and validation conventions, empty and error state patterns, translation keys and locale setup, accessibility linting, and how tests select elements. Consistency with the existing product beats local novelty.
 
 **Assemble screens; do not draw them.** Before any markup, write an inventory with one line per need: `need → component (path or package@version)`. Search in this order, and stop at the first that has it:
