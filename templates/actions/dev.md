@@ -88,11 +88,14 @@ One task per object that changes, in the order they can be done:
 
 ```markdown
 ### TASK-01 Add the refund window to orders
-**Files:** `db/migrations/20261118_refund_window.sql`, `src/orders/order.ts`
+**Files:** `db/migrations/20261118_refund_window.sql` (new), `src/orders/order.ts`
 **Change:** add `refund_window_days` (default 30); `Order.canRefund(today)` uses it (BR-0004)
 **Depends:** none
+**Status:** todo
 **Verify:** `npm test -- orders/order.test.ts`
 ```
+
+Mark a file the task creates with `(new)` after it; every other file must exist. **Depends** names the tasks that must be done first (no circles). **Status** is `todo`, `doing`, `done`, or `blocked`; update it as you go. With the harness, `node harness/gate.mjs board` shows what is done and which tasks can start now, and the gate checks the files, dependencies, and circles once the tasks stage is done.
 
 Every task names its files, what changes and why (the requirement, rule, or decision it serves), and the command that proves it is done. A task without a command to prove it is not ready; find the check first. The task points to the spec, model, and ADRs; it does not repeat them. Then implement one task at a time and run its **Verify** before the next.
 

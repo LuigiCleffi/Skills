@@ -54,14 +54,18 @@ describe("install --yes", () => {
     assert.match(read(project, "AGENTS.md"), /harness/i);
     assert.equal(JSON.parse(read(project, "harness/config.json")).enforce, "warn");
     const hooks = JSON.parse(read(project, ".claude/settings.json")).hooks.PreToolUse.map((entry) => entry.hooks[0].command);
-    assert.deepEqual(hooks, ['node "$CLAUDE_PROJECT_DIR"/harness/gate.mjs', 'node "$CLAUDE_PROJECT_DIR"/guards/guard.mjs']);
+    assert.deepEqual(hooks, [
+      'node "$CLAUDE_PROJECT_DIR"/harness/gate.mjs',
+      'node "$CLAUDE_PROJECT_DIR"/harness/gate.mjs issue',
+      'node "$CLAUDE_PROJECT_DIR"/guards/guard.mjs',
+    ]);
   });
 
   it("takes each answer from its flag", () => {
     const project = makeProject();
     const { code } = kit(
       project, "install", "--groups", "harness,guards,scrum", "--harness", "block", "--no-guards",
-      "--agents", "codex", "--mcp", "none", "--no-playwright",
+      "--agents", "codex", "--mcp", "none", "--no-playwright", "--no-harness-helpers",
     );
     assert.equal(code, 0);
     assert.equal(JSON.parse(read(project, "harness/config.json")).enforce, "block");
@@ -147,5 +151,19 @@ describe("explore and finish", () => {
     const agents = read(project, "AGENTS.md");
     assert.ok(agents.includes("actions/explore.md"));
     assert.ok(agents.includes("actions/finish.md"));
+  });
+});
+
+describe("harness helpers", () => {
+  it("adds the brief and issue hooks with the harness, and leaves them out when told to", () => {
+    const project = makeProject();
+    kit(project, "install", "--groups", "harness", "--yes", "--no-checks");
+    const hooks = JSON.parse(read(project, ".claude/settings.json")).hooks;
+    assert.equal(hooks.UserPromptSubmit[0].hooks[0].command, 'node "$CLAUDE_PROJECT_DIR"/harness/gate.mjs brief');
+    assert.ok(hooks.PreToolUse.some((entry) => entry.matcher === "mcp__.*__(save_issue|create_issue|update_issue)"));
+
+    const without = makeProject();
+    kit(without, "install", "--groups", "harness", "--yes", "--no-harness-helpers");
+    assert.equal(JSON.parse(read(without, ".claude/settings.json")).hooks.UserPromptSubmit, undefined);
   });
 });

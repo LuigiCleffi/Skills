@@ -54,6 +54,7 @@ type InstallOptions = {
   guards?: boolean;
   checks?: boolean;
   worktreeHook?: boolean;
+  harnessHelpers?: boolean;
   mcp?: string[];
   overwrite: boolean;
 };
@@ -74,13 +75,16 @@ Install options (each one answers its question; the rest are asked):
   --groups a,b             Install these groups (and the groups they require)
   --yes, -y                Do not ask: unanswered questions take their default
                            (Playwright only if configured, agents for the AI
-                           tools found, harness hook "warn", guards, checks
-                           and worktree hooks on,
+                           tools found, harness hook "warn", harness helpers,
+                           guards, checks and worktree hooks on,
                            no MCP server, never overwrite edited files)
   --playwright / --no-playwright
   --agents claude,opencode,codex   Scrum role agents for these tools ("none" for none)
   --harness warn|block|none        The harness gate hook in Claude Code
   --guards / --no-guards           The guards hook in Claude Code
+  --harness-helpers / --no-harness-helpers
+                                   Brief the agent on the run at each prompt, and check
+                                   the format of issues it saves through a tracker's MCP
   --checks / --no-checks           The hook that refuses a pull request from an unchecked commit
   --worktree-hook / --no-worktree-hook
                                    Assign the worktree slot when a Claude Code session starts
@@ -125,6 +129,8 @@ function parseInstallOptions(args: string[]): InstallOptions {
       checks: { type: "boolean" },
       "no-checks": { type: "boolean" },
       "worktree-hook": { type: "boolean" },
+      "harness-helpers": { type: "boolean" },
+      "no-harness-helpers": { type: "boolean" },
       "no-worktree-hook": { type: "boolean" },
       mcp: { type: "string" },
       overwrite: { type: "boolean" },
@@ -157,6 +163,7 @@ function parseInstallOptions(args: string[]): InstallOptions {
     guards: flag(values.guards, values["no-guards"]),
     checks: flag(values.checks, values["no-checks"]),
     worktreeHook: flag(values["worktree-hook"], values["no-worktree-hook"]),
+    harnessHelpers: flag(values["harness-helpers"], values["no-harness-helpers"]),
     mcp,
     overwrite: values.overwrite ?? false,
   };
@@ -937,6 +944,10 @@ async function installSkills(selectedSkills: Skill[]): Promise<void> {
     await offerHarnessHook();
   }
 
+  if (selectedSkills.some((skill) => skill.value === "harness")) {
+    await offerHarnessHelpers();
+  }
+
   if (selectedSkills.some((skill) => skill.value === "checks")) {
     await offerChecksHook();
   }
@@ -990,6 +1001,8 @@ async function offerMcpServer(): Promise<void> {
 
 const harnessHookCommand = 'node "$CLAUDE_PROJECT_DIR"/harness/gate.mjs';
 const guardsHookCommand = 'node "$CLAUDE_PROJECT_DIR"/guards/guard.mjs';
+const briefHookCommand = 'node "$CLAUDE_PROJECT_DIR"/harness/gate.mjs brief';
+const issueHookCommand = 'node "$CLAUDE_PROJECT_DIR"/harness/gate.mjs issue';
 const checksHookCommand = 'node "$CLAUDE_PROJECT_DIR"/checks/checks.mjs hook';
 // A session must start even outside git or before the config exists.
 const worktreeHookCommand = 'node "$CLAUDE_PROJECT_DIR"/tools/worktree-slot.mjs --hook';
@@ -1084,6 +1097,19 @@ async function offerHarnessHook(): Promise<void> {
 
   await setHarnessEnforcement(choice as "warn" | "block");
   await addPreToolUseHook(harnessHookCommand, "Edit|Write|MultiEdit|NotebookEdit", "harness gate");
+}
+
+// Two hooks that only inform: the run's state and next stage at each prompt,
+// and the format of an issue saved through an issue tracker's MCP.
+async function offerHarnessHelpers(): Promise<void> {
+  const enable = await answer("--harness-helpers or --no-harness-helpers", options.harnessHelpers, () => true, () => confirm({
+    message:
+      "Brief the agent on the harness run at each prompt, and check the format of issues it saves through an issue tracker? Adds a UserPromptSubmit and a PreToolUse hook; neither blocks.",
+    default: true,
+  }));
+  if (!enable) return;
+  await addHook("UserPromptSubmit", briefHookCommand, undefined, "harness brief");
+  await addPreToolUseHook(issueHookCommand, "mcp__.*__(save_issue|create_issue|update_issue)", "issue format");
 }
 
 // Refusing a pull request is the one block outside the guards: an opened
