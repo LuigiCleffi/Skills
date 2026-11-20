@@ -538,6 +538,8 @@ To run the latest published version:
 npx skills-code-kit@latest
 ```
 
+A rerun can name fewer groups than the first install: the files of the groups you name are installed or updated, and `AGENTS.md` keeps listing every group installed before (recorded in `.skills-code-kit/lock.json`).
+
 To see what changed since the last install, without installing anything:
 
 ```bash

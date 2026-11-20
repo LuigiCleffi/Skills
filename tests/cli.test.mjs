@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { after, describe, it } from "node:test";
 import { cleanUp, makeProject, repoDirectory } from "./helpers.mjs";
@@ -85,5 +85,35 @@ describe("install --yes", () => {
     kit(project, "install", "--groups", "scrum", "--yes", "--overwrite");
     assert.doesNotMatch(read(project, "scrum/handoff.md"), /local note/);
     assert.equal(kit(project, "verify").code, 0);
+  });
+});
+
+describe("rerunning with fewer groups", () => {
+  const lockOf = (project) => JSON.parse(read(project, ".skills-code-kit/lock.json"));
+
+  it("keeps the groups installed earlier in AGENTS.md and the lock", () => {
+    const project = makeProject();
+    kit(project, "install", "--groups", "guards,bdd", "--yes");
+    assert.deepEqual(lockOf(project).groups, ["bdd", "guards"]);
+
+    const { code, out } = kit(project, "install", "--groups", "dev", "--yes");
+    assert.equal(code, 0);
+    assert.match(out, /keeps the groups installed earlier: bdd, guards/);
+    const agents = read(project, "AGENTS.md");
+    for (const file of ["actions/dev.md", "actions/bdd.md", "guards/"]) assert.ok(agents.includes(file), file);
+    assert.deepEqual(lockOf(project).groups, ["bdd", "dev", "guards"]);
+    assert.equal(kit(project, "verify").code, 0);
+  });
+
+  it("works out the groups from a lock written before they were recorded", () => {
+    const project = makeProject();
+    kit(project, "install", "--groups", "bdd", "--yes");
+    const lock = lockOf(project);
+    delete lock.groups;
+    writeFileSync(path.join(project, ".skills-code-kit/lock.json"), JSON.stringify(lock));
+
+    assert.match(kit(project, "install", "--groups", "dev", "--yes").out, /keeps the groups installed earlier: bdd/);
+    assert.ok(read(project, "AGENTS.md").includes("actions/bdd.md"));
+    assert.deepEqual(lockOf(project).groups, ["bdd", "dev"]);
   });
 });

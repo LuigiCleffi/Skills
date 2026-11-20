@@ -682,6 +682,7 @@ function printList(title: string, files: string[], mark: string): void {
 async function installFiles(
   filesToInstall: string[],
   generatedFiles: Map<string, string>,
+  groups: string[],
 ): Promise<void> {
   const lock = await readLock(projectDirectory);
   const incoming = new Map<string, Buffer>();
@@ -747,7 +748,7 @@ async function installFiles(
     (state === "new" ? installed : updated).push(file);
   }
 
-  await writeLock(projectDirectory, { version: await packageVersion(), files: lockedFiles });
+  await writeLock(projectDirectory, { version: await packageVersion(), groups, files: lockedFiles });
 
   console.log("\nInstallation finished.");
   printList("Installed files:", installed, "✓");
@@ -820,13 +821,37 @@ async function main(): Promise<void> {
   return installSkills(selectedSkills);
 }
 
+// The groups an earlier install put in this project: from the lock, or, for
+// a lock written before groups were recorded, every group whose entry points
+// are all in it.
+async function installedGroups(): Promise<string[]> {
+  const lock = await readLock(projectDirectory);
+  if (!lock) return [];
+  if (Array.isArray(lock.groups)) return lock.groups.filter((value) => skills.some((skill) => skill.value === value));
+  return skills
+    .filter((skill) => skill.files.every((file) => file in lock.files))
+    .map((skill) => skill.value);
+}
+
 async function installSkills(selectedSkills: Skill[]): Promise<void> {
   if (selectedSkills.length === 0) {
     console.log("\nNo instruction groups selected. Installation cancelled.");
     return;
   }
 
-  const usesPlaywright = selectedSkills.some(
+  // AGENTS.md lists every installed group, not only this run's: a rerun with
+  // fewer groups must not hide the others from the agents.
+  const earlier = (await installedGroups()).filter(
+    (value) => !selectedSkills.some((skill) => skill.value === value),
+  );
+  const listedSkills = skills.filter(
+    (skill) => selectedSkills.includes(skill) || earlier.includes(skill.value),
+  );
+  if (earlier.length > 0) {
+    console.log(`\nAGENTS.md keeps the groups installed earlier: ${earlier.join(", ")}`);
+  }
+
+  const usesPlaywright = listedSkills.some(
     (skill) => skill.value === "pull-request",
   )
     ? await choosePlaywright()
@@ -835,7 +860,7 @@ async function installSkills(selectedSkills: Skill[]): Promise<void> {
   // AGENTS.md is always generated to provide an entry point to the
   // instruction files selected by the developer.
   const generatedFiles = new Map([
-    ["AGENTS.md", generateAgentsMd(selectedSkills, usesPlaywright)],
+    ["AGENTS.md", generateAgentsMd(listedSkills, usesPlaywright)],
   ]);
 
   if (selectedSkills.some((skill) => skill.value === "scrum")) {
@@ -865,7 +890,7 @@ async function installSkills(selectedSkills: Skill[]): Promise<void> {
     return;
   }
 
-  await installFiles(filesToInstall, generatedFiles);
+  await installFiles(filesToInstall, generatedFiles, listedSkills.map((skill) => skill.value));
 
   if (selectedSkills.some((skill) => skill.value === "harness")) {
     await offerHarnessHook();
