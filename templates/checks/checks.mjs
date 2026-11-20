@@ -152,6 +152,51 @@ function headSha(cwd, toolInput) {
 
 // The refusal reason for one tool call, or null to let it through. Fails
 // open outside a git repository.
+// The body of the pull request a tool call opens, when it can be read: the
+// MCP call's body, or gh's --body / --body-file. Null when it cannot (an
+// editor, stdin, --fill): the screenshot check then stays out of the way.
+export function pullRequestBody(toolName, toolInput, cwd) {
+  if (toolName !== "Bash") return typeof toolInput?.body === "string" ? toolInput.body : null;
+  const command = String(toolInput?.command ?? "");
+  const file = /(?:--body-file|-F)[=\s]+("([^"]+)"|'([^']+)'|(\S+))/.exec(command);
+  if (file) {
+    const name = file[2] ?? file[3] ?? file[4];
+    if (name === "-") return null;
+    try {
+      return readFileSync(path.resolve(cwd, name), "utf8");
+    } catch {
+      return null;
+    }
+  }
+  const inline = /(?:--body|-b)[=\s]+([\s\S]*)$/.exec(command);
+  return inline ? inline[1] : null;
+}
+
+// Why a pull request touching screens is not illustrated, or null. Images in
+// the template's own HTML comments do not count; a GitHub image linked by
+// branch instead of a commit SHA is refused, because it breaks (or changes)
+// once the branch moves or is deleted.
+export function screenshotProblem(body, files, config) {
+  const settings = config.screenshots;
+  if (!settings || body === null) return null;
+  const visual = files.filter((file) => matchesAny(file, settings.when ?? []));
+  if (visual.length === 0) return null;
+  if (/<!--\s*no-screenshot:\s*\S+[^>]*-->/.test(body)) return null;
+  const visible = body.replace(/<!--[\s\S]*?-->/g, "");
+  const images = [...visible.matchAll(/!\[[^\]]*\]\(([^)\s]+)[^)]*\)|<img[^>]+src=["']([^"']+)["']/g)].map((match) => match[1] ?? match[2]);
+  const unpinned = images.filter((url) => {
+    const ref = /github\.com\/[^/]+\/[^/]+\/(?:blob|raw)\/([^/]+)\//.exec(url)?.[1] ?? /raw\.githubusercontent\.com\/[^/]+\/[^/]+\/([^/]+)\//.exec(url)?.[1];
+    return ref !== undefined && !/^[0-9a-f]{40}$/.test(ref);
+  });
+  if (unpinned.length > 0) {
+    return `Checks: ${unpinned[0]} links an image by branch; link it by the 40-character commit SHA so it survives the branch (blob/<sha>/...?raw=1).`;
+  }
+  if (images.length === 0) {
+    return `Checks: the change touches screens (${visual.slice(0, 3).join(", ")}${visual.length > 3 ? ", ..." : ""}) and the pull request body has no screenshot. Add before and after images, or <!-- no-screenshot: <reason> --> when nothing visible changed.`;
+  }
+  return null;
+}
+
 export function hookProblem(input) {
   if (!opensPullRequest(input?.tool_name, input?.tool_input)) return null;
   let sha;
@@ -162,7 +207,16 @@ export function hookProblem(input) {
   }
   const cwd = input.cwd || projectDirectory;
   const stamp = readStamp(sha, cwd);
-  if (stampStands(stamp, stamp ? currentBaseSha(sha, stamp.base ?? configuredBase(cwd), cwd) : null)) return null;
+  if (stampStands(stamp, stamp ? currentBaseSha(sha, stamp.base ?? configuredBase(cwd), cwd) : null)) {
+    try {
+      const config = loadConfig();
+      const base = stamp.base ?? configuredBase(cwd);
+      const files = git(["diff", "--name-only", `${git(["merge-base", base, sha], cwd)}..${sha}`], cwd).split("\n").filter(Boolean);
+      return screenshotProblem(pullRequestBody(input.tool_name, input.tool_input, cwd), files, config);
+    } catch {
+      return null;
+    }
+  }
   const why = stamp
     ? `the base moved since the checks ran on commit ${sha.slice(0, 9)} (a rebase or a merge of ${stamp.base}), so they run again`
     : `the checks have not passed on commit ${sha.slice(0, 9)}`;

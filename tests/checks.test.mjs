@@ -196,3 +196,38 @@ describe("pre-push", () => {
     assert.match(refused.stderr, /not the checked-out commit/);
   });
 });
+
+describe("screenshots in the pull request", () => {
+  const config = { screenshots: { when: ["**/*.tsx", "**/*.css"] } };
+  const sha = "a".repeat(40);
+
+  it("asks for an image when screens change, and accepts a reason instead", async () => {
+    const { screenshotProblem } = await importFrom(makeProject(["checks"]), "checks/checks.mjs");
+    assert.equal(screenshotProblem("## Why\nx", ["src/api.ts"], config), null);
+    assert.match(screenshotProblem("## How it is\n<!-- ![placeholder](x.png) -->", ["src/List.tsx"], config), /no screenshot/);
+    assert.equal(screenshotProblem(`![after](https://github.com/o/r/blob/${sha}/shots/1.png?raw=1)`, ["src/List.tsx"], config), null);
+    assert.equal(screenshotProblem("<!-- no-screenshot: only a class rename -->", ["src/a.css"], config), null);
+    assert.match(screenshotProblem("![after](https://github.com/o/r/blob/feature/x/shots/1.png?raw=1)", ["src/List.tsx"], config), /links an image by branch/);
+    assert.match(screenshotProblem('<img src="https://raw.githubusercontent.com/o/r/main/a.png">', ["src/List.tsx"], config), /by branch/);
+    assert.equal(screenshotProblem(null, ["src/List.tsx"], config), null);
+  });
+
+  it("reads the body from gh flags, a body file, or the MCP call", async () => {
+    const project = makeProject(["checks"]);
+    const { pullRequestBody } = await importFrom(project, "checks/checks.mjs");
+    write(project, "body.md", "from the file");
+    assert.equal(pullRequestBody("Bash", { command: 'gh pr create --title t --body-file body.md' }, project), "from the file");
+    assert.match(pullRequestBody("Bash", { command: 'gh pr create --title t --body "![a](x.png)"' }, project), /!\[a\]\(x\.png\)/);
+    assert.equal(pullRequestBody("Bash", { command: "gh pr create --fill" }, project), null);
+    assert.equal(pullRequestBody("mcp__github__create_pull_request", { body: "mcp body" }, project), "mcp body");
+  });
+
+  it("refuses a stamped pull request that touches a screen without a screenshot", () => {
+    const project = repo([{ name: "ok", command: "node -e \"0\"" }]);
+    commit(project, "src/List.tsx", "export const List = () => null;\n");
+    run(project, "checks/checks.mjs");
+    const open = (body) => JSON.stringify({ tool_name: "Bash", tool_input: { command: `gh pr create --title t --body "${body}"` }, cwd: project });
+    assert.match(run(project, "checks/checks.mjs", ["hook"], open("## Why\\nfaster list")).stderr, /has no screenshot/);
+    assert.equal(run(project, "checks/checks.mjs", ["hook"], open("<!-- no-screenshot: props only -->")).code, 0);
+  });
+});

@@ -10,6 +10,17 @@
       "command": "npm test"
     }
   ],
+  "screenshots": {
+    "when": [
+      "**/*.tsx",
+      "**/*.jsx",
+      "**/*.vue",
+      "**/*.svelte",
+      "**/*.css",
+      "**/*.scss",
+      "**/*.html"
+    ]
+  },
   "examples": [
     {
       "name": "typecheck",
