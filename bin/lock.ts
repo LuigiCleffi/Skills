@@ -9,7 +9,9 @@ import path from "node:path";
 
 export const lockFile = ".skills-code-kit/lock.json";
 
-export type Lock = { version: string; files: Record<string, string> };
+// groups: the instruction groups installed so far, so a rerun with fewer
+// groups keeps the others in AGENTS.md. Locks written before 1.3.1 lack it.
+export type Lock = { version: string; groups?: string[]; files: Record<string, string> };
 
 // new: not in the project · same: already what would be installed ·
 // untouched: unchanged since the last install, safe to update ·
@@ -42,7 +44,7 @@ export async function writeLock(projectDirectory: string, lock: Lock): Promise<v
   await mkdir(path.join(projectDirectory, path.dirname(lockFile)), { recursive: true });
   await writeFile(
     path.join(projectDirectory, lockFile),
-    `${JSON.stringify({ version: lock.version, files: sorted }, null, 2)}\n`,
+    `${JSON.stringify({ version: lock.version, groups: lock.groups ? [...lock.groups].sort() : undefined, files: sorted }, null, 2)}\n`,
     "utf8",
   );
 }
