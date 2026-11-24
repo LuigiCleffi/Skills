@@ -754,11 +754,10 @@ Use a patch version for fixes, a minor version for backward-compatible features,
 
 ### Publishing from CI
 
-`.github/workflows/ci.yml` runs the frontmatter check and the tests on every pull request. `.github/workflows/release.yml` publishes when a `v*` tag is pushed, with npm provenance, so a release can be traced to the commit that built it. Set up npm trusted publishing for this repository on npmjs.com (or add an `NPM_TOKEN` secret), then release with:
+`.github/workflows/ci.yml` runs the frontmatter check and the tests on every pull request. `.github/workflows/release.yml` publishes automatically: on every push to `main` whose `package.json` version is not on npm yet, it runs the checks, publishes with npm provenance (so a release can be traced to the commit that built it), tags the commit `v<version>`, and creates a GitHub release. A merge that does not change the version publishes nothing. Set up npm trusted publishing for this repository and `release.yml` on npmjs.com (or add an `NPM_TOKEN` secret), then release by bumping the version in the pull request and merging it:
 
 ```bash
 npm version minor --no-git-tag-version
-git commit -am "1.2.0" && git tag v1.2.0 && git push origin main v1.2.0
 ```
 
 ## Guiding principle
