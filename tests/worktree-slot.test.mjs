@@ -119,3 +119,13 @@ describe("orphaned slots", () => {
     }
   });
 });
+
+describe("outside git", () => {
+  it("exits 2 with the reason, and says nothing as a hook", () => {
+    const project = makeProject(["tools"]);
+    const result = run(project, "tools/worktree-slot.mjs");
+    assert.equal(result.code, 2);
+    assert.match(result.stderr, /^worktree-slot: /);
+    assert.deepEqual(run(project, "tools/worktree-slot.mjs", ["--hook"]), { code: 0, stdout: "", stderr: "" });
+  });
+});

@@ -48,3 +48,13 @@ describe("rules check", () => {
     assert.equal(run(project, "tools/rules-check.mjs").code, 0);
   });
 });
+
+describe("when it cannot run", () => {
+  it("exits 2 with the reason, never 1", () => {
+    const project = makeProject(["tools"]);
+    write(project, "tools/rules-check.json", "{ broken");
+    const result = run(project, "tools/rules-check.mjs");
+    assert.equal(result.code, 2);
+    assert.match(result.stderr, /^rules-check: /);
+  });
+});

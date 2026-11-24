@@ -47,3 +47,13 @@ describe("palette check", () => {
     assert.equal(result.code, 0, result.stderr);
   });
 });
+
+describe("when it cannot run", () => {
+  it("exits 2 with the reason, never 1", () => {
+    const project = makeProject(["tools"]);
+    write(project, "tools/palette.json", JSON.stringify({ css: ["missing.css"], themes: {}, series: [] }));
+    const result = run(project, "tools/palette-check.mjs");
+    assert.equal(result.code, 2);
+    assert.match(result.stderr, /^palette-check: .*missing\.css/);
+  });
+});

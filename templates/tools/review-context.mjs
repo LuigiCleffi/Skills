@@ -12,6 +12,7 @@
 //   node tools/review-context.mjs --worktree      # uncommitted and untracked files
 //   node tools/review-context.mjs --files a b c   # these files
 //   add --json for machine-readable output
+// Exit 0 with the list, 2 when it cannot run (no fixed point, outside git).
 //
 // No dependencies beyond Node.js 20.
 
@@ -191,6 +192,6 @@ if (isEntryPoint()) {
     process.exitCode = main();
   } catch (error) {
     console.error(`review-context: ${error.message}`);
-    process.exitCode = 1;
+    process.exitCode = 2; // Exit 1 means the check failed; 2 means it could not run.
   }
 }

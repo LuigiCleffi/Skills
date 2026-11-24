@@ -22,7 +22,8 @@
 //   escapedDefects    fix runs recorded as escaped in docs/harness/runs/ (when the harness is installed)
 //
 // A number whose source cannot be read is null, and "missing" says why. It is
-// never estimated. No dependencies beyond Node.js 20, git, and gh.
+// never estimated. Exit 2 when it cannot run (bad dates, outside git).
+// No dependencies beyond Node.js 20, git, and gh.
 
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, realpathSync } from "node:fs";
@@ -215,6 +216,6 @@ if (isEntryPoint()) {
     process.exitCode = main();
   } catch (error) {
     console.error(`cycle-metrics: ${error.message}`);
-    process.exitCode = 1;
+    process.exitCode = 2; // Exit 1 means the check failed; 2 means it could not run.
   }
 }

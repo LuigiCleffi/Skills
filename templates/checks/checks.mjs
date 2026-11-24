@@ -24,6 +24,9 @@
 // It checks each commit being pushed to a branch, not HEAD, and does nothing
 // for a commit already stamped against the same base. No dependencies beyond
 // Node.js 20.
+//
+// Exit 1 when a check fails or HEAD is not stamped, 2 when it cannot run
+// (checks/config.json missing or broken, outside git); the hook exits 0 then.
 
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
@@ -405,6 +408,7 @@ if (isEntryPoint()) {
   } catch (error) {
     console.error(`checks: ${error.message}`);
     // The hook fails open: a broken check must not stop every command.
-    process.exitCode = process.argv[2] === "hook" ? 0 : 1;
+    // Anything else exits 2: exit 1 means the checks failed.
+    process.exitCode = process.argv[2] === "hook" ? 0 : 2;
   }
 }

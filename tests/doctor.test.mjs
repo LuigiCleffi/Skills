@@ -43,3 +43,13 @@ describe("doctor", () => {
     assert.equal(JSON.parse(run(project, "tools/doctor.mjs", ["--json"]).stdout)[0].ok, false);
   });
 });
+
+describe("when it cannot run", () => {
+  it("exits 2 with the reason, never 1", () => {
+    const project = makeProject(["tools"]);
+    write(project, "tools/doctor.json", "{ broken");
+    const result = run(project, "tools/doctor.mjs");
+    assert.equal(result.code, 2);
+    assert.match(result.stderr, /^doctor: /);
+  });
+});

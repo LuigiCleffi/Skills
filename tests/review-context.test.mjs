@@ -80,3 +80,11 @@ describe("the command", () => {
     assert.match(run(project, "tools/review-context.mjs", ["--files", "web/app.css"]).stdout, /No project rule/);
   });
 });
+
+describe("when it cannot run", () => {
+  it("exits 2 with the reason outside git, never 1", () => {
+    const result = run(makeProject(["tools"]), "tools/review-context.mjs", ["main"]);
+    assert.equal(result.code, 2);
+    assert.match(result.stderr, /^review-context: /);
+  });
+});
