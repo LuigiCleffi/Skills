@@ -352,8 +352,20 @@ describe("tasks, coverage, and the board", () => {
     const context = JSON.parse(first.stdout).hookSpecificOutput.additionalContext;
     assert.match(context, /mode fix/);
     assert.match(context, /Next stage: knowledge-gate, following actions\/knowledge\.md/);
+    assert.match(context, /Effort: routine/);
+    assert.doesNotMatch(context, /Context: start this stage/);
     assert.match(context, /Tasks: 1\/3 done; can start: TASK-02/);
     assert.equal(run(project, "harness/gate.mjs", ["brief"], prompt).stdout, "");
+  });
+
+  it("says how much effort a stage needs and when to start it from the records", async () => {
+    const gate = await importFrom(makeProject(["harness"]), "harness/gate.mjs");
+    const config = gate.loadConfig();
+    assert.deepEqual(gate.contextHints(config, "ddd"), ["Effort: deep. This stage decides; use the strongest model and high effort."]);
+    assert.match(gate.contextHints(config, "dev").join("\n"), /Effort: routine[\s\S]*Context: start this stage from a fresh or compacted session/);
+    assert.match(gate.contextHints(config, "code-review").join("\n"), /Effort: deep[\s\S]*Context: start this stage/);
+    assert.deepEqual(gate.contextHints({}, "qa"), ["Effort: routine. The records already decide; a faster model and normal effort are enough."]);
+    assert.deepEqual(gate.contextHints({ context: { deep: [], routine: [], freshBefore: [] } }, "dev"), []);
   });
 
   it("reminds what governs a path before it is edited", () => {

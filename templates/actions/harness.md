@@ -184,6 +184,16 @@ If building shows a pre-code record is wrong (a missing rule, a model that does 
 
 A run that the user stops is set to **Abandoned** with the reason, and `active.json` is deleted.
 
+## Context budget
+
+Every turn rereads the whole conversation, so a run that does all its stages in one context pays for the plan's exploration again on every line of code. The records exist so it does not have to.
+
+- **The records are the handoff.** A stage reads the records of the earlier stages, not the conversation that produced them. Start `dev` and `code-review` from a fresh or compacted session (in Claude Code, `/compact` or a new session); the brief says so when that stage is next. Compact again after a long exploration, and start a new session for an unrelated request instead of mixing topics.
+- **Spend effort where it decides.** `harness/config.json` sorts the stages under `context`: `deep` stages (plan, research, spec, strategy, ddd, uiux, adr-gate, tasks, review, code-review) decide what gets built and need the strongest model and high effort; `routine` stages (spec-checklist, reproduce, bdd, knowledge-gate, dev, qa) carry out what the records already decided, and a faster model is enough. The brief names the tier of the next stage. Both reviews stay `deep`, since a reviewer is never on a weaker model than the author (see *Agents, models, and effort*). When dev finds the records do not decide something, that is a pre-code stage going back to `pending`, not a reason to raise the effort.
+- **Read through the gates.** The knowledge gate, the ADR gate, and `docs/design/RULES.md` route to the few files a task needs; read those, and the section of a long file you need, not whole folders. Never paste a repository, a lockfile, generated code, or build output into context.
+- **Keep command output short.** Look at `git diff --stat` before a full diff, then read the diff one file at a time. Run tests with a quiet or failures-only reporter and cut long output to what matters (`| tail -50`, `grep -n`). A record cites what a command showed ("42 passed"), never the whole log.
+- **Brief sub-agents tightly.** A sub-agent (the code-review axes, the QA fresh agent, a search) gets the goal, the files, and what done looks like, and returns a conclusion, not file dumps. Records and the questions you put to the user stay in full sentences: terse writing saves the most where the reader can infer least.
+
 ## The gate script
 
 `harness/gate.mjs` has no dependencies beyond Node.js and runs in two ways:

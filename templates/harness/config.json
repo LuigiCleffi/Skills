@@ -92,6 +92,32 @@
       "triggered": []
     }
   },
+  "context": {
+    "deep": [
+      "plan",
+      "research",
+      "spec",
+      "strategy",
+      "ddd",
+      "uiux",
+      "adr-gate",
+      "tasks",
+      "review",
+      "code-review"
+    ],
+    "routine": [
+      "spec-checklist",
+      "reproduce",
+      "bdd",
+      "knowledge-gate",
+      "dev",
+      "qa"
+    ],
+    "freshBefore": [
+      "dev",
+      "code-review"
+    ]
+  },
   "records": {
     "plan": {
       "require": [
