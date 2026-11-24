@@ -32,7 +32,7 @@ Starter rules: keep the ones that fit this product, change the rest, and add the
 - **L05 Every action has four states.** Rest, hover, visible focus, and pressed. When a whole component is clickable, hover shows on the whole component.
 - **L06 Small screens are a redesign.** Tables become cards; summaries stay visible; nothing is just shrunk.
 - **L07 No dead controls.** Every control leads to a real screen or a dialog in context. Not built yet: a non-clickable label, never a disabled button.
-- **L08 The chart must not lie.** Bars fill toward the good; when lower is better, show the threshold; a fall in a bad direction is never green.
+- **L08 The chart must not lie.** Bars fill toward the good; when lower is better, show the threshold; a fall in a bad direction is never green Series stay apart for every reader: `node tools/palette-check.mjs` checks the palette's contrast and separation, including under color blindness.
 - **L09 Size sets contrast.** Body text at least 4.5:1, large text and graphics at least 3:1, measured in every theme.
 
 ## K — Components

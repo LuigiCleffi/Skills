@@ -1,0 +1,13 @@
+{
+  "css": ["src/styles/tokens.css"],
+  "themes": {
+    "light": [":root"],
+    "dark": [":root[data-theme=\"dark\"]", "[data-theme=\"dark\"]"]
+  },
+  "surfaces": ["--color-surface", "--color-background"],
+  "series": ["--chart-1", "--chart-2", "--chart-3", "--chart-4", "--chart-5"],
+  "minContrast": 3,
+  "minDeltaE": 15,
+  "minDeltaECvd": 8,
+  "failDeltaECvd": 6
+}

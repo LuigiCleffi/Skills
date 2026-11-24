@@ -10,6 +10,17 @@
       "command": "npm test"
     }
   ],
+  "screenshots": {
+    "when": [
+      "**/*.tsx",
+      "**/*.jsx",
+      "**/*.vue",
+      "**/*.svelte",
+      "**/*.css",
+      "**/*.scss",
+      "**/*.html"
+    ]
+  },
   "examples": [
     {
       "name": "typecheck",
@@ -39,6 +50,10 @@
       "when": [
         "**/*.md"
       ]
+    },
+    {
+      "name": "rulers",
+      "command": "node tools/rulers.mjs"
     }
   ]
 }

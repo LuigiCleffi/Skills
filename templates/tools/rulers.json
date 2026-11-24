@@ -1,0 +1,32 @@
+{
+  "base": "origin/main",
+  "maxFiles": 250,
+  "skipBranches": [],
+  "rulers": [
+    {
+      "name": "long-comments",
+      "kind": "comment-block",
+      "files": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.mjs", "**/*.py", "**/*.go", "**/*.rb"],
+      "maxLines": 8,
+      "message": "say why in fewer lines; the story belongs in the commit or the docs",
+      "allow": "ruler:allow-long-comment",
+      "legacy": []
+    },
+    {
+      "name": "fixed-waits-in-tests",
+      "files": ["**/*.test.*", "**/*.spec.*", "**/e2e/**"],
+      "pattern": "\\b(setTimeout|sleep|waitForTimeout)\\s*\\(",
+      "message": "wait for the condition (an element, a response, a state), not for a fixed time",
+      "allow": "ruler:allow-wait",
+      "legacy": []
+    },
+    {
+      "name": "any-type",
+      "files": ["**/*.ts", "**/*.tsx"],
+      "pattern": "(:\\s*any\\b|\\bas any\\b|<any>)",
+      "message": "give it a real type, or unknown and narrow it",
+      "allow": "ruler:allow-any",
+      "legacy": []
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "checks": [
+    { "name": "Node.js 20 or newer", "run": "node --version", "expect": "^v(2\\d|[3-9]\\d)\\.", "fix": "install Node.js 20 or newer from https://nodejs.org" },
+    { "name": "git", "run": "git --version", "fix": "install git from https://git-scm.com" },
+    { "name": "Dependencies installed", "exists": "node_modules", "fix": "npm install" },
+    { "name": "Local settings file", "exists": ".env.local", "fix": "cp .env.example .env.local, then fill in the values the team gives you", "optional": true },
+    { "name": "GitHub CLI signed in", "run": "gh auth status", "fix": "gh auth login", "optional": true },
+    { "name": "Access to the repository on GitHub", "run": "gh repo view --json name", "ask": "Hi! Could you give my GitHub account read and write access to this repository? I'm setting up to work on it.", "optional": true }
+  ]
+}

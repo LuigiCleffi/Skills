@@ -847,6 +847,7 @@ export function briefOf(config) {
   const lines = [`Harness run ${state.run ?? "(no run record)"}: mode ${state.mode}${declared.length ? `, triggers ${declared.join(", ")}` : ""}.`];
   if (next) {
     lines.push(`Next stage: ${next}, following ${stageWorkflows[next] ?? `actions/${next}.md`}. Skipping it loses what that stage checks; record it done or "skipped: <reason>".`);
+    lines.push(...contextHints(config, next));
   } else {
     lines.push("Every stage is settled; close the run with its result (actions/finish.md after the merge).");
   }
@@ -856,6 +857,28 @@ export function briefOf(config) {
     lines.push(`Tasks: ${board.done}/${board.total} done${board.frontier.length ? `; can start: ${board.frontier.map((task) => task.id).join(", ")}` : ""}.`);
   }
   return lines.join("\n");
+}
+
+const defaultContext = {
+  deep: ["plan", "research", "spec", "strategy", "ddd", "uiux", "adr-gate", "tasks", "review", "code-review"],
+  routine: ["spec-checklist", "reproduce", "bdd", "knowledge-gate", "dev", "qa"],
+  freshBefore: ["dev", "code-review"],
+};
+
+// How much reasoning a stage needs, and whether it should start from the
+// records instead of the conversation: tokens go to the stages that decide.
+export function contextHints(config, stage) {
+  const context = { ...defaultContext, ...config.context };
+  const hints = [];
+  if (context.deep.includes(stage)) {
+    hints.push("Effort: deep. This stage decides; use the strongest model and high effort.");
+  } else if (context.routine.includes(stage)) {
+    hints.push("Effort: routine. The records already decide; a faster model and normal effort are enough.");
+  }
+  if (context.freshBefore.includes(stage)) {
+    hints.push("Context: start this stage from a fresh or compacted session; the run's records are the handoff, not this conversation.");
+  }
+  return hints;
 }
 
 function postCodeStages(config, mode) {

@@ -17,7 +17,8 @@
 // Usage: node guards/guard.mjs   (reads the hook JSON on stdin; exit 2 blocks)
 
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, realpathSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -349,10 +350,102 @@ export function otherWorktree(config, target, cwd) {
   return here && there && here !== there ? there : null;
 }
 
+// With "sessionScope", a repository of several units (apps/*, packages/*)
+// lets one session write in one unit: the first unit it writes in is its
+// own, and writing in another is refused, so "fix the button in app A" never
+// rewrites app B. Folders in "templates" change every future unit, so they
+// are refused unless the user asked (GUARDS_ALLOW_TEMPLATES=1). The root and
+// anything outside the units stay writable.
+export function unitOf(relative, patterns) {
+  const parts = relative.split("/");
+  for (const pattern of patterns) {
+    const depth = pattern.split("/").length;
+    if (parts.length > depth && globToRegExp(pattern).test(parts.slice(0, depth).join("/"))) return parts.slice(0, depth).join("/");
+  }
+  return null;
+}
+
+function scopeFile(sessionId) {
+  return path.join(os.tmpdir(), "skills-code-kit-guard", `scope-${String(sessionId).replace(/[^\w.-]/g, "_")}.txt`);
+}
+
+export function scopeProblem(config, target, cwd, sessionId) {
+  const scope = config.sessionScope ?? {};
+  if (!(scope.units ?? []).length && !(scope.templates ?? []).length) return null;
+  const relative = pathForms(target, cwd)[0];
+  if (relative.startsWith("..") || path.isAbsolute(relative) || pathForms(target, cwd).length === 1) return null;
+
+  if (matchesAny(relative, scope.templates ?? []) && process.env.GUARDS_ALLOW_TEMPLATES !== "1") {
+    return `${relative} is a template every future unit starts from, and changing it does not fix the current one; if the user asked to change the template, run again with GUARDS_ALLOW_TEMPLATES=1`;
+  }
+
+  const unit = unitOf(relative, scope.units ?? []);
+  if (!unit || !sessionId) return null;
+  const file = scopeFile(sessionId);
+  let claimed = null;
+  try {
+    claimed = readFileSync(file, "utf8").trim() || null;
+  } catch {}
+  if (!claimed || !existsSync(path.join(projectDirectory, claimed))) {
+    try {
+      mkdirSync(path.dirname(file), { recursive: true });
+      writeFileSync(file, unit);
+    } catch {}
+    return null;
+  }
+  if (claimed === unit) return null;
+  return `this session works in ${claimed}, and ${relative} belongs to ${unit} (guards/config.json "sessionScope"); open a new session for ${unit}`;
+}
+
 const branchChanging = new Set(["commit", "push", "merge", "rebase", "cherry-pick", "revert", "am", "pull"]);
 
+// Database clients and how each takes the query on the command line.
+const queryClients = {
+  psql: ["-c", "--command"],
+  mysql: ["-e", "--execute"],
+  mariadb: ["-e", "--execute"],
+  mongosh: ["--eval"],
+  bq: ["query"],
+};
+
+// Whether SQL is one statement that only reads.
+export function readOnlyQuery(sql) {
+  const text = sql.replace(/--[^\n]*|\/\*[\s\S]*?\*\//g, " ").trim();
+  const statements = text.split(";").map((part) => part.trim()).filter(Boolean);
+  if (statements.length !== 1) return false;
+  if (!/^(select|with|explain|show|describe|desc)\b/i.test(statements[0])) return false;
+  return !/\b(insert|update|delete|merge|drop|alter|truncate|create|grant|revoke|replace|call|copy|vacuum)\b/i.test(statements[0]);
+}
+
+// Returns why a query against production must not run, or null. Against a
+// target named as production (guards/config.json "production.markers"), a
+// database client may run only one read-only statement given on the command
+// line; anything else (a write, several statements, a script file, an
+// interactive session) goes to the user.
+function queryReason(config, segment, name, args) {
+  const flags = queryClients[name];
+  const markers = (config.production?.markers ?? []).map((marker) => marker.toLowerCase());
+  if (!flags || markers.length === 0) return null;
+  const env = segment.filter((item) => typeof item === "string" && /^[A-Za-z_][A-Za-z0-9_]*=/.test(item));
+  if (!hasMarker([...args, ...env], markers)) return null;
+  let sql = null;
+  if (name === "bq") {
+    const index = args.indexOf("query");
+    if (index === -1) return null;
+    sql = args.slice(index + 1).filter((arg) => !arg.startsWith("-")).pop() ?? null;
+  } else {
+    for (let index = 0; index < args.length; index += 1) {
+      const arg = args[index];
+      const flag = flags.find((candidate) => arg === candidate || arg.startsWith(`${candidate}=`));
+      if (flag) sql = arg.includes("=") && arg.startsWith("--") ? arg.slice(arg.indexOf("=") + 1) : args[index + 1];
+    }
+  }
+  if (sql && readOnlyQuery(sql)) return null;
+  return `${name} against production may only run one read-only statement given on the command line (SELECT, WITH, EXPLAIN, SHOW); writes, scripts, and interactive sessions go to the user`;
+}
+
 // Returns why a shell command must not run, or null.
-export function bashProblem(config, command, cwd = projectDirectory) {
+export function bashProblem(config, command, cwd = projectDirectory, sessionId = null) {
   const segments = parseCommand(command);
   const branch = (config.protectedBranches ?? []).length > 0 || config.dangerousCommands !== false ? currentBranch(cwd) : null;
   const onProtected = branch && (config.protectedBranches ?? []).includes(branch);
@@ -403,13 +496,16 @@ export function bashProblem(config, command, cwd = projectDirectory) {
     const protectedTarget = writeTargets.find((word) => isProtected(config, word, here));
     if (protectedTarget) return `${protectedTarget} is protected (guards/config.json "protectedPaths"); let the project's tool write it`;
 
-    const production = productionReason(config, segment, name, args);
+    const production = productionReason(config, segment, name, args) ?? queryReason(config, segment, name, args);
     if (production) return production;
 
     if (config.dangerousCommands !== false) {
       const reason = dangerousReason(name, args, branch);
       if (reason) return `${reason}; ask the user to run it themselves if it is really intended`;
     }
+
+    const outOfScope = writeTargets.map((word) => scopeProblem(config, word, here, sessionId)).find(Boolean);
+    if (outOfScope) return outOfScope;
 
     const elsewhere = writeTargets.map((word) => otherWorktree(config, word, here)).find(Boolean);
     if (elsewhere) return `${elsewhere} is another worktree (guards/config.json "worktreeIsolation"); work only in this session's own worktree`;
@@ -433,7 +529,7 @@ export function toolProblem(config, input) {
   const cwd = typeof input.cwd === "string" ? input.cwd : projectDirectory;
 
   if (tool === "Bash") {
-    return typeof toolInput.command === "string" ? bashProblem(config, toolInput.command, cwd) : null;
+    return typeof toolInput.command === "string" ? bashProblem(config, toolInput.command, cwd, input.session_id) : null;
   }
 
   const target = toolInput.file_path ?? toolInput.notebook_path ?? toolInput.path;
@@ -448,6 +544,8 @@ export function toolProblem(config, input) {
   }
   const elsewhere = otherWorktree(config, target, cwd);
   if (elsewhere) return `${elsewhere} is another worktree (guards/config.json "worktreeIsolation"); work only in this session's own worktree`;
+  const outOfScope = scopeProblem(config, target, cwd, input.session_id);
+  if (outOfScope) return outOfScope;
   const branch = (config.protectedBranches ?? []).length > 0 ? currentBranch(path.dirname(path.resolve(cwd, target))) ?? currentBranch(cwd) : null;
   if (branch && config.protectedBranches.includes(branch)) {
     return `the current branch is ${branch}, which is protected; create a branch before editing`;

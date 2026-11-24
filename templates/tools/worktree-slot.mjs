@@ -15,6 +15,7 @@
 //   node tools/worktree-slot.mjs --print   # print the variables without writing
 //   node tools/worktree-slot.mjs --list    # list every worktree and its slot
 //   node tools/worktree-slot.mjs --hook    # as a SessionStart hook: one line for the agent, never fails
+//   node tools/worktree-slot.mjs --orphans [--yes]   # slots of removed worktrees, and their cleanup
 //
 // In tools/worktree.json, "include" names a file in the main checkout that
 // lists untracked files a new worktree needs (.env.local, say), copied when
@@ -25,7 +26,7 @@
 // It does not create databases or start anything: create the database named
 // in the file with the project's own tool. No dependencies beyond Node.js 20.
 
-import { execFileSync } from "node:child_process";
+import { execFileSync, execSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, symlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -104,6 +105,26 @@ export function variablesFor(config, slot) {
   return variables;
 }
 
+// Slots whose worktree is gone (removed by hand, or by another tool) leave
+// their resources behind: a database named app_wt2 keeps its data, and the
+// next worktree given slot 2 would inherit it. They are kept here until
+// cleaned up with --orphans.
+export function findOrphans(previous, current, config) {
+  const orphans = {};
+  for (const [worktree, slot] of Object.entries(previous)) {
+    if (!(worktree in current) && Number.isInteger(slot) && slot > 0) orphans[worktree] = { slot, variables: variablesFor(config, slot) };
+  }
+  return orphans;
+}
+
+export function cleanupCommand(template, variables) {
+  return template.replace(/\{(\w+)\}/g, (match, name) => variables[name] ?? match);
+}
+
+function orphansPath(cwd) {
+  return slotsPath(cwd).replace(/slots\.json$/, "orphans.json");
+}
+
 function slotsPath(cwd) {
   const common = git(["rev-parse", "--git-common-dir"], cwd);
   return path.join(path.resolve(cwd, common), slotsFileName);
@@ -171,7 +192,39 @@ function main() {
   const config = JSON.parse(readFileSync(configFile, "utf8"));
   const here = realPath(git(["rev-parse", "--show-toplevel"], cwd));
   const file = slotsPath(cwd);
-  const slots = assignSlots(listWorktrees(cwd), readSlots(file));
+  const previous = readSlots(file);
+  const slots = assignSlots(listWorktrees(cwd), previous);
+  const orphanFile = orphansPath(cwd);
+  const orphans = { ...readSlots(orphanFile), ...findOrphans(previous, slots, config) };
+  writeFileSync(orphanFile, `${JSON.stringify(orphans, null, 2)}\n`, "utf8");
+
+  if (args.includes("--orphans")) {
+    const entries = Object.entries(orphans);
+    if (entries.length === 0) {
+      console.log("No orphaned slots.");
+      return 0;
+    }
+    const template = config.cleanup;
+    for (const [worktree, orphan] of entries) {
+      const command = template ? cleanupCommand(template, orphan.variables) : null;
+      console.log(`slot ${orphan.slot} (was ${worktree}): ${Object.entries(orphan.variables).filter(([name]) => name !== "WORKTREE_SLOT").map(([name, value]) => `${name}=${value}`).join(", ")}${command ? `\n    cleanup: ${command}` : ""}`);
+    }
+    if (!template) {
+      console.log('\nSet "cleanup" in tools/worktree.json (for example "dropdb --if-exists {DATABASE_NAME}") to clean these up with --yes.');
+      return 0;
+    }
+    if (!args.includes("--yes")) {
+      console.log("\nDry run. Run again with --yes to run the cleanup commands above.");
+      return 0;
+    }
+    for (const [worktree, orphan] of entries) {
+      execSync(cleanupCommand(template, orphan.variables), { stdio: "inherit" });
+      delete orphans[worktree];
+      writeFileSync(orphanFile, `${JSON.stringify(orphans, null, 2)}\n`, "utf8");
+    }
+    console.log("Cleaned up.");
+    return 0;
+  }
 
   if (args.includes("--list")) {
     for (const [worktree, slot] of Object.entries(slots)) console.log(`${slot}\t${worktree}`);
@@ -189,6 +242,11 @@ function main() {
     return 0;
   }
 
+  const inherited = Object.values(orphans).find((orphan) => orphan.slot === slot && slot > 0);
+  const warning = inherited
+    ? `Slot ${slot} still has resources from a removed worktree (${Object.entries(inherited.variables).filter(([name]) => name !== "WORKTREE_SLOT").map(([name, value]) => `${name}=${value}`).join(", ")}); clean them up first: node tools/worktree-slot.mjs --orphans`
+    : null;
+
   const output = path.join(here, config.output ?? ".worktree-slot.env");
   writeFileSync(output, `# Written by tools/worktree-slot.mjs for slot ${slot}. Do not commit.\n${body}\n`, "utf8");
   const mainCheckout = listWorktrees(cwd)[0];
@@ -198,11 +256,13 @@ function main() {
   // As a session hook, one short line the agent reads: where to run the app.
   if (args.includes("--hook")) {
     const extras = [copied.length ? `copied ${copied.join(", ")}` : "", linked.length ? `linked ${linked.join(", ")}` : ""].filter(Boolean);
+    if (warning) console.log(warning);
     console.log(`Worktree slot ${slot}: ${Object.entries(variables).filter(([name]) => name !== "WORKTREE_SLOT").map(([name, value]) => `${name}=${value}`).join(", ")} (in ${path.relative(here, output)})${extras.length ? `; ${extras.join("; ")}` : ""}.`);
     return 0;
   }
 
   console.log(`Slot ${slot}: wrote ${path.relative(here, output)}\n${body}`);
+  if (warning) console.log(warning);
   if (copied.length > 0) console.log(`Copied from the main checkout: ${copied.join(", ")}`);
   if (linked.length > 0) console.log(`Linked from the main checkout: ${linked.join(", ")}`);
 

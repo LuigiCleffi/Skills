@@ -184,6 +184,16 @@ If building shows a pre-code record is wrong (a missing rule, a model that does 
 
 A run that the user stops is set to **Abandoned** with the reason, and `active.json` is deleted.
 
+## Context budget
+
+Every turn rereads the whole conversation, so a run that does all its stages in one context pays for the plan's exploration again on every line of code. The records exist so it does not have to.
+
+- **The records are the handoff.** A stage reads the records of the earlier stages, not the conversation that produced them. Start `dev` and `code-review` from a fresh or compacted session (in Claude Code, `/compact` or a new session); the brief says so when that stage is next. Compact again after a long exploration, and start a new session for an unrelated request instead of mixing topics.
+- **Spend effort where it decides.** `harness/config.json` sorts the stages under `context`: `deep` stages (plan, research, spec, strategy, ddd, uiux, adr-gate, tasks, review, code-review) decide what gets built and need the strongest model and high effort; `routine` stages (spec-checklist, reproduce, bdd, knowledge-gate, dev, qa) carry out what the records already decided, and a faster model is enough. The brief names the tier of the next stage. Both reviews stay `deep`, since a reviewer is never on a weaker model than the author (see *Agents, models, and effort*). When dev finds the records do not decide something, that is a pre-code stage going back to `pending`, not a reason to raise the effort.
+- **Read through the gates.** The knowledge gate, the ADR gate, and `docs/design/RULES.md` route to the few files a task needs; read those, and the section of a long file you need, not whole folders. Never paste a repository, a lockfile, generated code, or build output into context.
+- **Keep command output short.** Look at `git diff --stat` before a full diff, then read the diff one file at a time. Run tests with a quiet or failures-only reporter and cut long output to what matters (`| tail -50`, `grep -n`). A record cites what a command showed ("42 passed"), never the whole log.
+- **Brief sub-agents tightly.** A sub-agent (the code-review axes, the QA fresh agent, a search) gets the goal, the files, and what done looks like, and returns a conclusion, not file dumps. Records and the questions you put to the user stay in full sentences: terse writing saves the most where the reader can infer least.
+
 ## The gate script
 
 `harness/gate.mjs` has no dependencies beyond Node.js and runs in two ways:
@@ -237,6 +247,15 @@ The gate is a guard against skipping stages by accident, not a security boundary
 ## With the Scrum team
 
 When `scrum/README.md` is installed, the ceremonies decide when each stage runs. The Tech Lead opens one run per backlog item in Sprint Planning (mode Feature, or Fix for a defect), declares its triggers, fills its pre-code stages from the records Refinement and Planning produced, and closes it when the item is Done. The gate then flags Dev, DBA, and DevOps tasks whose item has not been designed.
+
+## Agents, models, and effort
+
+Spend follows how much can go wrong, not how important the work feels:
+
+- **Match the check to the artifact.** A doc or a record gets a factual check (do the paths, IDs, and commands it cites exist?). Code, migrations, and ambiguous requirements get an adversarial review in a fresh context.
+- **One reviewer by default.** The default review is one fresh-context agent with the whole rule set. Add a second agent only for a distinct risk axis (data, permissions, money, public contract, concurrency), never just because the diff is big; a big diff is split, not multiplied (see `actions/code-review.md`).
+- **The reviewer is never on a weaker model than the author.** A review cheaper than the work it judges approves what it cannot see.
+- **Diagnose a miss before escalating.** When an agent got something wrong, ask whether it did not know (it lacked the context or the capability: give it the missing file, or a stronger model) or did not try (it skipped a step it could do: raise the effort, or make the step a check). Changing the model for a "did not try" miss changes nothing.
 
 ## Guardrails
 
