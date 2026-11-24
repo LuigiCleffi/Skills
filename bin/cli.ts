@@ -243,7 +243,7 @@ const skills: Skill[] = [
     name: "Spec-driven harness",
     description: "Runs every stage in order with a run record in docs/harness/, and a gate that warns (or, if you choose, blocks) when code is edited before the pre-code stages are settled",
     files: ["actions/harness.md", "harness/gate.mjs", "harness/config.json"],
-    requires: ["product", "research", "knowledge", "adr", "dev", "tdd", "review", "qa"],
+    requires: ["product", "research", "knowledge", "adr", "dev", "tdd", "review", "qa", "context-audit"],
   },
   {
     value: "qa",
@@ -274,6 +274,12 @@ const skills: Skill[] = [
     name: "Cycle metrics",
     description: "tools/cycle-metrics.mjs: the numbers of a sprint or any window from git and GitHub (merged pull requests, time to merge and to a first look, reviewless merges, size, CI failures, reverts, releases, escaped defects), each next to the previous window, with fixed definitions",
     files: ["tools/cycle-metrics.mjs"],
+  },
+  {
+    value: "context-audit",
+    name: "Context audit",
+    description: "tools/context-audit.mjs: what Claude Code, Codex, and OpenCode each load from the project before the first prompt (instruction files and imports, skill and agent descriptions, MCP servers and hooks named), largest first, against a token budget CI can enforce",
+    files: ["tools/context-audit.mjs", "tools/context-audit.json"],
   },
   {
     value: "design-rules",

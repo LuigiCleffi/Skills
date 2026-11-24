@@ -1,2 +1,19 @@
 node_modules
 dist/*
+# skills-code-kit installed into its own repository for dogfooding. The
+# sources are in templates/; only the harness run records and the knowledge
+# they produce are committed.
+/.claude/
+/.skills-code-kit/
+/CleanCode/
+/JavaScript/
+/ProductDefinition/
+/TDD/
+/actions/
+/harness/
+/tools/
+/docs/*
+!/docs/harness/
+!/docs/knowledge/
+!/docs/adr/
+/docs/harness/active.json

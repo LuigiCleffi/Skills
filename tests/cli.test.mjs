@@ -24,6 +24,8 @@ describe("commands", () => {
     assert.match(kit(project, "--help").out, /Usage: npx skills-code-kit/);
     assert.equal(kit(project, "--version").out.trim(), version);
     assert.match(kit(project, "list").out, /^harness\s+.*also installs .*\bqa\b/m);
+    assert.match(kit(project, "list").out, /^harness\s+.*also installs .*\bcontext-audit\b/m);
+    assert.match(kit(project, "list").out, /^context-audit\s+tools\/context-audit\.mjs/m);
     assert.equal(existsSync(path.join(project, "AGENTS.md")), false);
   });
 
@@ -51,6 +53,8 @@ describe("install --yes", () => {
     const { code } = kit(project, "install", "--groups", "harness,guards", "--yes");
     assert.equal(code, 0);
     assert.ok(existsSync(path.join(project, "actions/qa.md")), "harness requires qa");
+    assert.ok(existsSync(path.join(project, "tools/context-audit.mjs")), "harness requires context-audit");
+    assert.ok(existsSync(path.join(project, "tools/context-audit.json")));
     assert.match(read(project, "AGENTS.md"), /harness/i);
     assert.equal(JSON.parse(read(project, "harness/config.json")).enforce, "warn");
     const hooks = JSON.parse(read(project, ".claude/settings.json")).hooks.PreToolUse.map((entry) => entry.hooks[0].command);
