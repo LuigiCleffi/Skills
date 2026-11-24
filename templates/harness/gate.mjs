@@ -18,7 +18,8 @@
 //           `check` prints the problems and exits 0.
 //   "block" the hook refuses the edit; `check` exits 1.
 //   "off"   nothing runs except `status` and `validate`.
-// HARNESS_GATE=off|warn|block overrides it for one shell.
+// HARNESS_GATE=off|warn|block overrides it for one shell. A command that cannot
+// run (a broken config) exits 2; the hook reports it and exits 1, which never blocks.
 //
 // A hook that blocks needs irreversible damage on the other side; skipping a
 // stage is recoverable, so the default is to warn. A gate that blocks a
@@ -993,6 +994,9 @@ function runValidate(config, [stage, record]) {
   return 1;
 }
 
+// Commands a person or CI runs; anything else is a Claude Code hook.
+const COMMANDS = new Set(["status", "validate", "escapes", "scope", "coverage", "board", "check"]);
+
 function main() {
   const [command, ...args] = process.argv.slice(2);
   const config = loadConfig();
@@ -1025,7 +1029,9 @@ if (isEntryPoint()) {
     process.exitCode = main();
   } catch (error) {
     // A broken gate must not silently allow or block everything: report it.
-    console.error(`Harness gate failed: ${error.message}`);
-    process.exitCode = 1;
+    // As a hook, exit 1 shows the reason without blocking (2 would block);
+    // from the command line, exit 2, since 1 means the check found problems.
+    console.error(`gate: ${error.message}`);
+    process.exitCode = COMMANDS.has(process.argv[2]) ? 2 : 1;
   }
 }

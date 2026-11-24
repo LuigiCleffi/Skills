@@ -16,7 +16,8 @@
 // - a file is over its line budget ("budgets", HTML comments not counted);
 // - a CLAUDE.md does not import AGENTS.md ("@AGENTS.md").
 //
-// Usage: node tools/rules-check.mjs     Exit 1 when something fails.
+// Usage: node tools/rules-check.mjs     Exit 1 when something fails, 2 when it
+// cannot run (rules-check.json missing or broken).
 // No dependencies beyond Node.js 20.
 
 import { existsSync, readFileSync, readdirSync, realpathSync } from "node:fs";
@@ -158,6 +159,6 @@ if (isEntryPoint()) {
     process.exitCode = main();
   } catch (error) {
     console.error(`rules-check: ${error.message}`);
-    process.exitCode = 1;
+    process.exitCode = 2; // Exit 1 means the check failed; 2 means it could not run.
   }
 }

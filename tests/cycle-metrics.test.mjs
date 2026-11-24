@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { after, describe, it } from "node:test";
-import { cleanUp, importFrom, makeProject, write } from "./helpers.mjs";
+import { cleanUp, importFrom, makeProject, run, write } from "./helpers.mjs";
 
 after(cleanUp);
 
@@ -68,5 +68,13 @@ describe("cycle metrics", () => {
     assert.match(table, /\| Merged with no one else looking \| 25% \| 50% \|/);
     assert.match(table, /\| CI runs that failed \| n\/a \| n\/a \|/);
     assert.match(table, /Not read:\n- CI runs/);
+  });
+});
+
+describe("when it cannot run", () => {
+  it("exits 2 with the reason, never 1", () => {
+    const result = run(makeProject(["tools"]), "tools/cycle-metrics.mjs", ["--since", "not-a-date"]);
+    assert.equal(result.code, 2);
+    assert.match(result.stderr, /^cycle-metrics: --since and --until must be dates/);
   });
 });

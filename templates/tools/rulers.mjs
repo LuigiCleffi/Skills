@@ -19,7 +19,8 @@
 // config's "base". Untracked files count as all added. A diff wider than
 // "maxFiles" files, or a branch in "skipBranches" (an accumulator of work
 // already reviewed), gets no verdict instead of a wrong one.
-// Exit 1 when a ruler is broken. No dependencies beyond Node.js 20 and git.
+// Exit 1 when a ruler is broken, 2 when it cannot run (rulers.json missing or
+// broken, outside git). No dependencies beyond Node.js 20 and git.
 
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, realpathSync } from "node:fs";
@@ -212,6 +213,6 @@ if (isEntryPoint()) {
     process.exitCode = main();
   } catch (error) {
     console.error(`rulers: ${error.message}`);
-    process.exitCode = 1;
+    process.exitCode = 2; // Exit 1 means the check failed; 2 means it could not run.
   }
 }

@@ -231,3 +231,14 @@ describe("screenshots in the pull request", () => {
     assert.equal(run(project, "checks/checks.mjs", ["hook"], open("<!-- no-screenshot: props only -->")).code, 0);
   });
 });
+
+describe("when it cannot run", () => {
+  it("exits 2 with the reason, and the hook lets the command through", () => {
+    const project = makeProject(["checks"]);
+    write(project, "checks/config.json", "{ broken");
+    const result = run(project, "checks/checks.mjs");
+    assert.equal(result.code, 2);
+    assert.match(result.stderr, /^checks: /);
+    assert.equal(run(project, "checks/checks.mjs", ["hook"], "{}").code, 0);
+  });
+});

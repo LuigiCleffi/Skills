@@ -12,7 +12,8 @@
 //
 // Usage: node tools/doctor.mjs           # a list for a person
 //        node tools/doctor.mjs --json    # the same, for an agent
-// Exit 1 when a required check fails.
+// Exit 1 when a required check fails, 2 when it cannot run (doctor.json missing
+// or broken).
 
 import { execSync } from "node:child_process";
 import { existsSync, readFileSync, realpathSync } from "node:fs";
@@ -71,6 +72,6 @@ if (isEntryPoint()) {
     process.exitCode = main();
   } catch (error) {
     console.error(`doctor: ${error.message}`);
-    process.exitCode = 1;
+    process.exitCode = 2; // Exit 1 means the check failed; 2 means it could not run.
   }
 }

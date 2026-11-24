@@ -401,3 +401,16 @@ describe("design rules territory", () => {
     assert.deepEqual(gate.territoryFor("server/api.go"), []);
   });
 });
+
+describe("a broken config", () => {
+  it("exits 2 from the command line and 1 as a hook, which never blocks", () => {
+    const project = makeProject(["harness"]);
+    write(project, "harness/config.json", "{ broken");
+    const status = run(project, "harness/gate.mjs", ["status"]);
+    assert.equal(status.code, 2);
+    assert.match(status.stderr, /^gate: /);
+    const hook = run(project, "harness/gate.mjs", [], JSON.stringify({ tool_name: "Edit", tool_input: { file_path: "src/a.ts" } }));
+    assert.equal(hook.code, 1);
+    assert.match(hook.stderr, /^gate: /);
+  });
+});

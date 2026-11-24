@@ -123,6 +123,7 @@ Each rule this repository enforces lives once, as a row below. Docs explain a ru
 | ID | Rule | Applies to | Enforced by | Checkable | Why |
 |---|---|---|---|---|---|
 | ROOT-01 | An installed script runs only when it is the entry point, decided by `realpathSync(process.argv[1]) === realpathSync(<the script's file>)`, so it runs the same through a symlinked path. | `templates/**/*.mjs` | test | yes | Node resolves symlinks in `import.meta.url`, not in `process.argv[1]`; unresolved, the check skips `main` and exits 0. `tests/entry-points.test.mjs` runs every script through a symlink. |
+| ROOT-02 | An installed script that cannot finish (a crash, a broken config, outside git) says why on stderr and exits 2, never 1, which means the check found problems. A hook that 2 would block reports and lets the action through instead. | `templates/**/*.mjs` | test | yes | CI reads exit 1 as a failing check, so a crash that exits 1 looks like a real finding and nobody fixes the check. `tests/exit-codes.test.mjs` breaks every script and checks its code. |
 
 ## Instruction Priority
 

@@ -16,7 +16,8 @@
 //   two series are closer than "failDeltaECvd". Between that and
 //   "minDeltaECvd" it warns: pair those series with a pattern or a label.
 //
-// Usage: node tools/palette-check.mjs     Exit 1 on a failure.
+// Usage: node tools/palette-check.mjs     Exit 1 on a failure, 2 when it cannot
+// run (palette.json or a CSS file missing or broken).
 // No dependencies beyond Node.js 20.
 
 import { readFileSync, realpathSync } from "node:fs";
@@ -201,6 +202,6 @@ if (isEntryPoint()) {
     process.exitCode = main();
   } catch (error) {
     console.error(`palette-check: ${error.message}`);
-    process.exitCode = 1;
+    process.exitCode = 2; // Exit 1 means the check failed; 2 means it could not run.
   }
 }

@@ -24,7 +24,8 @@
 // browsers refuse or on macOS's AirPlay ports (5000, 7000).
 //
 // It does not create databases or start anything: create the database named
-// in the file with the project's own tool. No dependencies beyond Node.js 20.
+// in the file with the project's own tool. Exit 2 when it cannot run (outside
+// git); --hook exits 0 then. No dependencies beyond Node.js 20.
 
 import { execFileSync, execSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, symlinkSync, writeFileSync } from "node:fs";
@@ -289,7 +290,7 @@ if (isEntryPoint()) {
       process.exitCode = 0;
     } else {
       console.error(`worktree-slot: ${error.message}`);
-      process.exitCode = 1;
+      process.exitCode = 2;
     }
   }
 }
