@@ -76,7 +76,7 @@ Every agent session pays, before the first prompt, for the instruction files, sk
 
 **Acceptance Scenarios:**
 
-1. **Given** no `js-tiktoken` in the project, **When** the audit runs, **Then** it prints `npm install --save-dev js-tiktoken`, labels every count "estimate: characters ÷ 4", and still applies the budget.
+1. **Given** no `js-tiktoken` in the project, **When** the audit runs, **Then** it prints `npm install --save-dev js-tiktoken`, marks every count with "≈" (explained as "estimate: characters ÷ 4"), and still applies the budget.
 2. **Given** `js-tiktoken` installed, **When** the audit runs, **Then** the report says counts use `o200k_base` and are approximate for Claude models.
 
 ## 4. Functional Requirements
@@ -88,7 +88,7 @@ Every agent session pays, before the first prompt, for the instruction files, sk
 - **FR-005:** For Claude Code, the tool MUST strip block-level HTML comments before counting a CLAUDE file ([RS-0001](../../knowledge/research/RS-0001-agent-startup-context.md), finding 6).
 - **FR-006:** For each tool, the tool MUST count the name and description of its skills and agents per [BR-0003](../../knowledge/rules/BR-0003-descriptions-only.md), capping Claude Code descriptions at 1,536 characters and naming each capped skill.
 - **FR-007:** The tool MUST list instruction files below the project root as folder-scoped, with their tokens, outside every total ([BR-0002](../../knowledge/rules/BR-0002-subfolder-files-load-lazily.md)).
-- **FR-008:** The tool MUST name each configured MCP server per tool and each Claude Code SessionStart or UserPromptSubmit hook command, with a note that their cost is not in the total, and MUST flag Claude Code servers that load definitions upfront ([BR-0004](../../knowledge/rules/BR-0004-name-mcp-and-hooks.md)). It MUST NOT start a server or run a hook.
+- **FR-008:** The tool MUST name each configured MCP server per tool and each Claude Code SessionStart or UserPromptSubmit hook command in `.claude/settings.json` and `.claude/settings.local.json`, with a note that their cost is not in the total, and MUST flag Claude Code servers that load definitions upfront ([BR-0004](../../knowledge/rules/BR-0004-name-mcp-and-hooks.md)). It MUST NOT start a server or run a hook.
 - **FR-009:** The tool MUST count tokens with `js-tiktoken/lite` and the `o200k_base` ranks when the project can import them, and otherwise with characters divided by four, rounded up; the report MUST name the method used.
 - **FR-010:** The text report MUST show, per tool: the total and budget, then each part largest first with its path and tokens; then folder-scoped files, MCP servers, hooks, and warnings.
 - **FR-011:** With `--json`, the tool MUST print one JSON object with the same tools, parts, totals, budget, method, and warnings, and nothing else on stdout.
@@ -117,7 +117,9 @@ Every agent session pays, before the first prompt, for the instruction files, sk
 - **`.codex/config.toml` with `project_doc_max_bytes` that is not a positive integer:** warning, and 32,768 used.
 - **Budget flag not a positive integer:** exit 2.
 - **Unreadable or binary instruction file:** warning naming it; not counted.
-- **`node_modules`, `.git`, and the kit's own `templates/` folder when present:** never searched for folder-scoped files.
+- **`node_modules` and `.git` at any depth, dot folders at the root (the tools' own configuration, counted in the startup sets), and `templates/` at the root when it is the kit's own (`templates/actions/harness.md` exists):** never searched for folder-scoped files. Below the root, `templates/` and dot folders are searched.
+- **Unreadable folder:** a warning naming it; the rest is still reported.
+- **Unexpected error:** the reason on stderr and exit 2, never 1.
 - **No instruction files at all:** a report with zero totals; exit 0.
 
 ## 7. Key Entities

@@ -3,7 +3,7 @@
 **Run:** [2026-11-23-context-audit](../runs/2026-11-23-context-audit.md)
 **Spec:** [SpecifyRequirements.md](SpecifyRequirements.md)
 **Date:** 2026-11-23
-**How:** `npm test` (146 tests, 26 for this feature in `tests/context-audit.test.mjs`, each building a fixture project and running the installed tool as a user would), `npm run check:frontmatter`, and the tool run on this repository with the kit installed.
+**How:** `npm test` (176 tests after the code-review fixes, 56 for this feature in `tests/context-audit.test.mjs`, each building a fixture project and running the installed tool as a user would), `npm run check:frontmatter`, and the tool run on this repository with the kit installed.
 
 ## Change against the tasks
 
@@ -37,6 +37,6 @@ Nothing outside the tasks changed except `package.json` and `package-lock.json` 
 | QA-15 | README and harness *Context budget* name the command | FR-015 | `grep context-audit README.md templates/actions/harness.md` | PASS | README: 3 mentions (section 34, Brief paragraph); harness.md: 1 |
 | QA-16 | This repository with the kit installed: listed parts, under two seconds | SC-002 | `node tools/context-audit.mjs` | PASS | `o200k_base`, Claude Code 2,030 tokens (AGENTS.md), brief hook named, 0.2 s, exit 0 |
 | QA-17 | 40,000-character CLAUDE.md is named first and fails the default budget | SC-001 | test "names the largest file first and fails over the default budget" | PASS | parts start with `CLAUDE.md` at 10,000 tokens; exit 1 |
-| QA-18 | Every acceptance scenario and edge case has a passing automated test | SC-005 | `npm test` | PASS | 146 of 146 pass; the 10 scenarios in `context-audit.feature` and the spec's edge cases map to the 26 tests above |
+| QA-18 | Every acceptance scenario and edge case has a passing automated test | SC-005 | `npm test` | PASS | 176 of 176 pass; the 10 scenarios in `context-audit.feature` and every edge case in the spec, including those the code review added, have a test |
 
 **Verdict:** PASS

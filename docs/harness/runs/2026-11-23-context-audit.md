@@ -23,7 +23,7 @@ The kit is installed into this repository from its own build (groups harness, co
 | dev | done | docs/harness/tasks/2026-11-23-context-audit.md | 4/4 tasks done; 145 tests pass |
 | review | done |  | self-review: 3 findings fixed (library default budget, glob walking node_modules, mentions read as imports), each with a test |
 | qa | done | docs/harness/context-audit/qa-report.md | 18 scenarios PASS |
-| code-review | pending | | |
+| code-review | done | docs/harness/context-audit/code-review.md | 10 findings (2 overlap), all citations verified; fixes pending |
 
 ## Approvals
 
@@ -36,6 +36,7 @@ The kit is installed into this repository from its own build (groups harness, co
 - 2026-11-23 — Research questions: per detected tool; count `@imports` and `.claude/rules`; Codex 32 KiB cap as its own failing warning. BR-0001 to BR-0005 confirmed.
 - 2026-11-23 — Spec and its four assumptions: "Approve the spec".
 - 2026-11-23 — Commit and pull request: "Commit and open PR" (no version bump).
+- 2026-11-23 — Code review findings: "Fix them". Spec clarified with them: FR-008 (`settings.local.json`), the folder-scan edge case, US3-1 ("≈" on every estimated count).
 
 ## Result
 
