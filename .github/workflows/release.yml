@@ -57,9 +57,7 @@ jobs:
       - if: steps.version.outputs.publish == 'true'
         run: npm test
       - if: steps.version.outputs.publish == 'true'
-        # verbose shows the OIDC token exchange, the step that fails when the
-        # trusted publisher on npmjs.com does not match this workflow.
-        run: npm publish --provenance --access public --ignore-scripts --loglevel verbose
+        run: npm publish --provenance --access public --ignore-scripts
       - name: Tag the commit and create the GitHub release
         if: steps.version.outputs.publish == 'true'
         env:
