@@ -5,10 +5,11 @@
 #
 #   npm version minor --no-git-tag-version   # in the pull request
 #
-# Publishing uses npm trusted publishing (no token): on npmjs.com, open the
-# package's Settings → Trusted Publisher, choose GitHub Actions, and enter this
-# repository and the workflow file name release.yml. Until that is set up, an
-# NPM_TOKEN repository secret (an npm automation token) works instead.
+# Publishing uses npm trusted publishing, with no token: on npmjs.com, the
+# package's Settings → Trusted Publisher names GitHub Actions, this repository
+# (LuigiCleffi/Skills), the workflow file release.yml, and no environment. npm
+# exchanges the job's OIDC token for a short-lived publish token, so the job
+# sets up no .npmrc token for it to fall back to.
 # Provenance links each published version to the commit that built it.
 
 name: Release
@@ -34,7 +35,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          registry-url: https://registry.npmjs.org
       - name: Find whether this version is already on npm
         id: version
         run: |
@@ -57,9 +57,9 @@ jobs:
       - if: steps.version.outputs.publish == 'true'
         run: npm test
       - if: steps.version.outputs.publish == 'true'
-        run: npm publish --provenance --access public --ignore-scripts
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # verbose shows the OIDC token exchange, the step that fails when the
+        # trusted publisher on npmjs.com does not match this workflow.
+        run: npm publish --provenance --access public --ignore-scripts --loglevel verbose
       - name: Tag the commit and create the GitHub release
         if: steps.version.outputs.publish == 'true'
         env:
