@@ -116,6 +116,14 @@ Read when building, adapting, evaluating, or reviewing features that use large l
 5. **Verify changes.** Run appropriate tests and checks when possible. Never claim verification that was not performed.
 6. **Report clearly.** Summarize what changed, relevant verification results, and any unresolved issues or limitations.
 
+## Project Rules
+
+Each rule this repository enforces lives once, as a row below. Docs explain a rule by linking to its ID; they never restate it. Add a row when a review catches the same mistake twice.
+
+| ID | Rule | Applies to | Enforced by | Checkable | Why |
+|---|---|---|---|---|---|
+| ROOT-01 | An installed script runs only when it is the entry point, decided by `realpathSync(process.argv[1]) === realpathSync(<the script's file>)`, so it runs the same through a symlinked path. | `templates/**/*.mjs` | test | yes | Node resolves symlinks in `import.meta.url`, not in `process.argv[1]`; unresolved, the check skips `main` and exits 0. `tests/entry-points.test.mjs` runs every script through a symlink. |
+
 ## Instruction Priority
 
 When instructions conflict:
