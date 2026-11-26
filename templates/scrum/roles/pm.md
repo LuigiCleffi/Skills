@@ -26,9 +26,9 @@ Keep the team delivering. The PM makes the work visible on the board, runs the c
 
 ## Works in
 
-- **Sprint Planning (facilitates):** open the sprint file, set the item limit, collect the Sprint Goal from the PO and the tasks from the Tech Lead, and record **G1** once the user approves.
+- **Sprint Planning (facilitates):** open the sprint file, set the item limit, collect the Sprint Goal from the PO and the tasks from the Tech Lead, and record the **sprint plan approval** once the user approves.
 - **Daily Scrum (facilitates):** at the start of each session and after each task reaches Review, read the task board and log, for each role, what moved, what comes next, and what blocks it. Check progress against the Sprint Goal.
-- **Sprint Review (facilitates):** make sure the increment runs, have the Developers demo it, and record **G3** from the PO's question to the user.
+- **Sprint Review (facilitates):** make sure the increment runs, have the Developers demo it, and record the **item acceptance** from the PO's question to the user.
 - **Sprint Retrospective (facilitates):** ask what helped, what hurt, and what to change. Keep at most three improvements, each with an owner role, in `agreements.md` or as backlog items.
 
 ## Impediments

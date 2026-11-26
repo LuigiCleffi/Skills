@@ -34,6 +34,7 @@ Roles are hats, not processes. One agent wears one hat at a time:
 3. **Hand off explicitly.** End a role's turn with its handoff: who takes over and what they receive. Switch hats only through a handoff.
 4. **Write state to the board.** What a role decides or finishes goes into `docs/scrum/`, not only into the conversation. A new session must be able to continue from the board alone.
 5. **End every cycle with the handoff.** Whenever the team stops and returns control to the user, the last message is the [cycle handoff](handoff.md): what was implemented, what is next, and one question naming who takes the next step.
+6. **Speak plainly to the user.** Every message to the user follows the [plain language rules](handoff.md#plain-language): no bare codes or IDs, and every wait says what is awaited, from whom, and why.
 
 When the installer added native agents for the project's tool (`.claude/agents/`, `.opencode/agents/`, or `.codex/agents/`, named `scrum-po`, `scrum-pm`, `scrum-tech-lead`, `scrum-dev`, `scrum-dba`, `scrum-devops`), the main session runs the ceremony and delegates each role's step to its agent, with the task and the sprint file. The agents cannot talk to the user: they return gates and questions, and the main session asks them, inside the cycle handoff. The rules above still apply.
 
@@ -45,10 +46,10 @@ The team stops and waits for the user at four points. Record each approval in th
 
 | Gate | When | Who asks | The user approves |
 |---|---|---|---|
-| G1 — Backlog and Sprint Goal | End of Sprint Planning | PO | The order of the backlog items pulled into the sprint, and the Sprint Goal. |
-| G2 — Architecture decision | Whenever a new ADR is proposed | Tech Lead | The ADR, before code depends on it. |
-| G3 — Sprint Review | After the demo | PO | Acceptance or rejection of each item in the increment. |
-| G4 — Commit and merge | Before any commit (at the Daily, on the sprint branch) and before the merge (at the Review) | Tech Lead | The change going into git. |
+| Sprint plan approval | End of Sprint Planning | PO | The order of the backlog items pulled into the sprint, and the Sprint Goal. |
+| Architecture approval | Whenever a new ADR is proposed | Tech Lead | The ADR, before code depends on it. |
+| Item acceptance | After the demo | PO | Acceptance or rejection of each item in the increment. |
+| Commit approval and merge approval | Before any commit (at the Daily, on the sprint branch) and before the merge (at the Review) | Tech Lead | The change going into git. |
 
 ## The board
 
@@ -80,9 +81,9 @@ Each ceremony has its own playbook. Read only the one being run.
 | Ceremony | Playbook | Facilitator | Output |
 |---|---|---|---|
 | Backlog Refinement | `scrum/ceremonies/refinement.md` | PO | Backlog items that meet the Definition of Ready. |
-| Sprint Planning | `scrum/ceremonies/planning.md` | PM | Sprint Goal, selected items, tasks per role; G1. |
-| Daily Scrum | `scrum/ceremonies/daily.md` | PM | Progress against the Sprint Goal, Review cleared, G4 for commits, next task. |
-| Sprint Review | `scrum/ceremonies/review.md` | PM | Demo of the running increment; G3; code review; G4 for the merge. |
+| Sprint Planning | `scrum/ceremonies/planning.md` | PM | Sprint Goal, selected items, tasks per role; sprint plan approval. |
+| Daily Scrum | `scrum/ceremonies/daily.md` | PM | Progress against the Sprint Goal, Review cleared, commit approval, next task. |
+| Sprint Review | `scrum/ceremonies/review.md` | PM | Demo of the running increment; item acceptance; code review; merge approval. |
 | Sprint Retrospective | `scrum/ceremonies/retro.md` | PM | Up to three improvements, the sprint Closed. |
 
 The cycle: Refinement → Planning → Daily, repeated until the items are Done → Review → Retrospective → back to Refinement or Planning. Each ceremony, and each Daily that returns to the user, ends with the [cycle handoff](handoff.md).

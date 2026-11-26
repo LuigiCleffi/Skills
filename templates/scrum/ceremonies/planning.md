@@ -1,6 +1,6 @@
 ---
 name: scrum-planning
-description: "Sprint Planning ceremony of the Scrum team. The PM opens the sprint file, the PO proposes the Sprint Goal and the Ready items that serve it, the Tech Lead designs them (ADR gate, ddd, uiux) and breaks them into tasks owned by Dev, DBA, or DevOps, and the user approves the backlog and Sprint Goal (G1) before any work starts."
+description: "Sprint Planning ceremony of the Scrum team. The PM opens the sprint file, the PO proposes the Sprint Goal and the Ready items that serve it, the Tech Lead designs them (ADR gate, ddd, uiux) and breaks them into tasks owned by Dev, DBA, or DevOps, and the user approves the backlog and Sprint Goal (sprint plan approval) before any work starts."
 ---
 
 # Sprint Planning
@@ -12,10 +12,10 @@ Agree why this sprint matters, what it delivers, and how the team will build it,
 | | |
 |---|---|
 | **Facilitator** | PM |
-| **With** | PO, Tech Lead, Dev, DBA, DevOps; the user for G1 |
+| **With** | PO, Tech Lead, Dev, DBA, DevOps; the user for the sprint plan approval |
 | **When** | The previous sprint is Closed, and enough items are Ready |
 | **Input** | Ready items in `docs/scrum/backlog.md`, `docs/scrum/agreements.md`, records linked from the items |
-| **Output** | `docs/scrum/sprints/sprint-NN.md` with the Sprint Goal, selected items, task board, and G1 recorded; status Active |
+| **Output** | `docs/scrum/sprints/sprint-NN.md` with the Sprint Goal, selected items, task board, and the sprint plan approval recorded; status Active |
 
 If fewer items are Ready than the sprint needs, run [Backlog Refinement](refinement.md) first.
 
@@ -33,17 +33,17 @@ If fewer items are Ready than the sprint needs, run [Backlog Refinement](refinem
    - When `actions/harness.md` is installed, open one harness run for the item and record each design step below as its stage, so the gate script lets its tasks change code only once the item is designed.
    - New or changed domain concepts or rules: `actions/ddd.md`.
    - A user-facing surface: `actions/uiux.md`.
-   - A new architectural decision: propose it with `actions/adr.md` and ask the user for **G2**. Tasks that depend on it stay To Do until it is approved.
+   - A new architectural decision: propose it with `actions/adr.md` and ask the user for **architecture approval**. Tasks that depend on it stay To Do until it is approved.
 4. **[Tech Lead] Break items into tasks.** Each task has one owner role (see the assignment table in `scrum/roles/tech-lead.md`), one clear output, and its item ID. Order them so the work others depend on comes first: usually DBA and DevOps tasks, then Dev.
 5. **[Dev, DBA, DevOps] Check the tasks.** Each owner confirms its tasks are clear and small enough to finish in one session, or asks the Tech Lead to split or clarify them.
 6. **[Tech Lead and PO] Fit the sprint.** If the tasks show the selection is too large for the Sprint Goal, the PO drops the lowest-value items; the goal changes only if the PO agrees.
 
 ### Approval
 
-7. **[PO] Ask the user for G1.** Show the Sprint Goal, the selected items in order with their acceptance criteria, and a one-line summary of the tasks. Ask one question: approve, or what to change.
+7. **[PO] Ask the user for the sprint plan approval.** Show the Sprint Goal, the selected items in order with their acceptance criteria, and a one-line summary of the tasks. Ask one question: approve, or what to change.
 8. **[PM] Record and start.** Record the user's answer in the Approvals table. If approved, set the sprint to Active, the selected items to In Sprint, and run the first [Daily Scrum](daily.md). If changes were requested, return to the step they affect.
 
 ## Exit
 
-- G1 is recorded with the user's words.
-- Every selected item has tasks with an owner, and every task blocked by a pending G2 is marked so.
+- The sprint plan approval is recorded with the user's words.
+- Every selected item has tasks with an owner, and every task blocked by a pending architecture approval is marked so.

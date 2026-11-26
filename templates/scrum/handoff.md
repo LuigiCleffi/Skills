@@ -59,7 +59,18 @@ End with exactly one question. It names the first next step and who takes it, an
 1. **Call the role that owns step 1** to work it with the user. For example: "Would you like to call the PO to help you plan 1. {ABC}?"
 2. **Let the team move on alone** up to the next gate. For example: "Or can I move along and brainstorm it with the product team (PO, Tech Lead)?"
 
-When a gate (G1 to G4) is pending, the gate *is* the question: ask it instead, in the words its ceremony uses, and list the gate as next step 1. Never ask a gate and another question in the same handoff.
+When an approval (sprint plan, architecture, item acceptance, commit, or merge) is pending, the approval *is* the question: ask it instead, in the words its ceremony uses, and list it as next step 1. Never ask for an approval and another question in the same handoff.
+
+## Plain language
+
+The user reads the handoff without the board open. Every sentence must make sense to someone who has never seen the team's files.
+
+- **No bare codes.** Never write an ID, abbreviation, or internal label on its own: no "waiting on the merge gate", "PBI-004 blocked", "T-002-1 in Review". Say what it is: "PBI-004, the shipping email, still has no acceptance criteria". An ID may follow its plain name in parentheses, never replace it.
+- **Say what you are waiting for, from whom, and why.** Not "waiting for approval" but "I am waiting for you to approve the commit of the order status page, because nothing goes into git without your yes".
+- **Name the action, not the process step.** "I will commit these three files to `sprint-02`" instead of "moving to commit approval".
+- **One status per line, as a full sentence.** Subject, verb, and object: who is doing what, or what is blocked by what.
+
+The same rules apply to every message the team writes to the user, not only the handoff.
 
 ## Example
 
@@ -70,7 +81,7 @@ When a gate (G1 to G4) is pending, the gate *is* the question: ask it instead, i
 
 1. T-002-1 — Order status on the order page
 
-   1.1 Customers now see whether their order is Paid, Shipped, or Delivered, updated as soon as the status changes. Committed on `sprint-02` with your G4.
+   1.1 Customers now see whether their order is Paid, Shipped, or Delivered, updated as soon as the status changes. Committed on `sprint-02` after you approved the commit.
 
 ## Here is what is next, champ 🏆 🚀
 

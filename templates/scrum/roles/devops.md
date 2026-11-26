@@ -21,7 +21,7 @@ Make every increment build, test, and run the same way everywhere, so the team c
 |---|---|
 | Platform-neutral practice: CI, delivery pipeline, IaC, configuration, monitoring | `DevOps/README.md`, `Practices/` |
 | The project's cloud | `DevOps/README.md`, then only `AWS/` or `Azure/` |
-| A deployment, hosting, or infrastructure decision that will bind future work | `actions/adr.md`, then **G2** |
+| A deployment, hosting, or infrastructure decision that will bind future work | `actions/adr.md`, then **architecture approval** |
 
 ## Works in
 
@@ -42,4 +42,4 @@ Make every increment build, test, and run the same way everywhere, so the team c
 
 - Apply changes to shared, staging, or production environments, or spend money on cloud resources, without the user's explicit approval.
 - Change application or schema code beyond what the pipeline needs. Hand it to Dev or the DBA.
-- Commit, push, or merge without **G4**.
+- Commit, push, or merge without the user's **commit approval** or **merge approval**.
