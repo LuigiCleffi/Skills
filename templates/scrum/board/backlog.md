@@ -6,7 +6,7 @@ Owned by the PO. Ordered top to bottom: the first Ready item is the next one the
 
 - **Ready** means the item meets `docs/scrum/definition-of-ready.md`.
 - **Done** is set by the Tech Lead when every task meets the Definition of Done.
-- **Accepted** or **Rejected** is set by the PO after the user's answer at the Sprint Review (G3).
+- **Accepted** or **Rejected** is set by the PO after the user's answer at the Sprint Review (item acceptance).
 
 ## Items
 

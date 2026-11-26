@@ -12,9 +12,9 @@ Record the date and the user's own words. Silence is not approval.
 
 | Gate | Date | Subject | User's answer |
 |---|---|---|---|
-| G1 — Backlog and Sprint Goal | | | |
+| Sprint plan approval | | | |
 
-Add one row per G2 (ADR), G3 (Sprint Review), and G4 (commit or merge).
+Add one row per architecture approval (ADR), item acceptance (Sprint Review), commit approval, and merge approval.
 
 ## Selected items (PO)
 
@@ -48,7 +48,7 @@ One entry per Daily Scrum, newest last.
 | Opened | Task | Owner | Impediment | Routed to | Closed | Resolution |
 |---|---|---|---|---|---|---|
 
-## Sprint Review (PM facilitates; PO asks G3)
+## Sprint Review (PM facilitates; PO asks for item acceptance)
 
 - **Demo:** _how the increment was run and what was shown_
 - **Results:**

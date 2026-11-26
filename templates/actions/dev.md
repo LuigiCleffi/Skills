@@ -31,7 +31,7 @@ When the task comes from a sprint board (`scrum/README.md`), Backlog Refinement 
 - Skip step 1. Read the task's item, acceptance criteria, and the records and ADRs linked from it instead. If they are missing or contradict the code, move the task to Blocked with the reason; the Tech Lead routes it.
 - Run steps 2 to 6 for this task only. The Tech Lead's review in the Daily Scrum is the final review of the task.
 - Replace the final report with the task note on the board: what changed, which checks ran and their results, what remains. Then move the task to Review.
-- Never commit, push, or merge; the Tech Lead asks the user first (G4).
+- Never commit, push, or merge; the Tech Lead asks the user first (commit approval).
 
 ## Workflow
 

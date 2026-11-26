@@ -114,7 +114,7 @@ Read when building, adapting, evaluating, or reviewing features that use large l
 3. **Keep changes focused.** Implement the requested outcome without unrelated refactoring, unnecessary abstractions, or scope expansion.
 4. **Preserve quality.** Prioritize correctness, security, clarity, simplicity, and maintainability. Do not sacrifice them merely to deliver faster.
 5. **Verify changes.** Run appropriate tests and checks when possible. Never claim verification that was not performed.
-6. **Report clearly.** Summarize what changed, relevant verification results, and any unresolved issues or limitations.
+6. **Report clearly.** Summarize what changed, relevant verification results, and any unresolved issues or limitations. Write in plain, declarative sentences: never use an internal code, ID, or abbreviation on its own ("waiting on G4"); say what you are waiting for, from whom, and why ("waiting for you to approve the commit").
 
 ## Project Rules
 
@@ -124,6 +124,7 @@ Each rule this repository enforces lives once, as a row below. Docs explain a ru
 |---|---|---|---|---|---|
 | ROOT-01 | An installed script runs only when it is the entry point, decided by `realpathSync(process.argv[1]) === realpathSync(<the script's file>)`, so it runs the same through a symlinked path. | `templates/**/*.mjs` | test | yes | Node resolves symlinks in `import.meta.url`, not in `process.argv[1]`; unresolved, the check skips `main` and exits 0. `tests/entry-points.test.mjs` runs every script through a symlink. |
 | ROOT-02 | An installed script that cannot finish (a crash, a broken config, outside git) says why on stderr and exits 2, never 1, which means the check found problems. A hook that 2 would block reports and lets the action through instead. | `templates/**/*.mjs` | test | yes | CI reads exit 1 as a failing check, so a crash that exits 1 looks like a real finding and nobody fixes the check. `tests/exit-codes.test.mjs` breaks every script and checks its code. |
+| ROOT-03 | A message to the user names things in plain words. An ID or internal code may follow its plain name in parentheses, never stand alone, and the Scrum approvals are called by name (sprint plan approval, architecture approval, item acceptance, commit approval, merge approval), not by code. | `templates/scrum/**/*.md`, every message to the user | test, review | partly | Users saw "waiting for G4" and could not tell what was being asked of them. `tests/plain-language.test.mjs` fails if a gate code comes back into the Scrum templates; the rest is caught in review. |
 
 ## Instruction Priority
 

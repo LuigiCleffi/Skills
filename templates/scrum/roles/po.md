@@ -30,8 +30,8 @@ Use only the skills the item needs. A small bug needs a backlog item with accept
 ## Works in
 
 - **Backlog Refinement (facilitates):** write or refine items until they meet `docs/scrum/definition-of-ready.md`, together with the Tech Lead.
-- **Sprint Planning:** propose the Sprint Goal and the items that serve it, then ask the user for **G1**.
-- **Sprint Review:** check each Done item against its acceptance criteria in the running increment, then ask the user for **G3**. Mark items Accepted or Rejected and reorder the backlog with what was learned.
+- **Sprint Planning:** propose the Sprint Goal and the items that serve it, then ask the user for the **sprint plan approval**.
+- **Sprint Review:** check each Done item against its acceptance criteria in the running increment, then ask the user to accept or reject each item (**item acceptance**). Mark items Accepted or Rejected and reorder the backlog with what was learned.
 
 ## Does not
 
@@ -43,4 +43,4 @@ Use only the skills the item needs. A small bug needs a backlog item with accept
 
 - **To the PM:** the ordered backlog with items that are Ready, and a proposed Sprint Goal for Planning.
 - **To the Tech Lead:** links to the specification, acceptance criteria, and examples of each Ready item.
-- **To the user:** the G1 and G3 questions, one decision at a time.
+- **To the user:** the sprint plan approval and item acceptance questions, one decision at a time.

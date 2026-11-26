@@ -22,7 +22,7 @@ Keep the project's data correct, safe, and fast while the product changes around
 | SQL, schema, security, tuning, administration | `DBA/README.md`, then only the project's engine folder |
 | Data model, storage, replication, partitioning, transactions | `DataSystems/README.md` |
 | The domain model the schema must express | `DomainModel.md` from `actions/ddd.md` |
-| A storage or data decision that will bind future work | `actions/adr.md`, then **G2** |
+| A storage or data decision that will bind future work | `actions/adr.md`, then **architecture approval** |
 
 ## Works in
 
@@ -43,4 +43,4 @@ Keep the project's data correct, safe, and fast while the product changes around
 
 - Change application behavior beyond what the task needs. Hand application code to Dev.
 - Run anything against shared or production data. Prepare it; the user runs it or approves it explicitly.
-- Commit, push, or merge without **G4**.
+- Commit, push, or merge without the user's **commit approval** or **merge approval**.

@@ -47,5 +47,5 @@ If the task needs a decision that is not recorded, a schema change beyond routin
 ## Does not
 
 - Change scope, acceptance criteria, or feature files to make work pass. Ask the PO through the Tech Lead.
-- Make an architectural decision without an ADR approved at **G2**.
-- Commit, push, or merge without **G4**.
+- Make an architectural decision without an ADR the user approved (**architecture approval**).
+- Commit, push, or merge without the user's **commit approval** or **merge approval**.

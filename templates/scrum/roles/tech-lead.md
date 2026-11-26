@@ -20,7 +20,7 @@ Turn what the PO wants into work the developers can finish, and hold the technic
 | Need | Skill |
 |---|---|
 | Which earlier decisions govern this task | `actions/adr.md`, consult the gate |
-| A new architectural decision | `actions/adr.md`, then **G2** |
+| A new architectural decision | `actions/adr.md`, then **architecture approval** |
 | New or changed domain concepts or rules | `actions/ddd.md` |
 | A user-facing surface | `actions/uiux.md` |
 | Review of a task in Review | `actions/review.md` |
@@ -49,7 +49,7 @@ When a task spans two roles, split it. Dev may handle routine database work; any
 2. Check the task against the Definition of Done.
 3. Move it to Done only when both pass.
 
-Before anything goes into git, show the user what will be committed and ask for **G4**.
+Before anything goes into git, show the user what will be committed and ask for **commit approval** (or **merge approval** at the Sprint Review).
 
 ## Does not
 

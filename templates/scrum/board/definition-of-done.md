@@ -8,7 +8,7 @@ Owned by the Tech Lead and agreed by the team. A task moves to Done, and an item
 - [ ] Relevant tests were written or updated, and they ran and passed. The note says which commands ran.
 - [ ] Type checks, lint, and the build ran and passed where the project has them.
 - [ ] `review` found no unresolved blocking finding.
-- [ ] The code follows the governing ADRs, and any new architectural decision has an ADR approved at G2.
+- [ ] The code follows the governing ADRs, and any new architectural decision has an ADR the user approved (architecture approval).
 - [ ] No secrets, credentials, or personal data were added to the repository.
 
 ## By owner
